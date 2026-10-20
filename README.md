@@ -131,6 +131,19 @@ pushed update shows up the next time the game is opened online. dev.html never r
 the worker. On Android, Chrome shows an Install App button on the title screen; on
 iPhone, use Share, then Add to Home Screen in Safari.
 
+## Previews
+
+Changes are tried out at https://game.michaelsturrup.com/preview/ before they go live.
+The preview is the whole game built from the `next` branch: its version ends in `-pre`,
+the title screen says PREVIEW BUILD, and search engines are told to skip it. It shares
+saves, accounts and the leaderboard with the live game (scores show the `-pre` version).
+
+- **Make a preview:** commit the change to `next`, run `node build.mjs --preview` there,
+  then copy the `preview/` folder onto `main`, commit and push. Only `preview/` changes,
+  so the live game stays as it was.
+- **Publish:** merge `next` into `main`, run `node build.mjs`, commit and push.
+- Add a "What's new" entry (data/changelog.js) with each change that will be published.
+
 ## Project layout
 
 ```

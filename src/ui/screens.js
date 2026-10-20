@@ -19,7 +19,7 @@ import { accountScreen, conflictScreen, boardPost } from './account.js';
 import { profileScreen } from './profile.js';
 import { newsScreen, newsPending } from './news.js';
 import { bugScreen } from './bugreport.js';
-import { VERSION } from '../version.js';
+import { VERSION, PREVIEW } from '../version.js';
 import { account } from '../game/account.js';
 import { recordWiki } from '../game/wiki.js';
 import { wikiScreen, wikiProgress } from './wiki.js';
@@ -147,6 +147,7 @@ export class Screens {
     };
     this.show(
       `<div class="panel title">
+        ${PREVIEW ? '<p class="preview-banner">PREVIEW BUILD · not the live game yet</p>' : ''}
         <h1>HELPDESK<br>SURVIVORS</h1>
         <p class="sub">${pickLine(TITLE_TAGLINES)}</p>
         <div class="title-char"><canvas data-spr="${ch.sprite}" width="64" height="64"></canvas>

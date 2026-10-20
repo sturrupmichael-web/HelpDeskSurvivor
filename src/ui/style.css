@@ -326,3 +326,6 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
 .bug-text { box-sizing: border-box; width: 100%; resize: vertical; font: 15px/1.4 var(--font); padding: 9px 10px; color: var(--paper); background: var(--ink); border: 3px solid var(--gray); }
 .bug-text:focus { outline: none; border-color: var(--yellow); }
 .bug-count { text-align: right; margin-top: 2px; }
+
+/* Preview builds (node build.mjs --preview) */
+.preview-banner { margin: 0 0 8px; padding: 6px 10px; font-weight: bold; color: var(--ink); background: var(--yellow); text-align: center; }
