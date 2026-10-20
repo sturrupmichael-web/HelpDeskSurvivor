@@ -7,6 +7,9 @@ import { startLoop } from './engine/loop.js';
 import { Game } from './game/game.js';
 import { account } from './game/account.js';
 import { VERSION } from './version.js';
+import { watchErrors } from './ui/bugreport.js';
+
+watchErrors(); // so a bug report can include errors from startup on
 
 // Chrome/Android offer "install this app"; keep the offer for the title screen's button.
 addEventListener('beforeinstallprompt', (e) => {

@@ -18,6 +18,7 @@ import { topScores } from '../game/leaderboard.js';
 import { accountScreen, conflictScreen, boardPost } from './account.js';
 import { profileScreen } from './profile.js';
 import { newsScreen, newsPending } from './news.js';
+import { bugScreen } from './bugreport.js';
 import { VERSION } from '../version.js';
 import { account } from '../game/account.js';
 import { recordWiki } from '../game/wiki.js';
@@ -61,7 +62,7 @@ export class Screens {
   }
 
   focusables() {
-    return [...this.root.querySelectorAll('button:not([disabled]), input')];
+    return [...this.root.querySelectorAll('button:not([disabled]), input, textarea')];
   }
 
   hide() {
@@ -137,6 +138,7 @@ export class Screens {
       else if (act === 'wiki') wikiScreen(this);
       else if (act === 'account') accountScreen(this);
       else if (act === 'news') newsScreen(this, () => this.title(), true);
+      else if (act === 'bug') bugScreen(this, 'title', () => this.title());
       else if (act === 'install') {
         window.installPrompt?.prompt();
         window.installPrompt = null;
@@ -161,6 +163,7 @@ export class Screens {
           <button data-act="ach">Achievements ${Object.keys(m.achievements ?? {}).length}/${ACHIEVEMENTS.length} <kbd>A</kbd></button>
           <button data-act="settings">Settings <kbd>O</kbd></button>
         </div>
+        <button data-act="bug">Report a Bug</button>
         <table class="stats records">
           <tr><td>Longest shift</td><td>${fmtTime(m.best.time)}</td></tr>
           <tr><td>Most tickets closed</td><td>${m.best.tickets.toLocaleString()}</td></tr>
@@ -518,6 +521,7 @@ export class Screens {
         this.title();
       } else if (act === 'stats') this.stats();
       else if (act === 'settings') this.settings(() => this.pause());
+      else if (act === 'bug') bugScreen(this, 'pause', () => this.pause());
     };
     this.show(
       `<div class="panel">
@@ -526,6 +530,7 @@ export class Screens {
         <button class="primary" data-act="resume">Resume <kbd>Esc</kbd></button>
         <button data-act="stats">Shift Stats <kbd>T</kbd></button>
         <button data-act="settings">Settings <kbd>O</kbd></button>
+        <button data-act="bug">Report a Bug <kbd>B</kbd></button>
         <button data-act="restart">Restart Shift <kbd>R</kbd></button>
         <button data-act="quit">Quit to Title <kbd>Q</kbd></button>
         <p class="tiny"><kbd>M</kbd> mute / unmute sound</p>
@@ -536,6 +541,7 @@ export class Screens {
         else if (code === 'KeyQ') go('quit');
         else if (code === 'KeyT') go('stats');
         else if (code === 'KeyO') go('settings');
+        else if (code === 'KeyB') go('bug');
         else return false;
       },
     );

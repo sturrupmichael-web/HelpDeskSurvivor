@@ -4,6 +4,15 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-20-bugs',
+    date: 'Oct 20, 2026',
+    title: 'Report a Bug',
+    items: [
+      'Found something broken? Tap "Report a Bug" on the title screen, or in the pause menu (B) mid-shift.',
+      'Your report includes the game version and what was happening, so you only need to say what went wrong.',
+    ],
+  },
+  {
     id: '2026-10-20-news',
     date: 'Oct 20, 2026',
     title: "Player profiles and What's new",

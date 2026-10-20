@@ -26,7 +26,12 @@ const emit = (code) => {
 
 export function initInput(canvas) {
   addEventListener('keydown', (e) => {
-    // Typing in a text box (leaderboard name): only Enter and Escape reach the game.
+    // Typing in a text box (leaderboard name, bug report): only Enter and Escape reach
+    // the game, and only Escape from a multi-line box (Enter is a new line there).
+    if (e.target instanceof HTMLTextAreaElement) {
+      if (e.code === 'Escape' && !e.repeat) for (const fn of listeners) fn(e.code, e);
+      return;
+    }
     if (e.target instanceof HTMLInputElement && e.target.type === 'text') {
       if ((e.code === 'Enter' || e.code === 'Escape') && !e.repeat) for (const fn of listeners) fn(e.code, e);
       return;

@@ -319,3 +319,10 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
 .news-entry ul { margin: 6px 0 0; padding-left: 20px; }
 .news-entry li { margin: 4px 0; line-height: 1.4; font-size: 14px; }
 .version .name-link { font-size: inherit; letter-spacing: inherit; }
+
+/* Report a Bug */
+.panel.bug { max-width: 520px; }
+.panel.bug p { line-height: 1.4; }
+.bug-text { box-sizing: border-box; width: 100%; resize: vertical; font: 15px/1.4 var(--font); padding: 9px 10px; color: var(--paper); background: var(--ink); border: 3px solid var(--gray); }
+.bug-text:focus { outline: none; border-color: var(--yellow); }
+.bug-count { text-align: right; margin-top: 2px; }
