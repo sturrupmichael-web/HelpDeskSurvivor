@@ -71,6 +71,12 @@ users, bosses, tools and passives. An article unlocks the first time you close t
 user, face that boss, or finish a shift carrying that tool or passive; the end-of-shift
 screen lists new ones. Text comes from the `flavor` and `desc` fields in `data/`.
 
+**Performance review** (`src/game/review.js`, text in `data/review.js`): the end-of-shift
+screen ends with an HR-style review: a rating from Performance Improvement Plan to
+Employee of the Month, three manager's comments picked from what happened that shift,
+a goal for next quarter and the map's manager's signature. Add comments to `COMMENTS`
+with a test and a priority.
+
 **Debug mode hotkeys** (only while debug mode is on and the game is running):
 `1` spawn 50 enemies, `2` spawn 300 enemies (from the current wave mix), `3` level up,
 `4` skip ahead 1 minute, `5` god mode, `6` clear enemies, `7` spawn one of every
@@ -199,3 +205,4 @@ current `manifest.json` for the full list):
 9. **Online leaderboard:** top CSAT per map (Supabase), posted from the end-of-shift screen.
 10. **Installable app:** add to the home screen, runs full screen and offline.
 11. **Help Desk Wiki:** a codex of users, bosses, tools and passives that fills in as you play.
+12. **Performance review:** a funny HR review of every shift on the end-of-shift screen.

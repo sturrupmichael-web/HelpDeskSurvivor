@@ -37,6 +37,7 @@ import { Meta } from './meta.js';
 import { Score } from './score.js';
 import { Fx } from './fx.js';
 import { recordWiki } from './wiki.js';
+import { performanceReview } from './review.js';
 import { Hud } from '../ui/hud.js';
 import { Screens } from '../ui/screens.js';
 import { Debug, DEBUG_ALLOWED } from '../ui/debug.js';
@@ -189,7 +190,8 @@ export class Game {
     r.time = this.time;
     r.kills = this.score.kills;
     this.achievements.check();
-    this.screens.gameOver({ ...stats, pay, records, newMap, wikiNew, balance: this.meta.data.pay });
+    const review = performanceReview(stats, r);
+    this.screens.gameOver({ ...stats, pay, records, newMap, wikiNew, review, balance: this.meta.data.pay });
   }
 
   // Union Rep (shop): come back from burnout once per revive, clearing some space.
