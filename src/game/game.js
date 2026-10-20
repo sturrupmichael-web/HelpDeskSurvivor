@@ -37,6 +37,7 @@ import { Meta } from './meta.js';
 import { Score } from './score.js';
 import { Fx } from './fx.js';
 import { recordWiki } from './wiki.js';
+import { Tutorial } from './tutorial.js';
 import { performanceReview } from './review.js';
 import { CloudSave } from './cloudsave.js';
 import { conflictScreen } from '../ui/account.js';
@@ -173,11 +174,33 @@ export class Game {
     this.victoryT = 0;
     this.beatT = 0; // low-sanity heartbeat timer
     this.autoPizza = false; // everything maxed and the player chose "always take the pizza"
+    this.tutorial = null; // the training shift's script, while one runs
+    if (this.mapId !== this.meta.data.map) this.setMap(this.meta.data.map); // back from training
     this.camera.snap(0, 0);
     this.hud.reset(this);
     this.setState('run');
     this.screens.hide();
     startMusic();
+  }
+
+  // Training shift (src/game/tutorial.js): always on the Office with the selected tech.
+  startTutorial() {
+    this.newRun();
+    this.setMap('office');
+    this.spawner.stopped = true; // the tutorial spawns its own users
+    this.tutorial = new Tutorial(this);
+  }
+
+  // Training done: remember it, then the "you're ready" screen. Not a shift: no pay,
+  // no records, no leaderboard.
+  finishTutorial() {
+    this.meta.data.trained = true;
+    this.meta.save();
+    recordWiki(this);
+    this.setState('over');
+    stopMusic();
+    sfx('victory');
+    this.screens.trainingDone();
   }
 
   endRun(won) {
@@ -256,7 +279,7 @@ export class Game {
       p.rerolls--;
       this.openLevelUp(true);
     };
-    this.screens.levelUp(choices, p.rerolls > 0 && !onlyPizza ? reroll : null, p.rerolls, (choice, always) => {
+    this.screens.levelUp(choices, this.tutorial?.levelUpTip(), p.rerolls > 0 && !onlyPizza ? reroll : null, p.rerolls, (choice, always) => {
       if (always) this.autoPizza = true;
       applyChoice(this, choice);
       this.player.pendingLevels--;
@@ -419,7 +442,8 @@ export class Game {
     updateItems(this, dt); // may open the chest screen
     this.fx.update(dt);
     this.score.update(dt);
-    this.achievements.update(dt);
+    if (this.tutorial) this.tutorial.update(dt);
+    else this.achievements.update(dt);
     this.camera.follow(p.x, p.y, dt);
     setListener(p.x);
     // Low sanity: you can hear your pulse.

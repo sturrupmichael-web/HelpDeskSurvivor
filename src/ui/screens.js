@@ -128,7 +128,11 @@ export class Screens {
     const wiki = wikiProgress(this.game.meta);
     const go = (act) => {
       sfx('click');
-      if (act === 'start') this.game.newRun();
+      if (act === 'start') {
+        // Brand-new players get offered the training shift once.
+        if (!m.trained && !m.shifts && !m.offeredTraining) this.trainingOffer();
+        else this.game.newRun();
+      } else if (act === 'training') this.game.startTutorial();
       else if (act === 'chars') this.characters();
       else if (act === 'shop') this.shop();
       else if (act === 'ach') this.achievementsScreen();
@@ -153,6 +157,7 @@ export class Screens {
         <div class="title-char"><canvas data-spr="${ch.sprite}" width="64" height="64"></canvas>
           <div><div class="card-name">${ch.name}</div><div class="card-flavor">${ch.perk}</div></div></div>
         <button class="primary" data-act="start">Clock In <kbd>Enter</kbd></button>
+        <button data-act="training">Training Shift <kbd>T</kbd></button>
         <button data-act="maps">Map: ${MAPS[m.map].name} <kbd>L</kbd></button>
         <button data-act="chars">Characters <kbd>C</kbd></button>
         <button data-act="shop">Overtime Shop ${PAY(m.pay)} <kbd>S</kbd></button>
@@ -180,6 +185,7 @@ export class Screens {
       (code) => {
         if (code === 'Enter' || code === 'Space') go('start');
         else if (code === 'KeyC') go('chars');
+        else if (code === 'KeyT') go('training');
         else if (code === 'KeyL') go('maps');
         else if (code === 'KeyB') go('board');
         else if (code === 'KeyK') go('wiki');
@@ -192,6 +198,69 @@ export class Screens {
     );
     this.bind('button', (i, el) => go(el.dataset.act));
     this.drawThumbs();
+  }
+
+  // First Clock In ever: offer the training shift (once; it stays on the title screen).
+  trainingOffer() {
+    const m = this.game.meta;
+    m.data.offeredTraining = true;
+    m.save();
+    const go = (act) => {
+      sfx('click');
+      if (act === 'training') this.game.startTutorial();
+      else this.game.newRun();
+    };
+    this.show(
+      `<div class="panel training">
+        <h2>FIRST DAY?</h2>
+        <p class="sub">A two-minute training shift shows you how to move, close tickets and level up.</p>
+        <button class="primary" data-act="training">Start Training <kbd>Enter</kbd></button>
+        <button data-act="skip">Skip, I know the drill <kbd>Esc</kbd></button>
+        <p class="tiny">You can take training any time from the title screen.</p>
+      </div>`,
+      (code) => {
+        if (code === 'Enter' || code === 'Space' || code === 'KeyT') go('training');
+        else if (code === 'Escape') go('skip');
+        else return false;
+      },
+    );
+    this.bind('button', (i, el) => go(el.dataset.act));
+  }
+
+  // End of the training shift.
+  trainingDone() {
+    let ready = false;
+    setTimeout(() => (ready = true), 600); // don't let a held key skip it
+    const go = (act) => {
+      if (!ready) return;
+      sfx('click');
+      if (act === 'start') this.game.newRun();
+      else {
+        this.game.newRun();
+        this.game.setState('title');
+        this.title();
+      }
+    };
+    this.show(
+      `<div class="panel training">
+        <h1>TRAINING<br>COMPLETE</h1>
+        <p class="sub">You're ready for the floor. A few things to know:</p>
+        <ul class="training-list">
+          <li>Survive the 20-minute shift and beat The Executive to clock out.</li>
+          <li>Every shift pays Overtime Pay, even a short one. Spend it in the Overtime Shop on permanent upgrades, or hire new technicians.</li>
+          <li>Bosses drop a Change Approved chest. A maxed tool plus the right passive can evolve in one (the Wiki has hints).</li>
+          <li><kbd>Esc</kbd> or the II button pauses. Training is always on the title screen if you want it again.</li>
+        </ul>
+        <button class="primary" data-act="start">Clock In <kbd>Enter</kbd></button>
+        <button data-act="title">Title <kbd>Esc</kbd></button>
+      </div>`,
+      (code) => {
+        if (code === 'Enter' || code === 'Space') go('start');
+        else if (code === 'Escape') go('title');
+        else return false;
+      },
+    );
+    this.bind('button', (i, el) => go(el.dataset.act));
   }
 
   // Settings: volumes and comfort toggles. `back` returns to the screen that opened it.
@@ -510,11 +579,13 @@ export class Screens {
   }
 
   pause() {
+    const training = !!this.game.tutorial;
     const go = (act) => {
       if (act === 'resume') this.game.resume();
       else if (act === 'restart') {
         recordWiki(this.game);
-        this.game.newRun();
+        if (this.game.tutorial) this.game.startTutorial();
+        else this.game.newRun();
       } else if (act === 'quit') {
         recordWiki(this.game);
         this.game.newRun();
@@ -532,8 +603,8 @@ export class Screens {
         <button data-act="stats">Shift Stats <kbd>T</kbd></button>
         <button data-act="settings">Settings <kbd>O</kbd></button>
         <button data-act="bug">Report a Bug <kbd>B</kbd></button>
-        <button data-act="restart">Restart Shift <kbd>R</kbd></button>
-        <button data-act="quit">Quit to Title <kbd>Q</kbd></button>
+        <button data-act="restart">${training ? 'Restart Training' : 'Restart Shift'} <kbd>R</kbd></button>
+        <button data-act="quit">${training ? 'Skip Training' : 'Quit to Title'} <kbd>Q</kbd></button>
         <p class="tiny"><kbd>M</kbd> mute / unmute sound</p>
       </div>`,
       (code) => {
@@ -552,7 +623,8 @@ export class Screens {
   // onPick(choice, always): `always` is true when the player chose to auto-take the
   // pizza for the rest of the run (offered once every item is maxed).
   // onReroll is null when no rerolls are available.
-  levelUp(choices, onReroll, rerollsLeft, onPick) {
+  // `tip` is the training shift's explanation, shown above the cards (or null).
+  levelUp(choices, tip, onReroll, rerollsLeft, onPick) {
     let done = false;
     const onlyPizza = choices.length === 1 && choices[0].kind === 'reward';
     const pick = (i, always = false) => {
@@ -576,6 +648,7 @@ export class Screens {
       `<div class="panel wide">
         <h2>LEVEL UP!</h2>
         <p class="sub">${pickLine(LEVEL_UP_LINES)}</p>
+        ${tip ? `<p class="levelup-tip"><b>TRAINING:</b> ${tip}</p>` : ''}
         <div class="cards levelup">${choices.map(card).join('')}</div>
         ${
           onlyPizza
@@ -585,7 +658,7 @@ export class Screens {
         ${onReroll ? `<button class="always" data-act="reroll">Escalate: reroll these cards (${rerollsLeft} left) <kbd>R</kbd></button>` : ''}
       </div>`,
       (code) => {
-        const n = { Digit1: 0, Digit2: 1, Digit3: 2, Numpad1: 0, Numpad2: 1, Numpad3: 2 }[code];
+        const n = DIGITS[code];
         if (n !== undefined) pick(n);
         else if (onlyPizza && code === 'KeyA') pick(0, true);
         else if (onReroll && code === 'KeyR' && !done) {

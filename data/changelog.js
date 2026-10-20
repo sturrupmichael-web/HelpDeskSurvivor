@@ -4,6 +4,16 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-20-training',
+    date: 'Oct 20, 2026',
+    title: 'Training Shift',
+    items: [
+      'New to the help desk? "Training Shift" on the title screen (T) walks you through moving, closing tickets, levelling up and staying sane, in about two minutes.',
+      'Brand-new players are offered it the first time they clock in. It never costs you anything: no burnout, no pay, no leaderboard.',
+      'Level-up cards can now be picked with keys 1 to 4 (the fourth card had no key).',
+    ],
+  },
+  {
     id: '2026-10-20-bugs',
     date: 'Oct 20, 2026',
     title: 'Report a Bug',

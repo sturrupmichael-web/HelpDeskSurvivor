@@ -40,7 +40,7 @@ npm run build
 | 1 / 2 / 3 or click | Pick a level-up card |
 | Enter | Close the Change Approved (chest) screen |
 | R | Reroll the level-up cards (needs the Escalation Path upgrade) |
-| L / C / S / B / K / A / O | Office Maps / Characters / Overtime Shop / Leaderboard / Help Desk Wiki / Achievements / Settings (title screen) |
+| T / L / C / S / B / K / A / O | Training Shift / Office Maps / Characters / Overtime Shop / Leaderboard / Help Desk Wiki / Achievements / Settings (title screen) |
 | P | Post the shift to the online leaderboard (end-of-shift screen) |
 | T / O | Shift Stats / Settings (pause menu) |
 | A | When everything is maxed, always take the pizza from then on (no more level-up screens) |
@@ -65,6 +65,13 @@ ringing desk phones, darkness).
 **Achievements:** 24 of them in `data/achievements.js`; each is a name, icon, text and a
 `check(run, meta)` test. Unlocks pop a toast and are listed under Achievements on the
 title screen.
+
+**Training Shift** (`src/game/tutorial.js`, steps and text in `data/tutorial.js`): a
+guided first shift of about two minutes. The wave spawner is off; each step spawns its
+own users, shows a coach card at the bottom of the screen and waits for the player
+(move, fix users until the first level-up, survive a small rush, grab a pizza). Sanity
+can't hit zero, and it pays nothing and never reaches the leaderboard. Brand-new players
+are offered it on their first Clock In; it's always on the title screen (T).
 
 **Help Desk Wiki** (`src/game/wiki.js` records, `src/ui/wiki.js` screen): a codex of
 users, bosses, tools and passives. An article unlocks the first time you close that
