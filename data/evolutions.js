@@ -7,4 +7,7 @@ export const EVOLUTIONS = {
   powershell: { passive: 'runbook', into: 'scheduledTasks' },
   firewall: { passive: 'headphones', into: 'zeroTrust' },
   autoClose: { passive: 'itil', into: 'autoTriage' },
+  patchCable: { passive: 'secondMonitor', into: 'fiberBackbone' },
+  delegate: { passive: 'itil', into: 'outsourcedTeam' },
+  coffeeRun: { passive: 'coldBrew', into: 'espresso' },
 };

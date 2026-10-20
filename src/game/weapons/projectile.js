@@ -1,7 +1,9 @@
 // "Projectile" behavior: on cooldown, fires a quick burst of shots at the nearest
 // enemies. Used by: Ticket Auto-Close, Automated Triage (evolved: `homing` shots that
-// each pick a different target and steer toward it at `turn` rad/s).
-// stats: damage, cooldown, count, speed, pierce, life, knockback, homing, turn
+// each pick a different target and steer toward it at `turn` rad/s), Auto-Scaling
+// (`scalePer`: one extra shot per that many users within `scaleRadius`, up to `maxCount`).
+// stats: damage, cooldown, count, speed, pierce, life, knockback, homing, turn,
+//        scaleRadius, scalePer, maxCount
 
 import { fireProjectile } from '../projectiles.js';
 import { nearestEnemy } from '../enemies.js';
@@ -26,7 +28,11 @@ export default {
     w.timer -= dt;
     if (w.timer <= 0) {
       w.timer += s.cooldown * p.stats.cooldown;
-      w.burstLeft = s.count;
+      w.burstLeft = s.count + (p.extraCount ?? 0);
+      if (s.scalePer) {
+        const crowd = game.hash.query(p.x, p.y, s.scaleRadius * p.stats.area, game.scratch);
+        w.burstLeft = Math.min(s.maxCount + (p.extraCount ?? 0), w.burstLeft + Math.floor(crowd / s.scalePer));
+      }
       w.burstT = 0;
       w.targetN = 0;
     }

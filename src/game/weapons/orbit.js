@@ -32,9 +32,10 @@ export default {
     const now = game.time;
     const items = game.enemies.items;
     const rings = w.def.rings ?? 1;
-    for (let i = 0; i < s.count * rings; i++) {
-      const inner = i >= s.count;
-      const a = (inner ? -w.angle : w.angle) + (i / s.count) * Math.PI * 2;
+    const count = s.count + (p.extraCount ?? 0);
+    for (let i = 0; i < count * rings; i++) {
+      const inner = i >= count;
+      const a = (inner ? -w.angle : w.angle) + (i / count) * Math.PI * 2;
       const rr0 = inner ? radius * INNER : radius;
       const sx = p.x + Math.cos(a) * rr0;
       const sy = p.y + Math.sin(a) * rr0;
@@ -60,9 +61,10 @@ export default {
     const radius = s.radius * p.stats.area;
     ctx.globalAlpha = Math.min(1, w.active / 0.3);
     const rings = w.def.rings ?? 1;
-    for (let i = 0; i < s.count * rings; i++) {
-      const inner = i >= s.count;
-      const a = (inner ? -w.angle : w.angle) + (i / s.count) * Math.PI * 2;
+    const count = s.count + (p.extraCount ?? 0);
+    for (let i = 0; i < count * rings; i++) {
+      const inner = i >= count;
+      const a = (inner ? -w.angle : w.angle) + (i / count) * Math.PI * 2;
       const r = inner ? radius * INNER : radius;
       ctx.drawImage(spr.image, f[0], f[1], spr.w, spr.h, Math.round(p.x + Math.cos(a) * r - spr.w / 2), Math.round(p.y + Math.sin(a) * r - spr.h / 2 - 2), spr.w, spr.h);
     }

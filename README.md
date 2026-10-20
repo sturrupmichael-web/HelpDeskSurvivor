@@ -138,3 +138,7 @@ current `manifest.json` for the full list):
 5. **Polish:** controller and touch support, a settings menu (separate music and sound
    volume), the pause-menu Shift Stats page, and 18 achievements.
 6. **Office maps:** three unlockable maps with their own art, twist, music and records.
+7. **More characters and tools:** Network Engineer, Help Desk Manager, The Intern and
+   Cloud Architect; Patch Cable, Delegate, Coffee Run, Auto-Scaling, Out-of-Office Reply
+   and Ping Sweep; the Fiber Backbone, Outsourced Team and Espresso Machine evolutions;
+   and the Standing Desk passive.

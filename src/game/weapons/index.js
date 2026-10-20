@@ -12,8 +12,13 @@ import homing from './homing.js';
 import chain from './chain.js';
 import turret from './turret.js';
 import nuke from './nuke.js';
+import whip from './whip.js';
+import minion from './minion.js';
+import trail from './trail.js';
+import shield from './shield.js';
+import sweep from './sweep.js';
 
-export const WEAPON_BEHAVIORS = { pulse, projectile, boomerang, orbit, aura, homing, chain, turret, nuke };
+export const WEAPON_BEHAVIORS = { pulse, projectile, boomerang, orbit, aura, homing, chain, turret, nuke, whip, minion, trail, shield, sweep };
 
 // `slot` indexes the per-enemy hit timers (enemy.hitAt) used by damage-over-time weapons.
 export function createWeapon(id, slot) {

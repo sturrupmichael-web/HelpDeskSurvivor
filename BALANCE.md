@@ -69,6 +69,12 @@ Other per-enemy knobs: `onDeath: { spawn, count }` (Randy splitting), `explode: 
 | `chain` | MFA Prompt | `damage`, `cooldown`, `jumps`, `jumpRange`, `stun` |
 | `turret` | PowerShell Script | `cooldown`, `max`, `duration`, `fireRate`, `damage`, `range`, `boltSpeed` |
 | `nuke` | Reimage | `damage`, `cooldown`, `radius`, `knockback` |
+| `whip` | Patch Cable | `damage`, `cooldown`, `range`, `width`, `sides` (2 = both ways), `knockback`, `full` (evolved: whole circle) |
+| `minion` | Delegate | `count`, `damage`, `speed`, `leash`, `hitInterval` (each helper's own swing timer), `knockback` |
+| `trail` | Coffee Run | `damage`, `cooldown` (drop rate × `gap`), `tick`, `radius`, `life`, `slow` |
+| `projectile` + `scalePer` | Auto-Scaling | as `projectile`, plus one extra shot per `scalePer` users within `scaleRadius`, up to `maxCount` |
+| `shield` | Out-of-Office Reply | `damage`, `cooldown`, `duration`, `radius`, `knockback` (also deletes boss bullets inside) |
+| `sweep` | Ping Sweep | `damage`, `range`, `rotSpeed`, `width` (radians), `hitInterval` |
 
 How passives apply: Domain Admin Rights multiplies every `damage`. Runbook multiplies every
 `cooldown` (and the Group Policy `tick`). Second Monitor multiplies `radius`, `range`,
@@ -142,6 +148,9 @@ in `data/weapons.js` (`evolved: true`, one level row):
 | Scheduled Task Army | PowerShell Script | Runbook | up to 8 turrets, `spread` bolts per shot |
 | Zero Trust Perimeter | Firewall | Noise-Cancelling Headphones | `rings: 2` counter-rotating, never goes down |
 | Automated Triage | Ticket Auto-Close | ITIL Certification | `homing` shots with separate targets, pierce 4 |
+| Fiber Backbone | Patch Cable | Second Monitor | `full: true`, the cable whirls all the way round |
+| Outsourced Team | Delegate | ITIL Certification | 5 contractors, faster and harder-hitting |
+| Espresso Machine | Coffee Run | Cold Brew | bigger, hotter puddles that also `slow` |
 
 ## Pickups (`data/pickups.js`)
 
@@ -179,6 +188,10 @@ Each kill earns `pointsPerKill × multiplier`. The multiplier grows by 1 for eve
 | Desktop Support | $300 | KB Article | 90 | 84 | pickup radius 46 |
 | SysAdmin | $700 | PowerShell Script | 120 | 66 | `bonus: { damage: 0.1, cooldown: -0.05 }` |
 | SecOps Analyst | $1,200 | Firewall | 100 | 74 | `regen: 0.5`, `bonus: { damageTaken: -0.1 }` |
+| Network Engineer | $1,500 | Patch Cable | 100 | 74 | `bonus: { area: 0.15 }` |
+| Help Desk Manager | $2,000 | Delegate | 110 | 67 | `summonBonus: 0.25` (Delegate helpers and PowerShell turrets) |
+| The Intern | $200 | Coffee Run | 70 | 78 | `bonus: { growth: 0.3 }` (+30% XP) |
+| Cloud Architect | $3,000 | Auto-Scaling | 90 | 74 | `extraCount: 1` (+1 shot, orbiting shield or helper on every tool) |
 
 `bonus` adds to the same stat multipliers passives use, before passives stack on top.
 
@@ -234,3 +247,23 @@ burns out around 3:00 to 3:40 on every map.
 Changes from that pass: hot-aisle drain 3 to 2 sanity/s; Call Center phones every 3.5 s
 (was 4) for 12 + 1.5/min damage (was 10 + 1.2) in radius 50; garage flashlight 190
 (was 170) and enemy HP x1.15 (was x1.2).
+
+## New characters and tools notes
+
+Each tool was measured headless at level 1 and max level for 20 s against one tanky user
+and against a crowd of 60 (damage per second). Max-level crowd numbers: Patch Cable ~1,500,
+Delegate ~1,900, Coffee Run ~1,800 (standing still; less when you move), Auto-Scaling ~520,
+Out-of-Office ~620, Ping Sweep ~640, against ~1,800 to 1,900 for Turn It Off and On Again
+and Group Policy Push. Evolutions land at ~2,150 (Fiber Backbone, Espresso Machine) to
+~2,850 (Outsourced Team), next to Fleet-Wide Reboot at ~1,950.
+
+Changes from that pass: Patch Cable now aims at the nearest user in any direction (a
+kiting player faces away from the crowd, so a facing-only lash hit almost nothing) and
+starts at 12 damage / 1.2 s; each Delegate helper swings on its own timer and helpers
+spread over different users (before, extra helpers added no damage); Fiber Backbone
+damage 44 to 32; Espresso Machine 20 to 16; Outsourced Team 6 helpers / 26 damage to
+5 / 20.
+
+Bot check afterwards (cautious bot, every shop upgrade maxed, Open Office): the four new
+characters win or reach The Executive in 1 to 2 of 3 to 4 shifts each, the same spread as
+the original four (most losses come between 6:00 and 10:00 for every character).

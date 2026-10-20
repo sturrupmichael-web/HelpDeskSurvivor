@@ -23,6 +23,9 @@ export function createPlayer(def, sprite, meta) {
     r: def.radius,
     hp: maxHp,
     maxHp,
+    baseMaxHp: maxHp, // before the Standing Desk passive
+    extraCount: def.extraCount ?? 0, // extra projectiles / shields / helpers on every tool
+    summonDamage: 1 + (def.summonBonus ?? 0), // damage multiplier for turrets and helpers
     regen: def.regen + (meta ? meta.bonus('regen') : 0), // sanity per second
     rerolls: meta ? meta.bonus('rerolls') : 0, // level-up rerolls left this shift
     revives: meta ? meta.bonus('revives') : 0, // Union Rep comebacks left this shift
@@ -42,7 +45,7 @@ export function createPlayer(def, sprite, meta) {
     weapons: [], // weapon instances (see weapons/index.js)
     passives: {}, // passive id -> level
     // Stat multipliers, recomputed whenever passives change.
-    stats: { moveSpeed: 1, attackSpeed: 1, area: 1, damage: 1, growth: 1, damageTaken: 1, cooldown: 1, pickupRadius: 1 },
+    stats: { moveSpeed: 1, attackSpeed: 1, area: 1, damage: 1, growth: 1, damageTaken: 1, cooldown: 1, pickupRadius: 1, maxHp: 1 },
   };
   recomputeStats(p);
   return p;
@@ -60,6 +63,10 @@ export function recomputeStats(p) {
     p.stats[d.stat] += d.perLevel * lvl;
   }
   p.stats.cooldown = Math.max(0.2, p.stats.cooldown);
+  // Max sanity scales with the Standing Desk passive; the extra sanity arrives filled.
+  const maxHp = Math.round(p.baseMaxHp * p.stats.maxHp);
+  if (maxHp > p.maxHp) p.hp += maxHp - p.maxHp;
+  p.maxHp = maxHp;
   p.stats.damageTaken = Math.max(0.1, p.stats.damageTaken);
 }
 

@@ -58,7 +58,7 @@ export default {
       for (let k = 0; k < n; k++) {
         const a = base + (k - (n - 1) / 2) * SPREAD_ANGLE;
         fireProjectile(game, w, t.x, t.y - 12, Math.cos(a), Math.sin(a), {
-          spr: w.def.boltSprite ?? 'proj_bolt', speed: s.boltSpeed * p.stats.attackSpeed, damage: s.damage * p.stats.damage, pierce: 0, life: 1.2, r: 3, knockback: 20,
+          spr: w.def.boltSprite ?? 'proj_bolt', speed: s.boltSpeed * p.stats.attackSpeed, damage: s.damage * p.stats.damage * (p.summonDamage ?? 1), pierce: 0, life: 1.2, r: 3, knockback: 20,
         });
       }
     }

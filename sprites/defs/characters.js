@@ -258,6 +258,60 @@ const SECOPS = person({ hair: 'r', top: 'G', pants: 'k' }, ({ px }) => {
   patch(px, 3, 17, ['kkkkk', 'kBBBk', 'kBeBk', 'kBBBk', 'kkkkk']); // tablet
 });
 
+// Network Engineer: light-blue shirt, a coil of yellow patch cable over the shoulder,
+// and a crimping tool.
+const NETENG = person({ hair: 'h', top: 'B', pants: 'k' }, ({ px, rect }) => {
+  patch(px, 4, 14, ['.yyyy.', 'y....y', 'y.yy.y', 'y....y', '.yyyy.', '..y...']); // cable coil
+  patch(px, 21, 17, ['kk...', 'kGk..', '.kGk.', '..kGk', '...kk']); // crimper
+  rect(14, 16, 2, 2, 'y'); // RJ45 tip
+});
+
+// Help Desk Manager: white shirt, purple tie, grey hair, clipboard with the SLA report.
+const MANAGER = person({ hair: 'G', top: 'w', pants: 'n' }, ({ px, rect }) => {
+  patch(px, 14, 16, ['pp', 'pp', 'pp', 'pp', '.p']); // tie
+  patch(px, 20, 15, ['.kkk.', 'kwwwk', 'kwrrk', 'kwwwk', 'kweek', 'kwwwk', 'kkkkk']); // clipboard
+  rect(10, 8, 10, 1, 'g'); // reading glasses
+});
+
+// The Intern: orange hoodie, INTERN badge, carrying a tray of four coffees.
+const INTERN = person({ hair: 'y', top: 'o', pants: 'n' }, ({ px, rect }) => {
+  rect(14, 18, 3, 2, 'w'); // badge
+  patch(px, 18, 16, ['.k.k.k.k.', 'kwkwkwkwk', 'khkhkhkhk', 'kkkkkkkkk', 'kdddddddk', 'kkkkkkkkk']); // coffee tray
+});
+
+// Cloud Architect: cyan tee with a cloud logo, laptop open on one arm.
+const CLOUD = person({ hair: 'k', top: 'q', pants: 'k' }, ({ px }) => {
+  patch(px, 12, 17, ['.ww.', 'wwww', '.ww.']); // cloud logo
+  patch(px, 2, 16, ['kkkkkkk', 'kBBBBBk', 'kBwBBBk', 'kBBBBBk', 'kkkkkkk', 'kgggggk', 'kkkkkkk']); // laptop
+});
+
+// Delegate helpers (the Help Desk Manager's interns), 16x16: blue polo, yellow lanyard.
+// The evolved Outsourced Team wears orange.
+const HELPER = recolor(
+  walk(
+    [
+      '..kkkkkk..',
+      '.kyyyyyyk.',
+      '.kssssssk.',
+      '.kskssksk.',
+      '.kssssssk.',
+      '..kksskk..',
+      '.kbbyybbk.',
+      'kbbbyybbbk',
+      'kbbbwwbbbk',
+      'ksnnnnnnsk',
+      '.knnnnnnk.',
+    ],
+    {
+      a: ['.knnkknnk.', '.knk..knk.', '.kkk..kkk.'],
+      b: ['.knnkknnk.', '.knk..kkk.', '.kkk......'],
+      d: ['.knnkknnk.', '.kkk..knk.', '......kkk.'],
+    },
+  ),
+  {},
+);
+const HELPER_EVO = recolor(HELPER, { b: 'o', y: 'k' });
+
 // Small Reply-All Randy (spawned when a Randy is closed): 16x16.
 const RANDY_SMALL_TOP = [
   '..kkkkkk..',
@@ -311,6 +365,12 @@ export default {
     player_desktop: { size: [32, 32], fps: 9, anims: { walk: DESKTOP } },
     player_sysadmin: { size: [32, 32], fps: 7, anims: { walk: SYSADMIN } },
     player_secops: { size: [32, 32], fps: 8, anims: { walk: SECOPS } },
+    player_neteng: { size: [32, 32], fps: 8, anims: { walk: NETENG } },
+    player_manager: { size: [32, 32], fps: 7, anims: { walk: MANAGER } },
+    player_intern: { size: [32, 32], fps: 10, anims: { walk: INTERN } },
+    player_cloud: { size: [32, 32], fps: 8, anims: { walk: CLOUD } },
+    helper: { size: [16, 16], fps: 10, anims: { walk: HELPER }, hitFlash: false },
+    helper_evo: { size: [16, 16], fps: 10, anims: { walk: HELPER_EVO }, hitFlash: false },
     pam: { size: [32, 32], fps: 6, anims: { walk: walk(PAM_TOP, PAM_LEGS) } },
     quinn: { size: [32, 32], fps: 10, anims: { walk: QUINN } },
     randy: { size: [32, 32], fps: 6, anims: { walk: RANDY } },

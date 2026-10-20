@@ -1,7 +1,7 @@
 // Passive items. Each level adds `perLevel` to the stat multiplier:
 //   final multiplier = 1 + perLevel * level   (negative perLevel reduces the stat)
 // Stats: moveSpeed, attackSpeed, area, damage, growth (XP gain), damageTaken,
-//        cooldown, pickupRadius.
+//        cooldown, pickupRadius, maxHp.
 
 export const PASSIVES = {
   coldBrew: {
@@ -43,6 +43,11 @@ export const PASSIVES = {
     name: 'Ticket Queue Filter', icon: 'filter', stat: 'pickupRadius', perLevel: 0.25, maxLevel: 5, weight: 8,
     desc: '+25% pickup radius per level.',
     flavor: 'Auto-sorts the urgent from the "urgent".',
+  },
+  standingDesk: {
+    name: 'Standing Desk', icon: 'desk', stat: 'maxHp', perLevel: 0.1, maxLevel: 5, weight: 8,
+    desc: '+10% max sanity per level.',
+    flavor: 'Raised to "standing" once. Has been at "sitting" ever since.',
   },
 };
 

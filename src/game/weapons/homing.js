@@ -28,7 +28,7 @@ export default {
     const p = game.player;
     if ((w.timer -= dt) > 0) return;
     w.timer += s.cooldown * p.stats.cooldown;
-    for (let i = 0; i < s.count; i++) {
+    for (let i = 0; i < s.count + (p.extraCount ?? 0); i++) {
       const t = farTarget(game);
       const a = Math.random() * Math.PI * 2; // launch in a random direction, then curve in
       fireProjectile(game, w, p.x, p.y - 6, Math.cos(a), Math.sin(a), {

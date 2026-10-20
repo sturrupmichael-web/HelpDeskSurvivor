@@ -15,8 +15,9 @@ export default {
     const base = t ? Math.atan2(t.y - p.y, t.x - p.x) : p.flip ? Math.PI : 0;
     const speed = s.speed * p.stats.attackSpeed;
     const range = s.range * p.stats.area;
-    for (let i = 0; i < s.count; i++) {
-      const a = base + (i - (s.count - 1) / 2) * 0.55;
+    const count = s.count + (p.extraCount ?? 0);
+    for (let i = 0; i < count; i++) {
+      const a = base + (i - (count - 1) / 2) * 0.55;
       fireProjectile(game, w, p.x, p.y - 4, Math.cos(a), Math.sin(a), {
         kind: 'boomerang', spr: w.def.sprite, speed, damage: s.damage * p.stats.damage,
         pierce: 999, life: 6, knockback: s.knockback, r: 7, spin: 10,

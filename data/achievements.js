@@ -2,6 +2,8 @@
 // second during a shift and again when a shift ends. `r` is the current run's tracker
 // (see src/game/achievements.js), `meta` the save data (src/game/meta.js).
 
+import { CHARACTERS } from './player.js';
+
 export const ACHIEVEMENTS = [
   { id: 'first_shift', name: 'Onboarding Complete', icon: 'ticket', desc: 'Finish your first shift, one way or another.', check: (r) => r.ended },
   { id: 'speedrun', name: 'Rage Quit', icon: 'power', desc: 'Burn out in under a minute.', check: (r) => r.ended && !r.won && r.time < 60 },
@@ -18,7 +20,7 @@ export const ACHIEVEMENTS = [
   { id: 'pizza', name: 'Pizza Party', icon: 'pizza', desc: 'Eat 5 slices of vendor-lunch pizza in one shift.', check: (r) => r.pizzas >= 5 },
   { id: 'steve', name: 'Shadow IT Audit', icon: 'rdp', desc: 'Close 100 Shadow IT Steves in one shift.', check: (r) => (r.killsById.steve ?? 0) >= 100 },
   { id: 'union', name: 'Solidarity', icon: 'union', desc: 'Get rescued by your Union Rep.', check: (r) => r.revived },
-  { id: 'hired_all', name: 'Full Headcount', icon: 'monitor', desc: 'Hire every character.', check: (r, m) => m.unlocked.length >= 4 },
+  { id: 'hired_all', name: 'Full Headcount', icon: 'monitor', desc: 'Hire every character.', check: (r, m) => m.unlocked.length >= Object.keys(CHARACTERS).length },
   { id: 'shopper', name: 'Expense Report', icon: 'laptop', desc: 'Buy 15 shop upgrades.', check: (r, m) => Object.values(m.shop).reduce((a, b) => a + b, 0) >= 15 },
   { id: 'map_server', name: 'Cold Aisle Containment', icon: 'ssd', desc: 'Win a shift in the Server Room.', check: (r, m) => m.mapsWon?.includes('server') },
   { id: 'map_call', name: 'First Call Resolution', icon: 'headphones', desc: 'Win a shift in the Call Center.', check: (r, m) => m.mapsWon?.includes('callcenter') },

@@ -19,6 +19,8 @@ const one = (frame, size = [16, 16]) => ({ size, anims: { idle: [frame] }, hitFl
 export default {
   sheet: 'projectiles',
   sprites: {
+    // Auto-Scaling: a little cloud instance.
+    proj_cloud: one(['..kkkk....', '.kwwwwk.k.', 'kwwwwwwkwk', 'kwwqwwwwwk', 'kwqqwwwwqk', '.kkkkkkkk.']),
     // Ticket Auto-Close: a ticket stamped CLOSED.
     proj_ticket: one(['kkkkkkkkkk', 'kwwwwwwwwk', 'kwrrrrrrwk', 'kwrwwwwrwk', 'kwrrrrrrwk', 'kwwwwwwwwk', 'kkkkkkkkkk']),
     // KB Article: a page with a folded corner and a blue header.
