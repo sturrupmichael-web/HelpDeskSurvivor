@@ -309,3 +309,13 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
 .profile-ach { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .profile-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; font-size: 12px; background: var(--ink); border: 1px solid var(--slate); }
 .version { margin: 8px 0 0; font-size: 10px; color: var(--gray); opacity: 0.7; letter-spacing: 1px; }
+
+/* What's new */
+.panel.news { max-width: 640px; text-align: left; }
+.panel.news h2, .panel.news .sub { text-align: center; }
+.news-entry { margin: 10px 0 14px; }
+.news-title { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; color: var(--yellow); }
+.news-title span { color: var(--gray); font-size: 12px; }
+.news-entry ul { margin: 6px 0 0; padding-left: 20px; }
+.news-entry li { margin: 4px 0; line-height: 1.4; font-size: 14px; }
+.version .name-link { font-size: inherit; letter-spacing: inherit; }

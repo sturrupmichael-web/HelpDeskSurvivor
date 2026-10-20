@@ -17,6 +17,7 @@ import { Floor } from '../game/floor.js';
 import { topScores } from '../game/leaderboard.js';
 import { accountScreen, conflictScreen, boardPost } from './account.js';
 import { profileScreen } from './profile.js';
+import { newsScreen, newsPending } from './news.js';
 import { VERSION } from '../version.js';
 import { account } from '../game/account.js';
 import { recordWiki } from '../game/wiki.js';
@@ -120,6 +121,7 @@ export class Screens {
 
   title() {
     if (this.pendingConflict) return this.pendingConflict();
+    if (newsPending(this.game.meta)) return newsScreen(this, () => this.title());
     const m = this.game.meta.data;
     const ch = CHARACTERS[m.selected];
     const wiki = wikiProgress(this.game.meta);
@@ -134,6 +136,7 @@ export class Screens {
       else if (act === 'board') this.leaderboard();
       else if (act === 'wiki') wikiScreen(this);
       else if (act === 'account') accountScreen(this);
+      else if (act === 'news') newsScreen(this, () => this.title(), true);
       else if (act === 'install') {
         window.installPrompt?.prompt();
         window.installPrompt = null;
@@ -168,7 +171,7 @@ export class Screens {
           <div><kbd>WASD</kbd>/<kbd>Arrows</kbd> move · your tools fire automatically</div>
           <div><kbd>Esc</kbd> pause · <kbd>M</kbd> mute${DEBUG_ALLOWED ? ' · <kbd>`</kbd> debug' : ''}</div>
         </div>
-        <p class="version">Version ${VERSION}</p>
+        <p class="version">Version ${VERSION} · <button class="name-link" data-act="news">What's new</button></p>
       </div>`,
       (code) => {
         if (code === 'Enter' || code === 'Space') go('start');
