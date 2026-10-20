@@ -110,6 +110,11 @@ export class Screens {
       else if (act === 'settings') this.settings(() => this.title());
       else if (act === 'maps') this.maps();
       else if (act === 'board') this.leaderboard();
+      else if (act === 'install') {
+        window.installPrompt?.prompt();
+        window.installPrompt = null;
+        this.title();
+      }
     };
     this.show(
       `<div class="panel title">
@@ -122,6 +127,7 @@ export class Screens {
         <button data-act="chars">Characters <kbd>C</kbd></button>
         <button data-act="shop">Overtime Shop ${PAY(m.pay)} <kbd>S</kbd></button>
         <button data-act="board">Leaderboard <kbd>B</kbd></button>
+        ${window.installPrompt ? '<button data-act="install">Install App</button>' : ''}
         <div class="row-buttons">
           <button data-act="ach">Achievements ${Object.keys(m.achievements ?? {}).length}/${ACHIEVEMENTS.length} <kbd>A</kbd></button>
           <button data-act="settings">Settings <kbd>O</kbd></button>

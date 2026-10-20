@@ -101,6 +101,15 @@ create policy "anyone can add" on scores for insert with check (true);
 Scores are not verified, so anyone determined enough can post a fake one; delete those
 rows in the Supabase Table Editor.
 
+## Install as an app
+
+The page is a Progressive Web App: `manifest.webmanifest` (name, icons in `icons/`,
+full screen) and `sw.js`, a service worker that keeps the last-loaded page and sprite
+sheets so the installed game also runs offline. It fetches from the network first, so a
+pushed update shows up the next time the game is opened online. dev.html never registers
+the worker. On Android, Chrome shows an Install App button on the title screen; on
+iPhone, use Share, then Add to Home Screen in Safari.
+
 ## Project layout
 
 ```
@@ -173,3 +182,4 @@ current `manifest.json` for the full list):
 8. **Map bosses:** The Rat's Nest (Server Room), The Angry Caller (Call Center) and The
    Night Janitor (Parking Garage) replace the Major Incident at 10:00 on their maps.
 9. **Online leaderboard:** top CSAT per map (Supabase), posted from the end-of-shift screen.
+10. **Installable app:** add to the home screen, runs full screen and offline.
