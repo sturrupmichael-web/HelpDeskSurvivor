@@ -1,0 +1,10 @@
+{
+  "name": "helpdesk-survivors",
+  "private": true,
+  "type": "module",
+  "description": "A survivors-like about working the IT helpdesk. No dependencies.",
+  "scripts": {
+    "sprites": "node sprites/build.js",
+    "serve": "python3 -m http.server 8000"
+  }
+}
