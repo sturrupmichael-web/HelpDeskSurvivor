@@ -214,3 +214,28 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
 .panel button.card.map:disabled { opacity: 0.6; }
 .unlock { color: var(--yellow); font-size: 14px; margin: 0 0 14px; animation: banner-blink 0.8s steps(2) 4; }
 @media (max-width: 600px) { .panel button.card.map { width: 100%; } }
+
+/* Online leaderboard */
+.board .tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px; }
+.panel .board .tabs button.tab, .panel.board .tabs button.tab { width: auto; flex: 1 1 150px; margin: 0; padding: 8px; font-size: 13px; }
+.panel button.tab.selected { background: var(--ink); border-color: var(--yellow); color: var(--yellow); }
+.board-body { min-height: 120px; }
+.board-table { width: 100%; max-width: 640px; }
+.board-table tr.head td { color: var(--gray); border-bottom: 1px dashed var(--gray); }
+.board-table td { color: var(--paper); text-align: left; }
+.board-table td:first-child, .board-table td:last-child { text-align: right; color: var(--yellow); }
+.board-table tr.me td { color: var(--blue); }
+.board-msg { color: var(--gray); font-size: 13px; }
+.board-note { color: var(--gray); font-size: 12px; margin: 10px 0 0; }
+.board-post { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+.board-post input { font: bold 15px var(--font); padding: 9px 10px; width: 200px; color: var(--paper); background: var(--ink); border: 3px solid var(--gray); }
+.board-post input:focus { outline: none; border-color: var(--yellow); }
+.panel .board-post button { width: auto; margin: 0; }
+.board-post .board-msg { flex-basis: 100%; text-align: center; }
+.board-table td { white-space: nowrap; }
+.board-table td:nth-child(2) { white-space: normal; word-break: break-word; }
+@media (max-width: 600px) {
+  .board-table { font-size: 12px; }
+  .board-table td { padding: 3px 4px; }
+  .board-table td:nth-child(3) { display: none; }
+}

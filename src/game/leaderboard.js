@@ -1,0 +1,54 @@
+// Online leaderboard: reads the top scores per map and posts a finished shift, through
+// Supabase's REST API (data/leaderboard.js). Ranked by CSAT. Every call resolves to
+// { ok, ... } instead of throwing, so the screens can just show a message when offline.
+
+import { LEADERBOARD as LB } from '../../data/leaderboard.js';
+
+const base = () => `${LB.url}/rest/v1/${LB.table}`;
+
+async function call(path, opts = {}) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), LB.timeout);
+  try {
+    const res = await fetch(base() + path, {
+      ...opts,
+      signal: ctl.signal,
+      headers: { apikey: LB.key, 'Content-Type': 'application/json', ...opts.headers },
+    });
+    if (!res.ok) return { ok: false, status: res.status };
+    return { ok: true, res };
+  } catch {
+    return { ok: false, status: 0 };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+// Trims a typed name to something safe to store: printable characters only.
+export function cleanName(name) {
+  return String(name ?? '')
+    .replace(/[^\p{L}\p{N} ._\-'!?]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, LB.nameMax);
+}
+
+// Top scores on one map: [{ name, character, seconds, csat, won }].
+export async function topScores(map) {
+  const q = `?select=name,character,seconds,csat,won&map=eq.${encodeURIComponent(map)}&order=csat.desc,seconds.desc&limit=${LB.top}`;
+  const r = await call(q);
+  if (!r.ok) return r;
+  return { ok: true, rows: await r.res.json() };
+}
+
+// Posts a shift and returns its rank on that map's board (1 = top).
+export async function postScore(row) {
+  const r = await call('', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(row) });
+  if (!r.ok) return r;
+  const c = await call(`?select=id&map=eq.${encodeURIComponent(row.map)}&csat=gt.${row.csat}`, {
+    method: 'HEAD',
+    headers: { Prefer: 'count=exact' },
+  });
+  const total = c.ok ? Number(c.res.headers.get('content-range')?.split('/')[1]) : NaN;
+  return { ok: true, rank: Number.isFinite(total) ? total + 1 : null };
+}

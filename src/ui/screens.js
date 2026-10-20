@@ -14,11 +14,15 @@ import { gamepadConnected } from '../engine/input.js';
 import { DEBUG_ALLOWED } from './debug.js';
 import { MAPS, MAP_ORDER } from '../../data/maps.js';
 import { Floor } from '../game/floor.js';
+import { topScores, postScore, cleanName } from '../game/leaderboard.js';
+import { LEADERBOARD } from '../../data/leaderboard.js';
 import { TITLE_TAGLINES, LEVEL_UP_LINES, BURNOUT_QUIPS, VICTORY_QUIPS, PAUSE_LINES } from '../../data/flavor.js';
 
 const pickLine = (list) => list[(Math.random() * list.length) | 0];
 const DIGITS = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8, Numpad1: 0, Numpad2: 1, Numpad3: 2, Numpad4: 3, Numpad5: 4, Numpad6: 5, Numpad7: 6, Numpad8: 7, Numpad9: 8 };
 const PAY = (n) => `<span class="pay">$${n.toLocaleString()}</span>`;
+// Names on the leaderboard come from other players: always escape before showing them.
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 export class Screens {
   constructor(root, game) {
@@ -105,6 +109,7 @@ export class Screens {
       else if (act === 'ach') this.achievementsScreen();
       else if (act === 'settings') this.settings(() => this.title());
       else if (act === 'maps') this.maps();
+      else if (act === 'board') this.leaderboard();
     };
     this.show(
       `<div class="panel title">
@@ -116,6 +121,7 @@ export class Screens {
         <button data-act="maps">Map: ${MAPS[m.map].name} <kbd>L</kbd></button>
         <button data-act="chars">Characters <kbd>C</kbd></button>
         <button data-act="shop">Overtime Shop ${PAY(m.pay)} <kbd>S</kbd></button>
+        <button data-act="board">Leaderboard <kbd>B</kbd></button>
         <div class="row-buttons">
           <button data-act="ach">Achievements ${Object.keys(m.achievements ?? {}).length}/${ACHIEVEMENTS.length} <kbd>A</kbd></button>
           <button data-act="settings">Settings <kbd>O</kbd></button>
@@ -135,6 +141,7 @@ export class Screens {
         if (code === 'Enter' || code === 'Space') go('start');
         else if (code === 'KeyC') go('chars');
         else if (code === 'KeyL') go('maps');
+        else if (code === 'KeyB') go('board');
         else if (code === 'KeyS') go('shop');
         else if (code === 'KeyA') go('ach');
         else if (code === 'KeyO') go('settings');
@@ -269,6 +276,45 @@ export class Screens {
 
   // Character select: pick an unlocked tech, or unlock one with Overtime Pay.
   // Map select: each map unlocks after a won shift on the one before it.
+  // Online leaderboard: top CSAT per map, one map at a time (1-4 or the tabs).
+  leaderboard(mapId = this.game.meta.data.map) {
+    const tabs = MAP_ORDER.map(
+      (id, i) => `<button class="tab ${id === mapId ? 'selected' : ''}" data-map="${id}">${MAPS[id].name} <kbd>${i + 1}</kbd></button>`,
+    ).join('');
+    this.show(
+      `<div class="panel wide board">
+        <h2>LEADERBOARD</h2>
+        <p class="sub">Top ${LEADERBOARD.top} CSAT scores per map. Post yours from the end-of-shift screen.</p>
+        <div class="tabs">${tabs}</div>
+        <div class="board-body"><p class="board-msg">Loading…</p></div>
+        <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
+      </div>`,
+      (code) => {
+        if (DIGITS[code] !== undefined && MAP_ORDER[DIGITS[code]]) this.leaderboard(MAP_ORDER[DIGITS[code]]);
+        else if (code === 'Escape' || code === 'Enter') this.title();
+        else return false;
+      },
+    );
+    this.bind('.tab', (i, el) => this.leaderboard(el.dataset.map));
+    this.bind('[data-act=back]', () => this.title());
+    const body = this.root.querySelector('.board-body');
+    topScores(mapId).then((r) => {
+      if (this.root.querySelector('.board-body') !== body) return; // screen changed meanwhile
+      if (!r.ok) body.innerHTML = '<p class="board-msg">Couldn\'t reach the leaderboard. Check your connection and try again.</p>';
+      else if (!r.rows.length) body.innerHTML = '<p class="board-msg">No scores on this map yet. Be the first.</p>';
+      else
+        body.innerHTML = `<table class="stats board-table">
+          <tr class="head"><td>#</td><td>Name</td><td>Technician</td><td>Time</td><td>CSAT</td></tr>
+          ${r.rows
+            .map(
+              (row, i) => `<tr${row.name === this.game.meta.data.playerName ? ' class="me"' : ''}><td>${i + 1}</td><td>${esc(row.name)}</td>
+              <td>${esc(row.character)}</td><td>${fmtTime(row.seconds)}${row.won ? ' <b class="ok">✓</b>' : ''}</td><td>${Number(row.csat).toLocaleString()}</td></tr>`,
+            )
+            .join('')}
+        </table>`;
+    });
+  }
+
   maps() {
     const g = this.game;
     const meta = g.meta;
@@ -567,6 +613,34 @@ export class Screens {
         else this.title();
       }
     };
+    let posted = false;
+    const post = () => {
+      const input = this.root.querySelector('.board-name');
+      const btn = this.root.querySelector('[data-act=post]');
+      const msg = this.root.querySelector('.board-post .board-msg');
+      if (!input || posted) return;
+      const name = cleanName(input.value);
+      if (!name) {
+        msg.textContent = 'Type a name first.';
+        setTimeout(() => input.focus(), 50); // after the key that got us here, so it isn't typed
+        return;
+      }
+      posted = true;
+      input.value = name;
+      input.disabled = btn.disabled = true;
+      input.blur();
+      msg.textContent = 'Posting…';
+      this.game.meta.data.playerName = name;
+      this.game.meta.save();
+      postScore({ name, map: s.map, character: s.character, seconds: Math.round(s.time), csat: s.csat, won: s.won }).then((r) => {
+        if (r.ok) msg.innerHTML = r.rank ? `Posted! You're <b>#${r.rank}</b> on the ${esc(s.mapName)} board.` : 'Posted!';
+        else {
+          posted = false;
+          input.disabled = btn.disabled = false;
+          msg.textContent = "Couldn't reach the leaderboard. Try again.";
+        }
+      });
+    };
     const rec = (k) => (s.records.includes(k) ? ' <b class="record">NEW RECORD</b>' : '');
     const topDamage = Math.max(1, ...s.tools.map((t) => t.damage));
     const tools = s.tools
@@ -594,6 +668,15 @@ export class Screens {
           </table>
           <div class="tools"><div class="tools-head">Damage by tool</div>${tools}</div>
         </div>
+        ${
+          s.cheated
+            ? '<p class="board-note">Debug mode was on this shift, so it can\'t go on the leaderboard.</p>'
+            : `<div class="board-post">
+                <input type="text" class="board-name" maxlength="${LEADERBOARD.nameMax}" placeholder="Your name" value="${esc(this.game.meta.data.playerName ?? '')}" autocomplete="off" spellcheck="false">
+                <button data-act="post">Post to Leaderboard <kbd>P</kbd></button>
+                <span class="board-msg"></span>
+              </div>`
+        }
         <div class="summary-buttons">
           <button class="primary" data-act="again">Next Shift <kbd>Enter</kbd></button>
           <button data-act="shop">Overtime Shop <kbd>S</kbd></button>
@@ -601,12 +684,19 @@ export class Screens {
         </div>
       </div>`,
       (code) => {
+        const typing = document.activeElement?.classList.contains('board-name');
+        if (typing) {
+          if (code === 'Enter') post();
+          else if (code === 'Escape') document.activeElement.blur();
+          return;
+        }
         if (code === 'Enter' || code === 'Space') go('again');
+        else if (code === 'KeyP') post();
         else if (code === 'KeyS') go('shop');
         else if (code === 'Escape') go('title');
         else return false;
       },
     );
-    this.bind('button', (i, el) => go(el.dataset.act));
+    this.bind('button', (i, el) => (el.dataset.act === 'post' ? post() : go(el.dataset.act)));
   }
 }

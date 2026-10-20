@@ -26,6 +26,11 @@ const emit = (code) => {
 
 export function initInput(canvas) {
   addEventListener('keydown', (e) => {
+    // Typing in a text box (leaderboard name): only Enter and Escape reach the game.
+    if (e.target instanceof HTMLInputElement && e.target.type === 'text') {
+      if ((e.code === 'Enter' || e.code === 'Escape') && !e.repeat) for (const fn of listeners) fn(e.code, e);
+      return;
+    }
     if (BLOCK.has(e.code)) e.preventDefault();
     down.add(e.code);
     if (!e.repeat) for (const fn of listeners) fn(e.code, e);

@@ -146,6 +146,7 @@ export class Game {
     this.score.reset();
     this.spawner.reset();
     this.achievements.startRun();
+    this.cheated = this.debug.on;
     this.time = 0;
     this.boss = null;
     this.bossParts.length = 0;
@@ -165,6 +166,7 @@ export class Game {
     sfx(won ? 'victory' : 'burnout');
     const stats = {
       won,
+      cheated: !!this.cheated,
       character: p.def.name,
       map: this.mapId,
       mapName: this.map.name,
@@ -353,7 +355,11 @@ export class Game {
   }
 
   onKey(code) {
-    if (code === 'Backquote') return DEBUG_ALLOWED && this.debug.toggle();
+    if (code === 'Backquote' && DEBUG_ALLOWED) {
+      this.debug.toggle();
+      if (this.debug.on) this.cheated = true; // no leaderboard for this shift
+      return;
+    }
     if (code === 'KeyM') {
       this.hud.setMuted(toggleMute());
       return;

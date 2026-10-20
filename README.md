@@ -40,7 +40,8 @@ npm run build
 | 1 / 2 / 3 or click | Pick a level-up card |
 | Enter | Close the Change Approved (chest) screen |
 | R | Reroll the level-up cards (needs the Escalation Path upgrade) |
-| L / C / S / A / O | Office Maps / Characters / Overtime Shop / Achievements / Settings (title screen) |
+| L / C / S / B / A / O | Office Maps / Characters / Overtime Shop / Leaderboard / Achievements / Settings (title screen) |
+| P | Post the shift to the online leaderboard (end-of-shift screen) |
 | T / O | Shift Stats / Settings (pause menu) |
 | A | When everything is maxed, always take the pizza from then on (no more level-up screens) |
 | M | Mute / unmute (remembered between visits) |
@@ -72,6 +73,33 @@ end-user, `8` add the next weapon you don't have, `9` skip to the next event, `0
 a Change Approved chest next to you, `-` evolution kit (every evolvable weapon at max
 level plus its passive, so the next chests evolve them), `=` start the next boss fight
 now, `]` add $1,000 Overtime Pay. The panel also shows FPS, worst frame time and entity counts. In the browser console, `game` is the live game object.
+
+## Online leaderboard
+
+Top 10 CSAT scores per map, stored in a free Supabase project (settings in
+`data/leaderboard.js`, requests in `src/game/leaderboard.js`). After a shift you can post
+it under a name; shifts where debug mode was on can't be posted. The page only holds the
+publishable key, and the table's row level security allows reading and adding rows,
+nothing else. To set up a fresh project, run this in Supabase's SQL Editor:
+
+```sql
+create table scores (
+  id bigint generated always as identity primary key,
+  name text not null check (char_length(name) between 1 and 16),
+  map text not null,
+  character text not null,
+  seconds int not null check (seconds between 0 and 3600),
+  csat int not null check (csat >= 0),
+  won boolean not null default false,
+  created_at timestamptz not null default now()
+);
+alter table scores enable row level security;
+create policy "anyone can read" on scores for select using (true);
+create policy "anyone can add" on scores for insert with check (true);
+```
+
+Scores are not verified, so anyone determined enough can post a fake one; delete those
+rows in the Supabase Table Editor.
 
 ## Project layout
 
@@ -144,3 +172,4 @@ current `manifest.json` for the full list):
    and the Standing Desk passive.
 8. **Map bosses:** The Rat's Nest (Server Room), The Angry Caller (Call Center) and The
    Night Janitor (Parking Garage) replace the Major Incident at 10:00 on their maps.
+9. **Online leaderboard:** top CSAT per map (Supabase), posted from the end-of-shift screen.
