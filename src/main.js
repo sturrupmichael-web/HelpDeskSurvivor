@@ -21,3 +21,4 @@ startLoop(
   },
 );
 window.game = game; // handy in the browser console
+document.getElementById('boot')?.remove();

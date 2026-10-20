@@ -10,7 +10,15 @@
   <canvas id="game"></canvas>
   <div id="hud"></div>
   <div id="overlay"></div>
-  <div id="debug"></div>
+  <div id="debug" style="display:none"></div>
+  <div id="boot">Loading…</div>
+  <script>
+    // Shows load errors on the page instead of a blank screen (main.js removes #boot once running).
+    addEventListener('error', (e) => {
+      const b = document.getElementById('boot');
+      if (b) b.textContent = 'The game failed to load: ' + (e.message || (e.target && (e.target.src || e.target.href)) || 'unknown error');
+    }, true);
+  </script>
   <script type="module" src="src/main.js"></script>
 </body>
 </html>
