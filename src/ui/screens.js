@@ -320,7 +320,7 @@ export class Screens {
           ${r.rows
             .map(
               (row, i) => `<tr${row.name === this.game.meta.data.playerName ? ' class="me"' : ''}><td>${i + 1}</td><td>${esc(row.name)}</td>
-              <td>${esc(row.character)}</td><td>${fmtTime(row.seconds)}${row.won ? ' <b class="ok">✓</b>' : ''}</td><td>${Number(row.csat).toLocaleString()}</td></tr>`,
+              <td>${esc(row.character)}</td><td>${fmtTime(Number(row.seconds) || 0)}${row.won ? ' <b class="ok">✓</b>' : ''}</td><td>${Number(row.csat).toLocaleString()}</td></tr>`,
             )
             .join('')}
         </table>`;
@@ -652,7 +652,7 @@ export class Screens {
         else {
           posted = false;
           input.disabled = btn.disabled = false;
-          msg.textContent = "Couldn't reach the leaderboard. Try again.";
+          msg.textContent = r.status ? "The leaderboard didn't accept that score. Try again in a minute." : "Couldn't reach the leaderboard. Try again.";
         }
       });
     };
