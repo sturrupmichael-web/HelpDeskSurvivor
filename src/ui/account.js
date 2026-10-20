@@ -36,6 +36,7 @@ export async function accountScreen(screens, back = () => screens.title()) {
       <h2>ACCOUNT</h2>
       ${kind}
       ${u ? `<p class="sync-line">${syncLine(game.cloud)}</p>` : ''}
+      ${account.lastError ? `<p class="sign-in-error">Google sign-in didn't finish: ${esc(account.lastError)}</p>` : ''}
       ${!u || u.guest ? '<button class="primary google" data-act="google">Sign in with Google <kbd>G</kbd></button>' : ''}
       ${u ? `<div class="name-row"><input type="text" class="board-name" maxlength="${LEADERBOARD.nameMax}" placeholder="New leaderboard name" autocomplete="off" spellcheck="false">
         <button data-act="rename">${name ? 'Change name' : 'Claim name'}</button></div><p class="board-msg"></p>` : ''}

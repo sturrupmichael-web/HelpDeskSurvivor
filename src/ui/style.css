@@ -295,3 +295,4 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
 .posting-as { font-size: 14px; }
 .name-row input { font: bold 15px var(--font); padding: 9px 10px; color: var(--paper); background: var(--ink); border: 3px solid var(--gray); }
 .name-row input:focus { outline: none; border-color: var(--yellow); }
+.sign-in-error { color: var(--yellow); font-size: 13px; }

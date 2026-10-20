@@ -33,7 +33,7 @@ startLoop(
 );
 window.game = game; // handy in the browser console
 if (signIn === 'linked' || signIn === 'signed-in') game.hud.toast({ icon: 'key', label: 'SIGNED IN WITH GOOGLE', name: account.user.email || 'Your progress now follows you' });
-else if (signIn === 'error') game.hud.toast({ icon: 'key', label: 'SIGN-IN', name: "Google sign-in didn't finish" });
+else if (signIn === 'error') game.hud.toast({ icon: 'key', label: "GOOGLE SIGN-IN DIDN'T FINISH", name: 'See the Account screen (U)' });
 game.cloud.sync();
 
 // Offline support for the installed app (sw.js). Not on dev.html, so code edits always

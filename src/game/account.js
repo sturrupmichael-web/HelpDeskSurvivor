@@ -68,6 +68,7 @@ async function request(url, opts = {}) {
 const returnUrl = () => location.origin + location.pathname;
 
 export const account = {
+  lastError: '', // why the last Google sign-in didn't finish, shown on the Account screen
   get user() {
     return session?.user ?? null;
   },
@@ -83,12 +84,18 @@ export const account = {
     sessionStorage.removeItem('hs-google');
     if (params.has('error')) {
       // That Google account already has a player: sign in to it instead of linking.
-      if (params.get('error_code') !== 'identity_already_exists') return 'error';
+      if (params.get('error_code') !== 'identity_already_exists') {
+        this.lastError = (params.get('error_description') || params.get('error_code') || params.get('error')).slice(0, 160);
+        return 'error';
+      }
       this.googleSignIn();
       return 'redirect';
     }
     const s = fromTokens(Object.fromEntries(params));
-    if (!s) return 'error';
+    if (!s) {
+      this.lastError = "The sign-in came back in a form the game didn't understand.";
+      return 'error';
+    }
     store(s);
     return pending === 'link' ? 'linked' : 'signed-in';
   },
