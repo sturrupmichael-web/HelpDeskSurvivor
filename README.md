@@ -19,7 +19,17 @@ cd HelpDeskSurvivor
 python -m http.server 8000      # or: python3 -m http.server 8000
 ```
 
-Then open <http://localhost:8000>.
+Then open <http://localhost:8000/dev.html>, which loads the code straight from `src/`, so
+edits show up on reload.
+
+`index.html` is the published page: a generated, single-file build with all the CSS and
+JavaScript inlined, because ad blockers such as uBlock Origin block some of the game's
+module file names. After changing anything in `src/` or `data/`, rebuild it:
+
+```sh
+npm install      # once, installs esbuild
+npm run build
+```
 
 ## Controls
 
