@@ -281,3 +281,17 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
 .review.rating-needs { border-left-color: var(--blue); }
 .review.rating-pip { border-left-color: var(--red); }
 .review.rating-pip .review-rating b { color: var(--red); }
+
+/* Account screen and the "which progress do you keep?" choice */
+.panel.account { max-width: 520px; }
+.panel.account p { line-height: 1.4; }
+.panel button.google { margin-top: 8px; }
+.sync-line { color: var(--gray); font-size: 13px; }
+.name-row { display: flex; gap: 8px; margin-top: 12px; }
+.name-row .board-name { flex: 1; min-width: 0; }
+.name-row button { margin: 0; width: auto; }
+.save-picks { display: flex; gap: 12px; flex-wrap: wrap; }
+.panel button.save-pick { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px; text-align: left; font-weight: normal; }
+.posting-as { font-size: 14px; }
+.name-row input { font: bold 15px var(--font); padding: 9px 10px; color: var(--paper); background: var(--ink); border: 3px solid var(--gray); }
+.name-row input:focus { outline: none; border-color: var(--yellow); }

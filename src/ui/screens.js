@@ -14,7 +14,9 @@ import { gamepadConnected } from '../engine/input.js';
 import { DEBUG_ALLOWED } from './debug.js';
 import { MAPS, MAP_ORDER } from '../../data/maps.js';
 import { Floor } from '../game/floor.js';
-import { topScores, postScore, cleanName } from '../game/leaderboard.js';
+import { topScores } from '../game/leaderboard.js';
+import { accountScreen, conflictScreen, boardPost } from './account.js';
+import { account } from '../game/account.js';
 import { recordWiki } from '../game/wiki.js';
 import { wikiScreen, wikiProgress } from './wiki.js';
 import { LEADERBOARD } from '../../data/leaderboard.js';
@@ -115,6 +117,7 @@ export class Screens {
   }
 
   title() {
+    if (this.pendingConflict) return this.pendingConflict();
     const m = this.game.meta.data;
     const ch = CHARACTERS[m.selected];
     const wiki = wikiProgress(this.game.meta);
@@ -128,6 +131,7 @@ export class Screens {
       else if (act === 'maps') this.maps();
       else if (act === 'board') this.leaderboard();
       else if (act === 'wiki') wikiScreen(this);
+      else if (act === 'account') accountScreen(this);
       else if (act === 'install') {
         window.installPrompt?.prompt();
         window.installPrompt = null;
@@ -146,6 +150,7 @@ export class Screens {
         <button data-act="shop">Overtime Shop ${PAY(m.pay)} <kbd>S</kbd></button>
         <button data-act="board">Leaderboard <kbd>B</kbd></button>
         <button data-act="wiki">Help Desk Wiki ${wiki.found}/${wiki.total} <kbd>K</kbd></button>
+        <button data-act="account">${!account.user ? 'Account: not signed in' : account.user.guest ? 'Account: Guest' : 'Account: Google'} <kbd>U</kbd></button>
         ${window.installPrompt ? '<button data-act="install">Install App</button>' : ''}
         <div class="row-buttons">
           <button data-act="ach">Achievements ${Object.keys(m.achievements ?? {}).length}/${ACHIEVEMENTS.length} <kbd>A</kbd></button>
@@ -168,6 +173,7 @@ export class Screens {
         else if (code === 'KeyL') go('maps');
         else if (code === 'KeyB') go('board');
         else if (code === 'KeyK') go('wiki');
+        else if (code === 'KeyU') go('account');
         else if (code === 'KeyS') go('shop');
         else if (code === 'KeyA') go('ach');
         else if (code === 'KeyO') go('settings');
@@ -642,34 +648,6 @@ export class Screens {
         else this.title();
       }
     };
-    let posted = false;
-    const post = () => {
-      const input = this.root.querySelector('.board-name');
-      const btn = this.root.querySelector('[data-act=post]');
-      const msg = this.root.querySelector('.board-post .board-msg');
-      if (!input || posted) return;
-      const name = cleanName(input.value);
-      if (!name) {
-        msg.textContent = 'Type a name first.';
-        setTimeout(() => input.focus(), 50); // after the key that got us here, so it isn't typed
-        return;
-      }
-      posted = true;
-      input.value = name;
-      input.disabled = btn.disabled = true;
-      input.blur();
-      msg.textContent = 'Posting…';
-      this.game.meta.data.playerName = name;
-      this.game.meta.save();
-      postScore({ name, map: s.map, character: s.character, seconds: Math.round(s.time), csat: s.csat, won: s.won }).then((r) => {
-        if (r.ok) msg.innerHTML = r.rank ? `Posted! You're <b>#${r.rank}</b> on the ${esc(s.mapName)} board.` : 'Posted!';
-        else {
-          posted = false;
-          input.disabled = btn.disabled = false;
-          msg.textContent = r.status ? "The leaderboard didn't accept that score. Try again in a minute." : "Couldn't reach the leaderboard. Try again.";
-        }
-      });
-    };
     const rec = (k) => (s.records.includes(k) ? ' <b class="record">NEW RECORD</b>' : '');
     const topDamage = Math.max(1, ...s.tools.map((t) => t.damage));
     const tools = s.tools
@@ -702,11 +680,7 @@ export class Screens {
         ${
           s.cheated
             ? '<p class="board-note">Debug mode was on this shift, so it can\'t go on the leaderboard.</p>'
-            : `<div class="board-post">
-                <input type="text" class="board-name" maxlength="${LEADERBOARD.nameMax}" placeholder="Your name" value="${esc(this.game.meta.data.playerName ?? '')}" autocomplete="off" spellcheck="false">
-                <button data-act="post">Post to Leaderboard <kbd>P</kbd></button>
-                <span class="board-msg"></span>
-              </div>`
+            : '<div class="board-post"></div>'
         }
         <div class="summary-buttons">
           <button class="primary" data-act="again">Next Shift <kbd>Enter</kbd></button>
@@ -728,6 +702,7 @@ export class Screens {
         else return false;
       },
     );
-    this.bind('button', (i, el) => (el.dataset.act === 'post' ? post() : go(el.dataset.act)));
+    const post = s.cheated ? () => {} : boardPost(this, s);
+    this.bind('.summary-buttons button', (i, el) => go(el.dataset.act));
   }
 }

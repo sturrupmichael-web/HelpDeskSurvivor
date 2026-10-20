@@ -3,6 +3,7 @@
 // { ok, ... } instead of throwing, so the screens can just show a message when offline.
 
 import { LEADERBOARD as LB } from '../../data/leaderboard.js';
+import { account } from './account.js';
 
 const base = () => `${LB.url}/rest/v1/${LB.table}`;
 
@@ -41,9 +42,10 @@ export async function topScores(map) {
   return { ok: true, rows: await r.res.json() };
 }
 
-// Posts a shift and returns its rank on that map's board (1 = top).
+// Posts a shift for the signed-in player and returns its rank on that map's board
+// (1 = top). The database fills in the player's name from their account.
 export async function postScore(row) {
-  const r = await call('', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(row) });
+  const r = await account.rest(LB.table, { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(row) });
   if (!r.ok) return r;
   const c = await call(`?select=id&map=eq.${encodeURIComponent(row.map)}&csat=gt.${row.csat}`, {
     method: 'HEAD',

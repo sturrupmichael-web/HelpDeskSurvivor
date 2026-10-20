@@ -38,6 +38,8 @@ import { Score } from './score.js';
 import { Fx } from './fx.js';
 import { recordWiki } from './wiki.js';
 import { performanceReview } from './review.js';
+import { CloudSave } from './cloudsave.js';
+import { conflictScreen } from '../ui/account.js';
 import { Hud } from '../ui/hud.js';
 import { Screens } from '../ui/screens.js';
 import { Debug, DEBUG_ALLOWED } from '../ui/debug.js';
@@ -72,6 +74,22 @@ export class Game {
     this.screens = new Screens(document.getElementById('overlay'), this);
     this.debug = new Debug(document.getElementById('debug'), this);
     this.meta = new Meta();
+    this.cloud = new CloudSave(this.meta);
+    // Both sides changed: ask on the next menu, never mid-shift.
+    this.cloud.onConflict = (local, cloud, choose) => {
+      const s = this.screens;
+      s.pendingConflict = () => {
+        s.pendingConflict = null;
+        conflictScreen(s, local, cloud, choose);
+      };
+      if (s.root.querySelector('.panel.title')) s.title();
+    };
+    // The account's progress replaced this device's: refresh the title screen.
+    this.cloud.onChange = () => {
+      if (this.state !== 'title') return;
+      this.setMap(this.meta.data.map);
+      if (this.screens.root.querySelector('.panel.title')) this.screens.title();
+    };
     this.settings = loadSettings();
     this.setMap(this.meta.data.map);
     this.achievements = new Achievements(this);

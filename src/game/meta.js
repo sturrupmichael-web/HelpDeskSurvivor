@@ -26,23 +26,32 @@ function fresh() {
 
 export class Meta {
   constructor() {
-    this.data = fresh();
+    this.onSave = null; // set by the cloud save (src/game/cloudsave.js)
+    let saved = null;
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) Object.assign(this.data, JSON.parse(raw));
+      if (raw) saved = JSON.parse(raw);
     } catch {
       // No storage, or a corrupt save: start fresh.
     }
-    if (!CHARACTERS[this.data.selected]) this.data.selected = 'tier1';
-    if (!this.mapUnlocked(this.data.map)) this.data.map = 'office';
+    this.replace(saved);
   }
 
-  save() {
+  // Swaps in a whole save (from storage or the cloud), filling in anything missing.
+  replace(saved, store = false) {
+    this.data = Object.assign(fresh(), saved);
+    if (!CHARACTERS[this.data.selected]) this.data.selected = 'tier1';
+    if (!this.mapUnlocked(this.data.map)) this.data.map = 'office';
+    if (store) this.save(false);
+  }
+
+  save(sync = true) {
     try {
       localStorage.setItem(KEY, JSON.stringify(this.data));
     } catch {
       // Storage blocked; progress lasts for this page only.
     }
+    if (sync) this.onSave?.();
   }
 
   // Total bonus for one stat from everything bought in the shop.

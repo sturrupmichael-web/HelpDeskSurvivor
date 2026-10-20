@@ -64,7 +64,7 @@ export class Hud {
   toast(a) {
     const t = document.createElement('div');
     t.className = 'toast';
-    t.innerHTML = `${icon(a.icon, 32)}<div><small>ACHIEVEMENT UNLOCKED</small><b></b></div>`;
+    t.innerHTML = `${icon(a.icon, 32)}<div><small>${a.label ?? 'ACHIEVEMENT UNLOCKED'}</small><b></b></div>`;
     t.querySelector('b').textContent = a.name;
     this.toasts.appendChild(t);
     setTimeout(() => t.classList.add('out'), 3500);
