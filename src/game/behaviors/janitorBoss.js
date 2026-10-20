@@ -37,7 +37,7 @@ function mop(e, game, m, wet) {
     game.zones.add(e.x + Math.cos(a) * r, e.y + Math.sin(a) * r, wet);
   }
   game.fx.burst(e.x + e.ax * 30, e.y + e.ay * 30, ['#41a6f6', '#f4f4f4'], 12);
-  sfx('whoosh');
+  sfx('slosh', e.x);
 }
 
 function startAttack(e, game) {
@@ -51,6 +51,7 @@ function startAttack(e, game) {
   if (e.n === 'charge') {
     e.state = CHARGE_TELL;
     e.stateT = p.charge.telegraph;
+    sfx('warn', e.x);
     e.pose = LEAN;
   } else {
     e.state = POSE;
@@ -101,7 +102,7 @@ export default {
           e.n = 'charge';
           e.ax2 = 0; // has the charge hit you yet?
           e.pose = -1;
-          sfx('whoosh');
+          sfx('charge', e.x);
         }
         break;
       case CHARGING: {

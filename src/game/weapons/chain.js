@@ -3,6 +3,7 @@
 // stats: damage, cooldown, jumps, jumpRange, stun
 
 import { damageEnemy, nearestEnemy, stunEnemy } from '../enemies.js';
+import { sfx } from '../../engine/audio.js';
 
 const MAX_PATH = 24;
 
@@ -44,7 +45,10 @@ export default {
       y = e.y;
       range = s.jumpRange * p.stats.area;
     }
-    if (w.hitN) w.flashT = 0.22;
+    if (w.hitN) {
+      w.flashT = 0.22;
+      sfx('zap');
+    }
   },
   draw(w, game, ctx) {
     if (w.flashT <= 0 || w.pathN < 4) return;

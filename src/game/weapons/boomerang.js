@@ -4,6 +4,7 @@
 
 import { fireProjectile } from '../projectiles.js';
 import { nearestEnemy } from '../enemies.js';
+import { sfx } from '../../engine/audio.js';
 
 export default {
   update(w, game, dt) {
@@ -11,6 +12,7 @@ export default {
     const p = game.player;
     if ((w.timer -= dt) > 0) return;
     w.timer += s.cooldown * p.stats.cooldown;
+    sfx('throw');
     const t = nearestEnemy(game, p.x, p.y, 400);
     const base = t ? Math.atan2(t.y - p.y, t.x - p.x) : p.flip ? Math.PI : 0;
     const speed = s.speed * p.stats.attackSpeed;

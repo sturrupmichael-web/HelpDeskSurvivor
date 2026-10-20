@@ -5,6 +5,7 @@
 
 import { fireProjectile } from '../projectiles.js';
 import { nearestEnemy } from '../enemies.js';
+import { sfx } from '../../engine/audio.js';
 
 const MAX_TURRETS = 8;
 const SPREAD_ANGLE = 0.22; // radians between bolts of one shot
@@ -37,6 +38,7 @@ export default {
         slot.life = s.duration;
         slot.fireT = 0.2;
         slot.born = game.time;
+        sfx('deploy', slot.x);
       }
     }
     const range = s.range * p.stats.area;
@@ -53,6 +55,7 @@ export default {
         continue;
       }
       t.fireT = s.fireRate / p.stats.attackSpeed;
+      sfx('blip', t.x);
       const n = s.spread ?? 1;
       const base = Math.atan2(e.y - (t.y - 12), e.x - t.x);
       for (let k = 0; k < n; k++) {

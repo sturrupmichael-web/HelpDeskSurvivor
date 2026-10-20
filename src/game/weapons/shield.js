@@ -20,7 +20,7 @@ export default {
       if ((w.timer -= dt) > 0) return;
       w.timer = s.cooldown * p.stats.cooldown;
       w.active = s.duration;
-      sfx('whoosh');
+      sfx('bubble');
     }
     w.active -= dt;
     const radius = s.radius * p.stats.area;

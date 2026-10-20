@@ -76,7 +76,7 @@ function scream(e, game, s) {
   }
   game.fx.ring(e.x, e.y + MOUTH_Y, 60, '#b13e53', 0.4);
   game.camera.shake(5);
-  sfx('siren');
+  sfx('scream', e.x);
 }
 
 function startAttack(e, game) {
@@ -89,6 +89,7 @@ function startAttack(e, game) {
   if (e.n === 'scream') {
     e.state = SCREAM_TELL;
     e.stateT = p.scream.telegraph;
+    sfx('warn', e.x);
     e.pose = SCREAM;
   } else {
     e.state = POSE;

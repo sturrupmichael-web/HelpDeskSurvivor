@@ -7,6 +7,7 @@
 const INNER = 0.6; // inner ring radius, relative to the outer one
 
 import { damageEnemy } from '../enemies.js';
+import { sfx } from '../../engine/audio.js';
 
 const buf = new Int32Array(4096);
 
@@ -25,6 +26,7 @@ export default {
       if (w.active <= 0) w.timer = s.cooldown * p.stats.cooldown;
     } else if ((w.timer -= dt) <= 0) {
       w.active = s.duration;
+      sfx('hum');
     }
     if (w.active <= 0) return;
     const radius = s.radius * p.stats.area;

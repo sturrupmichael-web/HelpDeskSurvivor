@@ -11,7 +11,7 @@ import { CHARACTERS } from '../../data/player.js';
 import { SPAWNER, EVENTS } from '../../data/waves.js';
 import { TICKETS, MAX_ITEMS } from '../../data/pickups.js';
 import { EVOLUTIONS } from '../../data/evolutions.js';
-import { sfx, toggleMute, startMusic, stopMusic, duckMusic, setVolumes, setMusicStyle } from '../engine/audio.js';
+import { sfx, toggleMute, startMusic, stopMusic, duckMusic, setVolumes, setMusicStyle, setListener } from '../engine/audio.js';
 import { drawTouchStick } from '../engine/input.js';
 import { loadSettings, saveSettings } from './settings.js';
 import { Achievements } from './achievements.js';
@@ -152,6 +152,7 @@ export class Game {
     this.boss = null;
     this.bossParts.length = 0;
     this.victoryT = 0;
+    this.beatT = 0; // low-sanity heartbeat timer
     this.autoPizza = false; // everything maxed and the player chose "always take the pizza"
     this.camera.snap(0, 0);
     this.hud.reset(this);
@@ -400,6 +401,12 @@ export class Game {
     this.score.update(dt);
     this.achievements.update(dt);
     this.camera.follow(p.x, p.y, dt);
+    setListener(p.x);
+    // Low sanity: you can hear your pulse.
+    if (p.hp > 0 && p.hp < p.maxHp * 0.25 && (this.beatT -= dt) <= 0) {
+      this.beatT = 0.9;
+      sfx('heartbeat');
+    }
 
     if (p.hp <= 0 && p.revives > 0) this.revive();
     else if (p.hp <= 0) this.endRun(false);

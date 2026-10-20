@@ -27,6 +27,7 @@ function startLash(e, game) {
   for (let i = 0; i < n; i++) e.lines.push(base + (i / n) * Math.PI * 2 + (i ? (Math.random() - 0.5) * 0.5 : 0));
   e.state = LASH_TELL;
   e.stateT = p.lashTelegraph;
+  sfx('warn', e.x);
   e.anim = 'attack';
 }
 
@@ -112,7 +113,7 @@ export default {
         e.stateT = LASH_SHOW;
         if (lashHits(e, game) && hurtPlayer(game, p.lashDamage)) game.onPlayerHurt();
         game.camera.shake(small ? 2 : 4);
-        sfx('whoosh');
+        sfx('snap', e.x);
       }
     } else if ((e.stateT -= dt) <= 0) {
       e.state = WALK;

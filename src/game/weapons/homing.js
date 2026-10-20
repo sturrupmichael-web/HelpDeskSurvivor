@@ -3,6 +3,7 @@
 // stats: damage, cooldown, count, speed, turn, life
 
 import { fireProjectile } from '../projectiles.js';
+import { sfx } from '../../engine/audio.js';
 
 // Picks a random enemy that is far from the player but still near the screen.
 function farTarget(game) {
@@ -28,6 +29,7 @@ export default {
     const p = game.player;
     if ((w.timer -= dt) > 0) return;
     w.timer += s.cooldown * p.stats.cooldown;
+    sfx('launch');
     for (let i = 0; i < s.count + (p.extraCount ?? 0); i++) {
       const t = farTarget(game);
       const a = Math.random() * Math.PI * 2; // launch in a random direction, then curve in

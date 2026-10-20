@@ -4,6 +4,7 @@
 //        hitInterval
 
 import { damageEnemy } from '../enemies.js';
+import { sfx } from '../../engine/audio.js';
 
 const TAU = Math.PI * 2;
 const buf = new Int32Array(4096);
@@ -15,7 +16,9 @@ export default {
   update(w, game, dt) {
     const s = w.stats;
     const p = game.player;
+    const prev = w.angle;
     w.angle = (w.angle + s.rotSpeed * p.stats.attackSpeed * dt) % TAU;
+    if (w.angle < prev) sfx('ping'); // the beam came all the way round
     const range = s.range * p.stats.area;
     const dmg = s.damage * p.stats.damage;
     const now = game.time;

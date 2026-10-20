@@ -7,6 +7,7 @@
 
 import { fireProjectile } from '../projectiles.js';
 import { nearestEnemy } from '../enemies.js';
+import { sfx } from '../../engine/audio.js';
 
 const BURST_GAP = 0.08;
 const MAX_TARGETS = 16;
@@ -39,6 +40,7 @@ export default {
     if (w.burstLeft <= 0 || (w.burstT -= dt) > 0) return;
     w.burstT = BURST_GAP;
     w.burstLeft--;
+    sfx('shoot');
     const t = nearestEnemy(game, p.x, p.y, 420, s.homing ? w.skip : undefined);
     if (t && s.homing && w.targetN < MAX_TARGETS) w.targets[w.targetN++] = t.uid;
     const dx = t ? t.x - p.x : p.flip ? -1 : 1;

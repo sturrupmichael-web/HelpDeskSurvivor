@@ -143,7 +143,7 @@ export function resolveEnemies(game, dt) {
       game.fx.burst(e.x, e.y - 6, e.def.particle, 14);
       game.fx.ring(e.x, e.y, 28, '#ffcd75');
       game.camera.shake(4);
-      sfx('boom');
+      sfx('boom', e.x);
       if (hurtPlayer(game, e.def.explode.damage)) game.onPlayerHurt();
     } else drain += e.damage;
   }
@@ -161,7 +161,7 @@ export function damageEnemy(game, e, amount, weapon, dx, dy, knockback) {
   else if (e.flash < -0.2) e.flash = 0.06;
   if (weapon) weapon.damageDone += Math.min(amount, e.hp + amount);
   game.fx.number(e.x, e.y - 14, amount);
-  sfx('hit');
+  sfx(e.def.boss ? 'bosshit' : 'hit', e.x);
   if (knockback && (dx || dy)) {
     const d = Math.hypot(dx, dy);
     e.kx += (dx / d) * knockback * e.kbMul;
@@ -182,7 +182,7 @@ export function killEnemy(game, e) {
   game.fx.burst(e.x, e.y - 6, e.def.particle, 6);
   game.score.onKill();
   game.achievements.onKill(e.def.sprite);
-  sfx('pop');
+  sfx('pop', e.x);
   rollItemDrops(game, e);
   if (e.def.boss) game.onBossDown(e);
   const od = e.def.onDeath;

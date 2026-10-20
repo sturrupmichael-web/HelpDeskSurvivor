@@ -52,7 +52,7 @@ export default {
       const hit = (along >= -e.r && along <= range + e.r) || (s.sides > 1 && -along >= -e.r && -along <= range + e.r);
       if (hit) damageEnemy(game, e, dmg, w, dx, dy, s.knockback);
     }
-    sfx('whoosh');
+    sfx('snap');
   },
   draw(w, game, ctx) {
     if (w.flash <= 0) return;

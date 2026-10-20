@@ -3,6 +3,7 @@
 // stats: damage, cooldown, radius, knockback
 
 import { damageEnemy } from '../enemies.js';
+import { sfx } from '../../engine/audio.js';
 
 const buf = new Int32Array(4096);
 
@@ -15,6 +16,7 @@ export default {
     const p = game.player;
     if ((w.timer -= dt) > 0) return;
     w.timer += s.cooldown * p.stats.cooldown;
+    sfx('wipe');
     const radius = s.radius * p.stats.area;
     const r2 = radius * radius;
     const dmg = s.damage * p.stats.damage;

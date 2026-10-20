@@ -204,7 +204,17 @@ you; touching one collects it.
 BPM. The track itself (chords, bass line, melody) is the `CHORDS`, `BASS_LINE` and
 `MELODY` tables in `src/engine/audio.js`. It plays quieter while paused and stops on
 the summary screen.
-Rapid-fire sounds (hits, kills, ticket pickups) are throttled in `src/engine/audio.js`.
+Rapid-fire sounds (hits, kills, ticket pickups) are throttled in `src/engine/audio.js`,
+get a small random pitch spread (`VARY`), and at most 7 sounds may start in any 50 ms
+(level-ups, warnings and other important sounds always play).
+
+`mastering` sets the mix: sound effects go through a compressor (`threshold`, `ratio`,
+`makeup`), everything gets a little room reverb (`reverb`, `sfxReverb`, `musicReverb`), and
+a limiter at the end means nothing clips. Sounds in the world pan left or right of you.
+Measured alone at the master output (loudest 20 ms): music about -29 dB, hits -35 dB,
+tool sounds -24 to -35 dB, boss warnings -24 dB, the big moments (chest, level-up,
+victory, explosions) -13 to -19 dB. Scripts: scratchpad `test3/audiosfx.mjs` and
+`audiomix.mjs`.
 
 ## CSAT (`data/scoring.js`)
 

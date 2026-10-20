@@ -65,10 +65,12 @@ function startAttack(e, game) {
   if (name === 'charge') {
     e.state = CHARGE_TELL;
     e.stateT = p.charge.telegraph;
+    sfx('warn', e.x);
     e.pose = POINT;
   } else if (name === 'cone') {
     e.state = CONE_TELL;
     e.stateT = p.cone.telegraph;
+    sfx('warn', e.x);
     e.pose = POINT;
   } else {
     e.state = POSE;
@@ -130,7 +132,7 @@ export default {
           e.t1 = 0; // has the charge hit you yet?
           e.anim = 'walk';
           e.pose = -1;
-          sfx('whoosh');
+          sfx('charge', e.x);
         }
         break;
       case CHARGING: {
