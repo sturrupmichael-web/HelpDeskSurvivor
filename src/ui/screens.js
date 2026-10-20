@@ -16,6 +16,8 @@ import { MAPS, MAP_ORDER } from '../../data/maps.js';
 import { Floor } from '../game/floor.js';
 import { topScores } from '../game/leaderboard.js';
 import { accountScreen, conflictScreen, boardPost } from './account.js';
+import { profileScreen } from './profile.js';
+import { VERSION } from '../version.js';
 import { account } from '../game/account.js';
 import { recordWiki } from '../game/wiki.js';
 import { wikiScreen, wikiProgress } from './wiki.js';
@@ -166,6 +168,7 @@ export class Screens {
           <div><kbd>WASD</kbd>/<kbd>Arrows</kbd> move · your tools fire automatically</div>
           <div><kbd>Esc</kbd> pause · <kbd>M</kbd> mute${DEBUG_ALLOWED ? ' · <kbd>`</kbd> debug' : ''}</div>
         </div>
+        <p class="version">Version ${VERSION}</p>
       </div>`,
       (code) => {
         if (code === 'Enter' || code === 'Space') go('start');
@@ -205,6 +208,7 @@ export class Screens {
         </div>
         <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
         <p class="tiny"><kbd>M</kbd> mutes everything at any time.</p>
+        <p class="version">Version ${VERSION}</p>
       </div>`,
       (code) => {
         if (code === 'Escape' || code === 'Enter') back();
@@ -316,7 +320,7 @@ export class Screens {
     this.show(
       `<div class="panel wide board">
         <h2>LEADERBOARD</h2>
-        <p class="sub">Top ${LEADERBOARD.top} CSAT scores per map. Post yours from the end-of-shift screen.</p>
+        <p class="sub">Top ${LEADERBOARD.top} CSAT scores per map. Tap a name to see that player's profile.</p>
         <div class="tabs">${tabs}</div>
         <div class="board-body"><p class="board-msg">Loading…</p></div>
         <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
@@ -339,11 +343,17 @@ export class Screens {
           <tr class="head"><td>#</td><td>Name</td><td>Technician</td><td>Time</td><td>CSAT</td></tr>
           ${r.rows
             .map(
-              (row, i) => `<tr${row.name === this.game.meta.data.playerName ? ' class="me"' : ''}><td>${i + 1}</td><td>${esc(row.name)}</td>
+              (row, i) => `<tr${row.name === this.game.meta.data.playerName ? ' class="me"' : ''}><td>${i + 1}</td><td><button class="name-link" data-name="${esc(row.name)}">${esc(row.name)}</button></td>
               <td>${esc(row.character)}</td><td>${fmtTime(Number(row.seconds) || 0)}${row.won ? ' <b class="ok">✓</b>' : ''}</td><td>${Number(row.csat).toLocaleString()}</td></tr>`,
             )
             .join('')}
         </table>`;
+      body.querySelectorAll('.name-link').forEach((el) =>
+        el.addEventListener('click', () => {
+          sfx('click');
+          profileScreen(this, el.dataset.name, () => this.leaderboard(mapId));
+        }),
+      );
     });
   }
 

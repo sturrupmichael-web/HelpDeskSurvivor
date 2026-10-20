@@ -8,6 +8,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { LEADERBOARD } from './data/leaderboard.js';
 
+// Version = build time in UTC, e.g. 2026.10.20-2131 (see src/version.js).
+const VERSION = new Date().toISOString().replace(/^(\d+)-(\d+)-(\d+)T(\d+):(\d+).*/, '$1.$2.$3-$4$5');
 const js = await build({
   entryPoints: ['src/main.js'],
   bundle: true,
@@ -15,6 +17,7 @@ const js = await build({
   target: 'es2022',
   minify: true,
   write: false,
+  define: { __VERSION__: JSON.stringify(VERSION) },
 });
 const css = readFileSync('src/ui/style.css', 'utf8');
 const html = readFileSync('dev.html', 'utf8')
@@ -26,7 +29,7 @@ const html = readFileSync('dev.html', 'utf8')
 writeFileSync('index.html', withCsp(html));
 // dev.html keeps the same policy; its hash list is refreshed here when its inline script changes.
 writeFileSync('dev.html', withCsp(readFileSync('dev.html', 'utf8')));
-console.log(`index.html: ${(html.length / 1024).toFixed(0)} KB`);
+console.log(`index.html: ${(html.length / 1024).toFixed(0)} KB, version ${VERSION}`);
 
 // Content Security Policy: the page may only run its own scripts (the inline ones are
 // allowed by hash, so an injected <script> won't run) and only talk to this site and

@@ -6,6 +6,7 @@ import { initAudio } from './engine/audio.js';
 import { startLoop } from './engine/loop.js';
 import { Game } from './game/game.js';
 import { account } from './game/account.js';
+import { VERSION } from './version.js';
 
 // Chrome/Android offer "install this app"; keep the offer for the title screen's button.
 addEventListener('beforeinstallprompt', (e) => {
@@ -32,6 +33,7 @@ startLoop(
   },
 );
 window.game = game; // handy in the browser console
+console.info('Helpdesk Survivors version', VERSION);
 if (signIn === 'linked' || signIn === 'signed-in') game.hud.toast({ icon: 'key', label: 'SIGNED IN WITH GOOGLE', name: account.user.email || 'Your progress now follows you' });
 else if (signIn === 'error') game.hud.toast({ icon: 'key', label: "GOOGLE SIGN-IN DIDN'T FINISH", name: 'See the Account screen (U)' });
 game.cloud.sync();

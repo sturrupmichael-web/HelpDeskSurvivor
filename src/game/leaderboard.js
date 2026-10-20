@@ -54,3 +54,24 @@ export async function postScore(row) {
   const total = c.ok ? Number(c.res.headers.get('content-range')?.split('/')[1]) : NaN;
   return { ok: true, rank: Number.isFinite(total) ? total + 1 : null };
 }
+
+// A player's public profile by leaderboard name (supabase/profiles.sql), or null when
+// that name has no account (scores posted before accounts) or the player is banned.
+export async function playerProfile(name) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), LB.timeout);
+  try {
+    const res = await fetch(`${LB.url}/rest/v1/rpc/player_profile`, {
+      method: 'POST',
+      signal: ctl.signal,
+      headers: { apikey: LB.key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_name: name }),
+    });
+    if (!res.ok) return { ok: false, status: res.status };
+    return { ok: true, profile: await res.json() };
+  } catch {
+    return { ok: false, status: 0 };
+  } finally {
+    clearTimeout(t);
+  }
+}

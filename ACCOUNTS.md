@@ -79,3 +79,14 @@ together.
   Google account that already has a player is switched to that player; sign out keeps
   local progress. All existing game tests still pass.
 - Not tested: real Google and real Supabase, which this container can't reach.
+
+## Player profiles and versions (added 2026-10-20)
+
+- Tap a name on the leaderboard (or **My profile** on the Account screen) to see that
+  player's profile: when they joined, best CSAT and longest shift per map, most played
+  character, shifts worked and unlocked achievements. Served by the `player_profile`
+  function in `supabase/profiles.sql`; it never returns an email address, and banned
+  players have no profile. Scores from before accounts show "no profile".
+- Every build is stamped with a version, the build time in UTC (e.g. `2026.10.20-2117`).
+  It shows at the bottom of the title and Settings screens, in the browser console, and
+  in the `version` column of each posted score (Table Editor, `scores`).

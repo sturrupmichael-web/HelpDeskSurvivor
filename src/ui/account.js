@@ -5,6 +5,8 @@ import { sfx } from '../engine/audio.js';
 import { account } from '../game/account.js';
 import { cleanName, postScore } from '../game/leaderboard.js';
 import { LEADERBOARD } from '../../data/leaderboard.js';
+import { profileScreen } from './profile.js';
+import { VERSION } from '../version.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -40,6 +42,7 @@ export async function accountScreen(screens, back = () => screens.title()) {
       ${!u || u.guest ? '<button class="primary google" data-act="google">Sign in with Google <kbd>G</kbd></button>' : ''}
       ${u ? `<div class="name-row"><input type="text" class="board-name" maxlength="${LEADERBOARD.nameMax}" placeholder="New leaderboard name" autocomplete="off" spellcheck="false">
         <button data-act="rename">${name ? 'Change name' : 'Claim name'}</button></div><p class="board-msg"></p>` : ''}
+      ${name ? '<button data-act="profile">My profile</button>' : ''}
       ${u && !u.guest ? '<button data-act="signout">Sign out on this device</button>' : ''}
       <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
       <p class="tiny">We store your leaderboard name, your progress and, if you use Google, your email address. Nothing else.</p>
@@ -85,6 +88,10 @@ export async function accountScreen(screens, back = () => screens.title()) {
     if (act === 'back') back();
     else if (act === 'google') google();
     else if (act === 'rename') rename();
+    else if (act === 'profile') {
+      sfx('click');
+      profileScreen(screens, name, () => accountScreen(screens, back));
+    }
     else if (act === 'signout') {
       sfx('click');
       account.signOut();
@@ -160,7 +167,7 @@ export function boardPost(screens, s) {
       game.meta.save();
     }
     msg.textContent = 'Posting…';
-    const r = await postScore({ map: s.map, character: s.character, seconds: Math.round(s.time), csat: s.csat, won: s.won });
+    const r = await postScore({ map: s.map, character: s.character, seconds: Math.round(s.time), csat: s.csat, won: s.won, version: VERSION });
     if (r.ok) {
       posted = true;
       msg.innerHTML = r.rank ? `Posted! You're <b>#${r.rank}</b> on the ${esc(s.mapName)} board.` : 'Posted!';
