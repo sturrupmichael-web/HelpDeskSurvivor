@@ -20,11 +20,18 @@ export function dropTicket(game, x, y, value) {
   const pool = game.tickets;
   let t = pool.spawn();
   if (!t) {
-    // Floor is full: fold the XP into an existing ticket instead.
-    t = pool.items[(Math.random() * pool.count) | 0];
-    t.value += value;
-    t.spr = tierSprite(game, t.value);
-    return;
+    // Floor is full: move the ticket farthest from you here and fold the XP into it,
+    // so XP keeps landing where the fighting is instead of piling up across the map.
+    const p = game.player;
+    let far = -1;
+    for (let i = 0; i < pool.count; i++) {
+      const o = pool.items[i];
+      if (o.magnet) continue;
+      const d = (o.x - p.x) ** 2 + (o.y - p.y) ** 2;
+      if (d > far) (far = d), (t = o);
+    }
+    if (!t) t = pool.items[(Math.random() * pool.count) | 0];
+    value += t.value;
   }
   t.x = x;
   t.y = y;

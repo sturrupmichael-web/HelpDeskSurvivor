@@ -1,16 +1,16 @@
-// Level-up choices: rolls 3 weighted options from what the player can still take
+// Level-up choices: rolls LEVEL_UP_CHOICES weighted options from what the player can still take
 // (new weapons/passives while slots remain, level-ups for owned items).
 // Also: Change Approved chests, which evolve a weapon when one qualifies (max level +
 // its paired passive, see data/evolutions.js) and otherwise grant random upgrades.
 
 import { WEAPONS } from '../../data/weapons.js';
-import { PASSIVES, FALLBACK_REWARDS, MAX_WEAPONS, MAX_PASSIVES } from '../../data/passives.js';
+import { PASSIVES, FALLBACK_REWARDS, MAX_WEAPONS, MAX_PASSIVES, LEVEL_UP_CHOICES } from '../../data/passives.js';
 import { createWeapon, setWeaponLevel } from './weapons/index.js';
 import { recomputeStats } from './player.js';
 import { EVOLUTIONS } from '../../data/evolutions.js';
 import { CHEST_REWARDS } from '../../data/pickups.js';
 
-export function rollChoices(game, count = 3) {
+export function rollChoices(game, count = LEVEL_UP_CHOICES) {
   const p = game.player;
   const pool = [];
   const owned = new Set(p.weapons.map((w) => w.id));

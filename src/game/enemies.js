@@ -154,6 +154,7 @@ export function resolveEnemies(game, dt) {
 export function damageEnemy(game, e, amount, weapon, dx, dy, knockback) {
   if (e.dead) return;
   if (weapon && e.def.resist) for (const tag of weapon.def.tags) amount *= e.def.resist[tag] ?? 1;
+  if (weapon?.def.bossDamage && e.def.boss) amount *= weapon.def.bossDamage;
   e.hp -= amount;
   // Bosses take hits constantly; flash them in short blinks so their art stays readable.
   if (!e.heavy) e.flash = 0.12;

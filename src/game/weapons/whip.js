@@ -1,5 +1,6 @@
-// "Whip" behavior: on cooldown, lashes a patch cable at the nearest user (or the way
-// you face; behind you too from `sides: 2`), hitting everything in a long thin strip.
+// "Whip" behavior: on cooldown, lashes a patch cable at a boss in reach, else the nearest
+// user (or the way you face; behind you too from `sides: 2`), hitting everything in a
+// long thin strip.
 // Used by: Patch Cable, Fiber Backbone (evolved: `full: true` hits a whole circle).
 // stats: damage, cooldown, range, width, sides, knockback, full
 
@@ -26,7 +27,9 @@ export default {
     const half = (s.width * p.stats.area) / 2;
     const dmg = s.damage * p.stats.damage;
     const cy = p.y - 4;
-    const target = nearestEnemy(game, p.x, cy, range * 1.3);
+    // A boss in reach gets lashed first; otherwise the nearest user.
+    const boss = game.bossAlive() ? game.boss : null;
+    const target = boss && Math.hypot(boss.x - p.x, boss.y - cy) < range + boss.r ? boss : nearestEnemy(game, p.x, cy, range * 1.3);
     const tx = target ? target.x - p.x : p.flip ? -1 : 1;
     const ty = target ? target.y - cy : 0;
     const tl = Math.hypot(tx, ty) || 1;

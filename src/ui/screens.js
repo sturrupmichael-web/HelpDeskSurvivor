@@ -527,7 +527,7 @@ export class Screens {
       `<div class="panel wide">
         <h2>LEVEL UP!</h2>
         <p class="sub">${pickLine(LEVEL_UP_LINES)}</p>
-        <div class="cards">${choices.map(card).join('')}</div>
+        <div class="cards levelup">${choices.map(card).join('')}</div>
         ${
           onlyPizza
             ? `<button class="always" data-act="always">Everything's maxed: always take the pizza from now on <kbd>A</kbd></button>`

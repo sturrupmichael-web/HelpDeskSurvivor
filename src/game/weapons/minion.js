@@ -29,10 +29,14 @@ export default {
         m.y = p.y;
       }
       if (!m.target || m.target.dead || m.target.uid !== m.uid || Math.hypot(m.target.x - p.x, m.target.y - p.y) > leash) {
-        // Spread out: prefer a user nobody else on the team is already tackling.
+        // Spread out: prefer a user nobody else on the team is already tackling. A boss
+        // in reach always gets one helper, so the team chips away at it too.
         const far = (e) => Math.hypot(e.x - p.x, e.y - p.y) > leash;
+        const taken = (e) => w.minions.some((o) => o !== m && o.target === e);
+        const boss = game.bossAlive() ? game.boss : null;
         m.target =
-          nearestEnemy(game, m.x, m.y, leash, (e) => far(e) || w.minions.some((o) => o !== m && o.target === e)) ??
+          (boss && !far(boss) && !taken(boss) ? boss : null) ??
+          nearestEnemy(game, m.x, m.y, leash, (e) => far(e) || taken(e)) ??
           nearestEnemy(game, m.x, m.y, leash, far);
         m.uid = m.target ? m.target.uid : 0;
       }

@@ -61,3 +61,6 @@ export const FALLBACK_REWARDS = {
 
 export const MAX_WEAPONS = 6;
 export const MAX_PASSIVES = 6;
+// Cards offered per level-up. 4 since the tool list grew from 9 to 15, so each tool
+// still turns up about as often as it did with 3 cards.
+export const LEVEL_UP_CHOICES = 4;

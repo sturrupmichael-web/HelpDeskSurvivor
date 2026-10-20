@@ -6,7 +6,7 @@ export const TICKET_TIERS = [
 ];
 
 export const TICKETS = {
-  maxOnFloor: 1200, // when full, new XP is added to an existing ticket instead
+  maxOnFloor: 1200, // when full, the farthest ticket is moved to the new drop and takes its XP
   magnetSpeed: 60, // starting speed when a ticket flies toward you
   magnetAccel: 700, // px/s^2 while flying
   collectRadius: 10,

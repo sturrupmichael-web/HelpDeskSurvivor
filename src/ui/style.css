@@ -239,3 +239,14 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
   .board-table td { padding: 3px 4px; }
   .board-table td:nth-child(3) { display: none; }
 }
+
+/* Level-up: 4 cards in one row on wide screens. */
+.panel .cards.levelup { gap: 10px; }
+.panel .cards.levelup button.card { width: 190px; }
+@media (max-width: 600px) { .panel .cards.levelup button.card { width: 100%; } }
+/* Short landscape phones: drop the flavor line so all four cards fit. */
+@media (max-height: 500px) {
+  .panel .cards.levelup .card-flavor { display: none; }
+  .panel .cards.levelup button.card { width: calc(25% - 8px); min-width: 150px; padding: 8px; gap: 4px; }
+  .panel .cards.levelup .card-text, .panel .cards.levelup .card-hint { font-size: 11px; }
+}

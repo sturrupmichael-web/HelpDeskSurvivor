@@ -98,6 +98,8 @@ Passive multipliers are `1 + perLevel × level`. A negative `perLevel` reduces t
 items that can still level up compete with new items while slots are free (6 weapons,
 6 passives). When nothing is left to offer, the card is pizza (heals sanity).
 Evolved weapons, and the base weapon of one you already evolved, are never offered.
+Each level-up shows `LEVEL_UP_CHOICES` cards (4, in `data/passives.js`; it was 3 while
+there were only 9 tools).
 
 ## Bosses (`data/enemies.js`, events in `data/waves.js`)
 
@@ -297,3 +299,31 @@ damage 44 to 32; Espresso Machine 20 to 16; Outsourced Team 6 helpers / 26 damag
 Bot check afterwards (cautious bot, every shop upgrade maxed, Open Office): the four new
 characters win or reach The Executive in 1 to 2 of 3 to 4 shifts each, the same spread as
 the original four (most losses come between 6:00 and 10:00 for every character).
+
+## Difficulty check (after the new tools)
+
+With 15 tools instead of 9, the bot rarely found the strong old picks (Group Policy, KB
+Article, an early evolution) and most shifts burned out between 8:00 and 9:30. Compared
+with the bot on both versions (every shop upgrade maxed, closes in on bosses, takes the
+passive that evolves a tool it owns):
+
+| Map | Before the new tools | After this pass |
+| --- | --- | --- |
+| Open Office | 6 / 10 | 8 / 12 |
+| Call Center | 3 / 5 | 3 / 5 |
+| Parking Garage | 4 / 5 | 3 / 5 |
+
+Changes from that pass:
+- 4 level-up cards instead of 3 (`LEVEL_UP_CHOICES`).
+- Damage up on the weaker new tools: Auto-Scaling x1.5 (and scales up sooner), Out-of-Office
+  Reply x1.7 with a 20% shorter cooldown, Ping Sweep x1.7, Delegate x1.3, Coffee Run x1.2.
+- Coffee Run puddles slow users (0.8 at level 1 down to 0.6 at max).
+- Delegate always sends one helper at a boss in reach; Patch Cable lashes a boss in reach
+  first.
+- Fiber Backbone, Outsourced Team and Espresso Machine do x2.5 damage to bosses
+  (`bossDamage`); before, shifts that reached The Executive with them often couldn't
+  finish it.
+- Bug fix: when the floor held 1,200 tickets, new XP was added to a random ticket, often
+  far across the map, so levelling stalled late in a shift. Now the farthest ticket moves
+  to the new drop and takes its XP.
+The wave curve (`data/waves.js`) is unchanged.
