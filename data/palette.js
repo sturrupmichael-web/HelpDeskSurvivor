@@ -22,6 +22,12 @@ export const PALETTE = {
   r: '#b13e53', // red
   e: '#38b764', // green (plants, tier-2 tickets)
   p: '#7a4ea0', // purple (cardigans)
+  // Added for the extra office maps (data/maps.js).
+  x: '#4a4a50', // concrete
+  X: '#64646b', // concrete light
+  o: '#ef7d57', // orange (hot aisle, warning stripes)
+  q: '#73eff7', // cyan (server LEDs, wallboard)
+  R: '#2a2f45', // raised-floor seam / server room shadow
 };
 
 // Color used for the auto-generated hit-flash frames.

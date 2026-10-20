@@ -20,5 +20,8 @@ export const ACHIEVEMENTS = [
   { id: 'union', name: 'Solidarity', icon: 'union', desc: 'Get rescued by your Union Rep.', check: (r) => r.revived },
   { id: 'hired_all', name: 'Full Headcount', icon: 'monitor', desc: 'Hire every character.', check: (r, m) => m.unlocked.length >= 4 },
   { id: 'shopper', name: 'Expense Report', icon: 'laptop', desc: 'Buy 15 shop upgrades.', check: (r, m) => Object.values(m.shop).reduce((a, b) => a + b, 0) >= 15 },
+  { id: 'map_server', name: 'Cold Aisle Containment', icon: 'ssd', desc: 'Win a shift in the Server Room.', check: (r, m) => m.mapsWon?.includes('server') },
+  { id: 'map_call', name: 'First Call Resolution', icon: 'headphones', desc: 'Win a shift in the Call Center.', check: (r, m) => m.mapsWon?.includes('callcenter') },
+  { id: 'map_garage', name: 'Night Owl', icon: 'key', desc: 'Win the Night Shift in the Parking Garage.', check: (r, m) => m.mapsWon?.includes('garage') },
   { id: 'veteran', name: 'Employee of the Month', icon: 'chair', desc: 'Work 25 shifts.', check: (r, m) => m.shifts >= 25 },
 ];

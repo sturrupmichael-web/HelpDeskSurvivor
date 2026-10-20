@@ -40,7 +40,7 @@ npm run build
 | 1 / 2 / 3 or click | Pick a level-up card |
 | Enter | Close the Change Approved (chest) screen |
 | R | Reroll the level-up cards (needs the Escalation Path upgrade) |
-| C / S / A / O | Characters / Overtime Shop / Achievements / Settings (title screen) |
+| L / C / S / A / O | Office Maps / Characters / Overtime Shop / Achievements / Settings (title screen) |
 | T / O | Shift Stats / Settings (pause menu) |
 | A | When everything is maxed, always take the pizza from then on (no more level-up screens) |
 | M | Mute / unmute (remembered between visits) |
@@ -56,7 +56,12 @@ button sits at the top left. The view zooms in on narrow portrait screens.
 **Settings** (title or pause menu, saved between visits): music volume and sound
 effects volume separately, screen shake, damage numbers, and the touch joystick.
 
-**Achievements:** 18 of them in `data/achievements.js`; each is a name, icon, text and a
+**Office maps** (`data/maps.js`): Open Office, Server Room, Call Center and Night Shift:
+Parking Garage. Each one unlocks when you win a shift on the one before it, and has its
+own floor art, music remix, Overtime Pay bonus, best times and a twist (hot aisles,
+ringing desk phones, darkness).
+
+**Achievements:** 21 of them in `data/achievements.js`; each is a name, icon, text and a
 `check(run, meta)` test. Unlocks pop a toast and are listed under Achievements on the
 title screen.
 
@@ -132,3 +137,4 @@ current `manifest.json` for the full list):
    balance pass (see BALANCE.md).
 5. **Polish:** controller and touch support, a settings menu (separate music and sound
    volume), the pause-menu Shift Stats page, and 18 achievements.
+6. **Office maps:** three unlockable maps with their own art, twist, music and records.

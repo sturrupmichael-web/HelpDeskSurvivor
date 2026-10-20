@@ -1,11 +1,24 @@
-// Endless "open office" floor. The world is split into 256x256 chunks; each chunk is
-// generated deterministically from its coordinates (carpet tiles + a random furniture
-// layout), rendered once to an offscreen canvas and cached. Decoration only: nothing
-// here collides with anything.
+// Endless floor in one of the map styles from data/maps.js (office, server, callcenter,
+// garage). The world is split into 256x256 chunks; each chunk is generated
+// deterministically from its coordinates (floor tiles + a random furniture layout),
+// rendered once to an offscreen canvas and cached. Decoration only: nothing here
+// collides with anything. The Server Room's hot aisles are the one gameplay feature,
+// read back with isHot().
 
 const CHUNK = 256;
 const TILE = 32;
 const MAX_CACHED = 64;
+
+// Floor tile sprite per style, from global tile coordinates.
+const TILES = {
+  office: (gx, gy) => (hash2(gx, gy) % 37 === 0 ? 'carpet_c' : (gx + gy) & 1 ? 'carpet_a' : 'carpet_b'),
+  server: (gx, gy) => (hash2(gx, gy) % 7 === 0 ? 'raised_vent' : 'raised_a'),
+  callcenter: (gx, gy) => ((gx + gy) & 1 ? 'call_carpet_a' : 'call_carpet_b'),
+  garage: (gx, gy) => {
+    const h = hash2(gx, gy) % 41;
+    return h === 0 ? 'concrete_crack' : h === 1 ? 'concrete_oil' : 'concrete_a';
+  },
+};
 
 // Integer hash -> 32-bit unsigned.
 function hash2(x, y) {
@@ -26,6 +39,14 @@ export class Floor {
   constructor(assets) {
     this.assets = assets;
     this.cache = new Map();
+    this.hot = new Map(); // chunk key -> hot-aisle rect [x, y, w, h] in world px, or null
+    this.style = 'office';
+  }
+
+  setStyle(style) {
+    if (style === this.style) return;
+    this.style = style;
+    this.clear();
   }
 
   key(cx, cy) {
@@ -55,22 +76,19 @@ export class Floor {
     canvas.width = canvas.height = CHUNK;
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
-
-    // Carpet tiles: alternating weave, with the occasional odd replacement tile.
+    const tiles = TILES[this.style];
     for (let ty = 0; ty < CHUNK / TILE; ty++) {
-      for (let tx = 0; tx < CHUNK / TILE; tx++) {
-        const gx = cx * 8 + tx;
-        const gy = cy * 8 + ty;
-        const odd = hash2(gx, gy) % 37 === 0;
-        this.put(ctx, odd ? 'carpet_c' : (gx + gy) & 1 ? 'carpet_a' : 'carpet_b', tx * TILE, ty * TILE);
-      }
+      for (let tx = 0; tx < CHUNK / TILE; tx++) this.put(ctx, tiles(cx * 8 + tx, cy * 8 + ty), tx * TILE, ty * TILE);
     }
-
     // Furniture layout for this chunk.
     const r = rng(hash2(cx * 7 + 3, cy * 13 + 5));
     const ox = 16 + Math.floor(r() * 40);
     const oy = 16 + Math.floor(r() * 40);
-    const roll = r();
+    this[this.style](ctx, r, ox, oy, r(), cx, cy);
+    return canvas;
+  }
+
+  office(ctx, r, ox, oy, roll) {
     if (roll < 0.55) {
       // Cubicle block: one or two rows of two or three cubicles.
       const segments = ox + 192 <= CHUNK - 8 && r() < 0.5 ? 3 : 2;
@@ -84,7 +102,77 @@ export class Floor {
     } else if (roll < 0.8) {
       this.put(ctx, 'plant', ox + 60, oy + 60);
     }
-    return canvas;
+  }
+
+  // Server Room: a row of racks with its hot aisle (exhaust side) glowing in front.
+  server(ctx, r, ox, oy, roll, cx, cy) {
+    if (roll < 0.65) {
+      const n = 3 + Math.floor(r() * 3);
+      const x = Math.min(ox, CHUNK - n * 32 - 8);
+      const hot = this.hotRect(cx, cy);
+      ctx.fillStyle = 'rgba(239, 125, 87, 0.28)';
+      ctx.fillRect(hot[0] - cx * CHUNK, hot[1] - cy * CHUNK, hot[2], hot[3]);
+      ctx.fillStyle = 'rgba(239, 125, 87, 0.5)';
+      for (let i = 0; i < hot[2]; i += 12) ctx.fillRect(hot[0] - cx * CHUNK + i, hot[1] - cy * CHUNK + hot[3] / 2 - 1, 6, 2);
+      for (let i = 0; i < n; i++) this.put(ctx, ['rack_a', 'rack_b', 'rack_c'][Math.floor(r() * 3)], x + i * 32, oy);
+    } else if (roll < 0.8) {
+      this.put(ctx, 'crac', ox + 30, oy + 30);
+    }
+  }
+
+  // Call Center: clusters of headset pods behind low dividers, the odd queue wallboard.
+  callcenter(ctx, r, ox, oy, roll) {
+    if (roll < 0.7) {
+      const n = ox + 4 * 34 <= CHUNK - 8 && r() < 0.5 ? 4 : 3;
+      const rows = r() < 0.6 ? 2 : 1;
+      for (let row = 0; row < rows; row++) {
+        const y = oy + row * 64;
+        for (let i = 0; i < n; i++) this.put(ctx, 'pod_divider', ox + i * 34 - 2, y);
+        for (let i = 0; i < n; i++) this.put(ctx, 'pod_desk', ox + i * 34, y + 6);
+      }
+    } else if (roll < 0.85) {
+      this.put(ctx, 'wallboard', ox + 40, oy + 40);
+    }
+  }
+
+  // Parking Garage: painted stalls with parked cars, and concrete pillars.
+  garage(ctx, r, ox, oy, roll) {
+    if (roll < 0.7) {
+      const n = 4;
+      const x0 = Math.min(ox, CHUNK - n * 44 - 8);
+      ctx.fillStyle = '#ffcd75';
+      for (let i = 0; i <= n; i++) ctx.fillRect(x0 + i * 44, oy, 2, 64);
+      ctx.fillRect(x0, oy + 63, n * 44 + 2, 2);
+      const cars = ['car_red', 'car_blue', 'car_white', 'car_green'];
+      for (let i = 0; i < n; i++) if (r() < 0.65) this.put(ctx, cars[Math.floor(r() * cars.length)], x0 + i * 44 + 8, oy + 6);
+    } else if (roll < 0.9) {
+      this.put(ctx, 'pillar', ox + 40, oy + 40);
+    }
+  }
+
+  // The hot-aisle rectangle (world px) of a server-room chunk, or null. Uses the same
+  // RNG sequence as build() so the glow and the gameplay effect line up.
+  hotRect(cx, cy) {
+    const k = this.key(cx, cy);
+    if (this.hot.has(k)) return this.hot.get(k);
+    const r = rng(hash2(cx * 7 + 3, cy * 13 + 5));
+    const ox = 16 + Math.floor(r() * 40);
+    const oy = 16 + Math.floor(r() * 40);
+    let rect = null;
+    if (r() < 0.65) {
+      const n = 3 + Math.floor(r() * 3);
+      const x = Math.min(ox, CHUNK - n * 32 - 8);
+      rect = [cx * CHUNK + x - 6, cy * CHUNK + oy + 58, n * 32 + 12, 26];
+    }
+    if (this.hot.size > 512) this.hot.clear();
+    this.hot.set(k, rect);
+    return rect;
+  }
+
+  isHot(x, y) {
+    if (this.style !== 'server') return false;
+    const h = this.hotRect(Math.floor(x / CHUNK), Math.floor(y / CHUNK));
+    return !!h && x >= h[0] && x < h[0] + h[2] && y >= h[1] && y < h[1] + h[3];
   }
 
   chunk(cx, cy) {

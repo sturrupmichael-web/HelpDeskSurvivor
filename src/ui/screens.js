@@ -12,6 +12,8 @@ import { PASSIVES } from '../../data/passives.js';
 import { ACHIEVEMENTS } from '../../data/achievements.js';
 import { gamepadConnected } from '../engine/input.js';
 import { DEBUG_ALLOWED } from './debug.js';
+import { MAPS, MAP_ORDER } from '../../data/maps.js';
+import { Floor } from '../game/floor.js';
 import { TITLE_TAGLINES, LEVEL_UP_LINES, BURNOUT_QUIPS, VICTORY_QUIPS, PAUSE_LINES } from '../../data/flavor.js';
 
 const pickLine = (list) => list[(Math.random() * list.length) | 0];
@@ -102,6 +104,7 @@ export class Screens {
       else if (act === 'shop') this.shop();
       else if (act === 'ach') this.achievementsScreen();
       else if (act === 'settings') this.settings(() => this.title());
+      else if (act === 'maps') this.maps();
     };
     this.show(
       `<div class="panel title">
@@ -110,6 +113,7 @@ export class Screens {
         <div class="title-char"><canvas data-spr="${ch.sprite}" width="64" height="64"></canvas>
           <div><div class="card-name">${ch.name}</div><div class="card-flavor">${ch.perk}</div></div></div>
         <button class="primary" data-act="start">Clock In <kbd>Enter</kbd></button>
+        <button data-act="maps">Map: ${MAPS[m.map].name} <kbd>L</kbd></button>
         <button data-act="chars">Characters <kbd>C</kbd></button>
         <button data-act="shop">Overtime Shop ${PAY(m.pay)} <kbd>S</kbd></button>
         <div class="row-buttons">
@@ -130,6 +134,7 @@ export class Screens {
       (code) => {
         if (code === 'Enter' || code === 'Space') go('start');
         else if (code === 'KeyC') go('chars');
+        else if (code === 'KeyL') go('maps');
         else if (code === 'KeyS') go('shop');
         else if (code === 'KeyA') go('ach');
         else if (code === 'KeyO') go('settings');
@@ -263,6 +268,64 @@ export class Screens {
   }
 
   // Character select: pick an unlocked tech, or unlock one with Overtime Pay.
+  // Map select: each map unlocks after a won shift on the one before it.
+  maps() {
+    const g = this.game;
+    const meta = g.meta;
+    const act = (i) => {
+      const id = MAP_ORDER[i];
+      if (!id || !meta.selectMap(id)) return;
+      sfx('chest');
+      g.setMap(id);
+      g.newRun(); // fresh floor behind the menu
+      g.setState('title');
+      this.maps();
+    };
+    const card = (id, i) => {
+      const m = MAPS[id];
+      const unlocked = meta.mapUnlocked(id);
+      const selected = meta.data.map === id;
+      const best = meta.data.mapBest[id];
+      const status = selected
+        ? '<b class="ok">ON SHIFT</b>'
+        : unlocked
+          ? 'Select'
+          : `Locked: win a shift in the ${MAPS[m.unlockAfter].name}`;
+      return `<button class="card map ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}" data-i="${i}" ${unlocked ? '' : 'disabled'}>
+        <div class="card-head"><canvas data-map="${m.floor}" width="96" height="96"></canvas>
+          <div><div class="card-name">${m.name}</div>
+          <div class="card-level">${m.pay > 1 ? `${m.pay}x Overtime Pay` : 'Standard pay'}</div></div><kbd>${i + 1}</kbd></div>
+        <div class="card-text">${m.twistText}</div>
+        <div class="card-flavor">${m.blurb}</div>
+        ${best ? `<div class="card-hint">Best: ${fmtTime(best.time)} · ${best.tickets.toLocaleString()} tickets · ${best.wins} won</div>` : ''}
+        <div class="char-status">${status}</div>
+      </button>`;
+    };
+    this.show(
+      `<div class="panel wide chars maps">
+        <h2>OFFICE MAPS</h2>
+        <p class="sub">Win a shift on a map to unlock the next one.</p>
+        <div class="cards">${MAP_ORDER.map(card).join('')}</div>
+        <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
+      </div>`,
+      (code) => {
+        if (DIGITS[code] !== undefined) act(DIGITS[code]);
+        else if (code === 'Escape' || code === 'Enter') this.title();
+        else return false;
+      },
+    );
+    this.bind('.card', (i) => act(i));
+    this.bind('[data-act=back]', () => this.title());
+    // Floor previews: one generated chunk of each map, scaled down.
+    const floor = new Floor(g.assets);
+    this.root.querySelectorAll('canvas[data-map]').forEach((c) => {
+      floor.setStyle(c.dataset.map);
+      const cx = c.getContext('2d');
+      cx.imageSmoothingEnabled = false;
+      cx.drawImage(floor.build(1, 3), 0, 0, 256, 256, 0, 0, c.width, c.height);
+    });
+  }
+
   characters() {
     const meta = this.game.meta;
     const ids = Object.keys(CHARACTERS);
@@ -516,9 +579,11 @@ export class Screens {
       `<div class="panel wide summary ${s.won ? 'win' : 'lose'}">
         <h1>${s.won ? 'CLOCKED OUT!' : 'BURNOUT'}</h1>
         <p class="sub">${pickLine(s.won ? VICTORY_QUIPS : BURNOUT_QUIPS)}</p>
+        ${s.newMap ? `<p class="unlock">NEW MAP UNLOCKED: <b>${MAPS[s.newMap].name}</b> (pick it under Map on the title screen)</p>` : ''}
         <div class="summary-cols">
           <table class="stats">
             <tr><td>Technician</td><td>${s.character}</td></tr>
+            <tr><td>Map</td><td>${s.mapName}</td></tr>
             <tr><td>Time survived</td><td>${fmtTime(s.time)}${rec('time')}</td></tr>
             <tr><td>Tickets closed</td><td>${s.kills.toLocaleString()}${rec('tickets')}</td></tr>
             <tr><td>CSAT score</td><td>${s.csat.toLocaleString()}${rec('csat')}</td></tr>

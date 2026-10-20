@@ -3,6 +3,7 @@
  "sheets": {
   "bosses": "bosses.png",
   "characters": "characters.png",
+  "maps": "maps.png",
   "office": "office.png",
   "pickups": "pickups.png",
   "projectiles": "projectiles.png"
@@ -833,6 +834,386 @@
       [
        224,
        384
+      ]
+     ]
+    }
+   }
+  },
+  "raised_a": {
+   "sheet": "maps",
+   "w": 32,
+   "h": 32,
+   "anchor": [
+    16,
+    32
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       0
+      ]
+     ]
+    }
+   }
+  },
+  "raised_vent": {
+   "sheet": "maps",
+   "w": 32,
+   "h": 32,
+   "anchor": [
+    16,
+    32
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       32
+      ]
+     ]
+    }
+   }
+  },
+  "rack_a": {
+   "sheet": "maps",
+   "w": 32,
+   "h": 56,
+   "anchor": [
+    16,
+    56
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       64
+      ]
+     ]
+    }
+   }
+  },
+  "rack_b": {
+   "sheet": "maps",
+   "w": 32,
+   "h": 56,
+   "anchor": [
+    16,
+    56
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       120
+      ]
+     ]
+    }
+   }
+  },
+  "rack_c": {
+   "sheet": "maps",
+   "w": 32,
+   "h": 56,
+   "anchor": [
+    16,
+    56
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       176
+      ]
+     ]
+    }
+   }
+  },
+  "crac": {
+   "sheet": "maps",
+   "w": 40,
+   "h": 48,
+   "anchor": [
+    20,
+    48
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       232
+      ]
+     ]
+    }
+   }
+  },
+  "call_carpet_a": {
+   "sheet": "maps",
+   "w": 32,
+   "h": 32,
+   "anchor": [
+    16,
+    32
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       280
+      ]
+     ]
+    }
+   }
+  },
+  "call_carpet_b": {
+   "sheet": "maps",
+   "w": 32,
+   "h": 32,
+   "anchor": [
+    16,
+    32
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       312
+      ]
+     ]
+    }
+   }
+  },
+  "pod_desk": {
+   "sheet": "maps",
+   "w": 30,
+   "h": 26,
+   "anchor": [
+    15,
+    26
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       344
+      ]
+     ]
+    }
+   }
+  },
+  "pod_divider": {
+   "sheet": "maps",
+   "w": 34,
+   "h": 10,
+   "anchor": [
+    17,
+    10
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       370
+      ]
+     ]
+    }
+   }
+  },
+  "wallboard": {
+   "sheet": "maps",
+   "w": 64,
+   "h": 22,
+   "anchor": [
+    32,
+    22
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       380
+      ]
+     ]
+    }
+   }
+  },
+  "concrete_a": {
+   "sheet": "maps",
+   "w": 32,
+   "h": 32,
+   "anchor": [
+    16,
+    32
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       402
+      ]
+     ]
+    }
+   }
+  },
+  "concrete_crack": {
+   "sheet": "maps",
+   "w": 32,
+   "h": 32,
+   "anchor": [
+    16,
+    32
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       434
+      ]
+     ]
+    }
+   }
+  },
+  "concrete_oil": {
+   "sheet": "maps",
+   "w": 32,
+   "h": 32,
+   "anchor": [
+    16,
+    32
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       466
+      ]
+     ]
+    }
+   }
+  },
+  "car_red": {
+   "sheet": "maps",
+   "w": 30,
+   "h": 52,
+   "anchor": [
+    15,
+    52
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       498
+      ]
+     ]
+    }
+   }
+  },
+  "car_blue": {
+   "sheet": "maps",
+   "w": 30,
+   "h": 52,
+   "anchor": [
+    15,
+    52
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       550
+      ]
+     ]
+    }
+   }
+  },
+  "car_white": {
+   "sheet": "maps",
+   "w": 30,
+   "h": 52,
+   "anchor": [
+    15,
+    52
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       602
+      ]
+     ]
+    }
+   }
+  },
+  "car_green": {
+   "sheet": "maps",
+   "w": 30,
+   "h": 52,
+   "anchor": [
+    15,
+    52
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       654
+      ]
+     ]
+    }
+   }
+  },
+  "pillar": {
+   "sheet": "maps",
+   "w": 24,
+   "h": 40,
+   "anchor": [
+    12,
+    40
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       706
       ]
      ]
     }

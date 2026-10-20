@@ -16,6 +16,7 @@ reload the browser. No build step is needed (except for art; see README).
 | `data/meta.js` | Overtime Pay payout formula and the shop |
 | `data/audio.js` | Sound and music volumes, music tempo |
 | `data/flavor.js` | Title taglines, level-up lines, game-over quips |
+| `data/maps.js` | Office maps: unlock order, pay bonus, enemy HP/speed, spawn mix boosts, music remix, twist numbers |
 | `data/achievements.js` | Achievement names, icons, text and unlock tests |
 
 ## The difficulty curve (`data/waves.js`)

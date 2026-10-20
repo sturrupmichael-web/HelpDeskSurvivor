@@ -11,6 +11,21 @@ function mixAt(t) {
   return m;
 }
 
+// The timeline mix with the current map's mixBoost applied (cached per mix and map).
+const boosted = new WeakMap();
+function mapMix(mix, map) {
+  if (!map || !Object.keys(map.mixBoost).length) return mix;
+  let byMap = boosted.get(mix);
+  if (!byMap) boosted.set(mix, (byMap = new Map()));
+  let m = byMap.get(map);
+  if (!m) {
+    m = {};
+    for (const id in mix) m[id] = mix[id] * (map.mixBoost[id] ?? 1);
+    byMap.set(map, m);
+  }
+  return m;
+}
+
 function pick(mix) {
   let total = 0;
   for (const id in mix) total += mix[id];
@@ -56,7 +71,7 @@ export class Spawner {
   spawn(game, id, angle) {
     const t = game.time;
     const pt = this.ringPoint(game, angle);
-    return spawnEnemy(game, id ?? pick(mixAt(t)), pt.x, pt.y, this.sample(t, 'hpMult'), this.sample(t, 'speedMult'));
+    return spawnEnemy(game, id ?? pick(mapMix(mixAt(t), game.map)), pt.x, pt.y, this.sample(t, 'hpMult'), this.sample(t, 'speedMult'));
   }
 
   update(game, dt) {

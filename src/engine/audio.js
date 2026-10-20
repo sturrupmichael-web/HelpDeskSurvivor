@@ -199,6 +199,15 @@ let musicTimer = 0;
 let nextStepTime = 0;
 let step = 0;
 let ducked = false;
+let delayNode = null;
+// Per-map remix (data/maps.js `music`).
+let style = { transpose: 0, tempo: 1, lead: 'square', cutoff: 1400 };
+const stepSec = () => 60 / (AUDIO.musicTempo * style.tempo) / 4;
+
+export function setMusicStyle(s) {
+  style = { ...style, ...s };
+  if (delayNode) delayNode.delayTime.value = stepSec() * 3; // dotted eighth
+}
 
 function musicGain() {
   return (AUDIO.musicVolume ?? 0.5) * musicLevel * (ducked ? 0.35 : 1);
@@ -219,8 +228,8 @@ function buildMusicBus() {
   // Feedback echo for the lead.
   echoIn = ctx.createGain();
   echoIn.gain.value = 1;
-  const delay = ctx.createDelay(1);
-  delay.delayTime.value = (60 / AUDIO.musicTempo) * 0.75; // dotted eighth
+  const delay = (delayNode = ctx.createDelay(1));
+  delay.delayTime.value = stepSec() * 3; // dotted eighth
   const fb = ctx.createGain();
   fb.gain.value = 0.32;
   const tone = ctx.createBiquadFilter();
@@ -255,19 +264,20 @@ function synth(type, freq, t, dur, vol, out, cutoff, detune = 0) {
 }
 
 function scheduleStep(s, t) {
-  const sec = 60 / AUDIO.musicTempo / 4;
+  const sec = stepSec();
+  const tr = style.transpose;
   const bar = Math.floor(s / STEPS_PER_BAR);
   const inBar = s % STEPS_PER_BAR;
   const chord = CHORDS[bar % CHORDS.length];
   if (CHORD_HITS.includes(inBar)) {
     for (const n of chord.notes) {
-      synth('triangle', midi(n), t, sec * 5, 0.05, musicBus, 1800, -6);
-      synth('sine', midi(n), t, sec * 5, 0.04, musicBus, 0, 6);
+      synth('triangle', midi(n + tr), t, sec * 5, 0.05, musicBus, 1800, -6);
+      synth('sine', midi(n + tr), t, sec * 5, 0.04, musicBus, 0, 6);
     }
   }
-  for (const [st, semi] of BASS_LINE) if (st === inBar) synth('sawtooth', midi(chord.bass + semi), t, sec * 2.5, 0.12, musicBus, 500);
+  for (const [st, semi] of BASS_LINE) if (st === inBar) synth('sawtooth', midi(chord.bass + semi + tr), t, sec * 2.5, 0.12, musicBus, 500);
   for (const [st, n, len] of MELODY[bar % MELODY.length]) {
-    if (st === inBar) synth('square', midi(n), t, sec * len, 0.045, echoIn, 1400);
+    if (st === inBar) synth(style.lead, midi(n + tr), t, sec * len, style.lead === 'sawtooth' ? 0.035 : 0.045, echoIn, style.cutoff);
   }
   // Drum machine: kick on 1 and 3, snare on 2 and 4, soft closed hats on eighths.
   if (inBar === 0 || inBar === 8) tone('sine', 110, 40, t, 0.18, 0.35, musicBus);
@@ -277,7 +287,7 @@ function scheduleStep(s, t) {
 
 function scheduler() {
   if (!ctx || ctx.state !== 'running') return;
-  const sec = 60 / AUDIO.musicTempo / 4;
+  const sec = stepSec();
   if (nextStepTime < ctx.currentTime) nextStepTime = ctx.currentTime + 0.05; // after a stall
   while (nextStepTime < ctx.currentTime + 0.25) {
     scheduleStep(step, nextStepTime);

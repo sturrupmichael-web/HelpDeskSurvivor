@@ -46,8 +46,10 @@ export function spawnEnemy(game, id, x, y, hpMult = 1, speedMult = 1, behaviorId
   e.r = def.radius;
   e.foot = def.foot ?? DEFAULT_FOOT;
   e.kx = e.ky = e.dx = e.dy = 0;
-  e.hp = e.maxHp = def.hp * hpMult;
-  e.speed = def.speed * speedMult;
+  // The current map toughens regular users (bosses keep their tuned HP).
+  const map = def.boss ? null : game.map;
+  e.hp = e.maxHp = def.hp * hpMult * (map?.hpMult ?? 1);
+  e.speed = def.speed * speedMult * (map?.speedMult ?? 1);
   e.damage = def.damage;
   e.xp = def.xp;
   e.kbMul = def.knockback;

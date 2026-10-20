@@ -11,7 +11,7 @@ import { CHARACTERS } from '../../data/player.js';
 import { SPAWNER, EVENTS } from '../../data/waves.js';
 import { TICKETS, MAX_ITEMS } from '../../data/pickups.js';
 import { EVOLUTIONS } from '../../data/evolutions.js';
-import { sfx, toggleMute, startMusic, stopMusic, duckMusic, setVolumes } from '../engine/audio.js';
+import { sfx, toggleMute, startMusic, stopMusic, duckMusic, setVolumes, setMusicStyle } from '../engine/audio.js';
 import { drawTouchStick } from '../engine/input.js';
 import { loadSettings, saveSettings } from './settings.js';
 import { Achievements } from './achievements.js';
@@ -27,6 +27,8 @@ import { MAX_WEAPONS } from '../../data/passives.js';
 import { ENEMIES } from '../../data/enemies.js';
 import { createProjectilePool, updateProjectiles, drawProjectiles } from './projectiles.js';
 import { Zones } from './zones.js';
+import { MapTwist } from './maps.js';
+import { MAPS } from '../../data/maps.js';
 import { rollChoices, applyChoice, openChest } from './upgrades.js';
 import { setWeaponLevel } from './weapons/index.js';
 import { recomputeStats } from './player.js';
@@ -60,6 +62,7 @@ export class Game {
     this.scratch2 = new Int32Array(SPAWNER.maxEnemies);
     this.projectiles = createProjectilePool();
     this.zones = new Zones(assets);
+    this.twist = new MapTwist();
     this.fx = new Fx();
     this.spawner = new Spawner();
     this.score = new Score();
@@ -68,6 +71,7 @@ export class Game {
     this.debug = new Debug(document.getElementById('debug'), this);
     this.meta = new Meta();
     this.settings = loadSettings();
+    this.setMap(this.meta.data.map);
     this.achievements = new Achievements(this);
     this.applySettings();
     this.hud.onPause(() => {
@@ -115,6 +119,14 @@ export class Game {
     this.hud.setVisible(s !== 'title');
   }
 
+  // Switches the floor art, music remix and twist to a map from data/maps.js.
+  setMap(id) {
+    this.mapId = id;
+    this.map = MAPS[id];
+    this.floor.setStyle(this.map.floor);
+    setMusicStyle(this.map.music);
+  }
+
   // --- Run lifecycle ------------------------------------------------------------------
   newRun(charId = this.meta.data.selected) {
     const def = CHARACTERS[charId];
@@ -126,6 +138,7 @@ export class Game {
     this.hazards.clear();
     this.projectiles.clear();
     this.zones.clear();
+    this.twist.reset();
     this.fx.clear();
     this.score.reset();
     this.spawner.reset();
@@ -149,6 +162,8 @@ export class Game {
     const stats = {
       won,
       character: p.def.name,
+      map: this.mapId,
+      mapName: this.map.name,
       time: this.time,
       kills: this.score.kills,
       csat: this.score.csat,
@@ -158,14 +173,14 @@ export class Game {
         .map((w) => ({ name: w.def.name, icon: w.def.icon, evolved: !!w.def.evolved, damage: Math.round(w.damageDone) }))
         .sort((a, b) => b.damage - a.damage),
     };
-    const { pay, records } = this.meta.finishShift(stats);
+    const { pay, records, newMap } = this.meta.finishShift(stats);
     const r = this.achievements.run;
     r.ended = true;
     r.won = won;
     r.time = this.time;
     r.kills = this.score.kills;
     this.achievements.check();
-    this.screens.gameOver({ ...stats, pay, records, balance: this.meta.data.pay });
+    this.screens.gameOver({ ...stats, pay, records, newMap, balance: this.meta.data.pay });
   }
 
   // Union Rep (shop): come back from burnout once per revive, clearing some space.
@@ -326,6 +341,7 @@ export class Game {
     updateProjectiles(this, dt);
     this.enemies.compact(); // hash indices are stale after this point
     this.zones.update(this, dt);
+    this.twist.update(this, dt);
     this.hazards.update(this, dt);
     updateTickets(this, dt);
     updateItems(this, dt); // may open the chest screen
@@ -444,6 +460,14 @@ export class Game {
 
     // Screen-space overlays.
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (this.twist.drawOverlay(this, ctx, (p.x - left) * s, (p.y - 4 - top) * s)) {
+      // In the dark, attacks you have to dodge still show up.
+      ctx.setTransform(s, 0, 0, s, -left * s, -top * s);
+      this.hazards.drawTelegraphs(ctx);
+      drawBossTelegraphs(this, ctx);
+      this.hazards.draw(ctx);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
     if (this.settings.stick) drawTouchStick(ctx, this.dpr);
 
     this.debug.frame(frameDt);

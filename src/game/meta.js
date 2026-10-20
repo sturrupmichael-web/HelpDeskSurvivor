@@ -4,6 +4,7 @@
 
 import { SHOP, PAYOUT } from '../../data/meta.js';
 import { CHARACTERS } from '../../data/player.js';
+import { MAPS } from '../../data/maps.js';
 
 const KEY = 'helpdesk-survivors.save.v1';
 
@@ -17,6 +18,9 @@ function fresh() {
     best: { time: 0, tickets: 0, csat: 0 },
     shifts: 0,
     wins: 0,
+    map: 'office', // selected map
+    mapsWon: [], // maps with at least one won shift (each unlocks the next)
+    mapBest: {}, // map id -> { time, tickets, wins }
   };
 }
 
@@ -30,6 +34,7 @@ export class Meta {
       // No storage, or a corrupt save: start fresh.
     }
     if (!CHARACTERS[this.data.selected]) this.data.selected = 'tier1';
+    if (!this.mapUnlocked(this.data.map)) this.data.map = 'office';
   }
 
   save() {
@@ -87,12 +92,37 @@ export class Meta {
     return true;
   }
 
-  // Ends a shift: pays out, updates records. Returns { pay, records: [names of new records] }.
+  mapUnlocked(id) {
+    const m = MAPS[id];
+    return !!m && (!m.unlockAfter || this.data.mapsWon.includes(m.unlockAfter));
+  }
+
+  selectMap(id) {
+    if (!this.mapUnlocked(id)) return false;
+    this.data.map = id;
+    this.save();
+    return true;
+  }
+
+  // Ends a shift on map `s.map`: pays out (with the map's pay bonus), updates records
+  // and unlocks. Returns { pay, records: [names of new records], newMap: id or null }.
   finishShift(s) {
+    const map = MAPS[s.map] ?? MAPS.office;
     const pay = Math.floor(
-      (s.time / 60) * PAYOUT.perMinute + s.kills * PAYOUT.perKill + s.csat * PAYOUT.perCsat + (s.won ? PAYOUT.winBonus : 0),
+      ((s.time / 60) * PAYOUT.perMinute + s.kills * PAYOUT.perKill + s.csat * PAYOUT.perCsat + (s.won ? PAYOUT.winBonus : 0)) * map.pay,
     );
     const d = this.data;
+    const mb = (d.mapBest[s.map] ??= { time: 0, tickets: 0, wins: 0 });
+    mb.time = Math.max(mb.time, s.time);
+    mb.tickets = Math.max(mb.tickets, s.kills);
+    let newMap = null;
+    if (s.won) {
+      mb.wins++;
+      if (!d.mapsWon.includes(s.map)) {
+        d.mapsWon.push(s.map);
+        newMap = Object.keys(MAPS).find((id) => MAPS[id].unlockAfter === s.map) ?? null;
+      }
+    }
     d.pay += pay;
     d.earned += pay;
     d.shifts++;
@@ -102,7 +132,7 @@ export class Meta {
     if (s.kills > d.best.tickets) (d.best.tickets = s.kills), records.push('tickets');
     if (s.csat > d.best.csat) (d.best.csat = s.csat), records.push('csat');
     this.save();
-    return { pay, records };
+    return { pay, records, newMap };
   }
 
   // Debug: wipe the save.
