@@ -221,3 +221,16 @@ The changes from that pass:
 
 If the game feels too hard, lower `minAlive` between 4:00 and 10:00. If it feels too
 easy, raise `hpMult` from 10:00 onward or boss `hp`.
+
+## Map balance notes (office maps)
+
+Tuned with the cautious bot plus every shop upgrade maxed (a player who has won the
+previous map), 6 shifts per map. Win rates: Open Office 4/6, Server Room 5/6, Call
+Center 4/6, Parking Garage 5/6. The bot walks blindly through hot aisles and can see in
+the dark, so for a person the Server Room plays easier than that and the Parking Garage
+harder; the garage is meant to be the toughest. A brand-new character with no upgrades
+burns out around 3:00 to 3:40 on every map.
+
+Changes from that pass: hot-aisle drain 3 to 2 sanity/s; Call Center phones every 3.5 s
+(was 4) for 12 + 1.5/min damage (was 10 + 1.2) in radius 50; garage flashlight 190
+(was 170) and enemy HP x1.15 (was x1.2).

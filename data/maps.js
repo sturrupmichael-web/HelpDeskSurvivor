@@ -37,7 +37,7 @@ export const MAPS = {
     speedMult: 1,
     mixBoost: { steve: 1.6, phish: 1.6 },
     music: { transpose: -3, tempo: 1.06, lead: 'sawtooth', cutoff: 1100 },
-    twist: { type: 'hotAisles', drain: 3, speed: 0.3 },
+    twist: { type: 'hotAisles', drain: 2, speed: 0.3 },
   },
   callcenter: {
     name: 'Call Center',
@@ -50,7 +50,7 @@ export const MAPS = {
     speedMult: 1,
     mixBoost: { randy: 2, walkup: 1.4 },
     music: { transpose: 2, tempo: 1.1, lead: 'square', cutoff: 2000 },
-    twist: { type: 'phones', every: 4, delay: 1.4, radius: 46, damage: 10, damagePerMin: 1.2 },
+    twist: { type: 'phones', every: 3.5, delay: 1.4, radius: 50, damage: 12, damagePerMin: 1.5 },
   },
   garage: {
     name: 'Night Shift: Parking Garage',
@@ -59,11 +59,11 @@ export const MAPS = {
     blurb: "3 a.m. on-call. The exec's laptop won't connect and he is in the car.",
     twistText: 'Lights out: you only see what your phone flashlight shows. Users are 10% faster.',
     pay: 1.5,
-    hpMult: 1.2,
+    hpMult: 1.15,
     speedMult: 1.1,
     mixBoost: { phish: 1.3, vip: 1.5 },
     music: { transpose: -5, tempo: 0.92, lead: 'triangle', cutoff: 900 },
-    twist: { type: 'dark', radius: 170, flicker: 0.06 },
+    twist: { type: 'dark', radius: 190, flicker: 0.06 },
   },
 };
 

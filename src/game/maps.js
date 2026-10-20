@@ -23,7 +23,7 @@ export class MapTwist {
       this.hot = game.floor.isHot(p.x, p.y);
       if (this.hot) {
         p.slow *= 1 + tw.speed;
-        if (p.invuln <= 0 && game.victoryT <= 0) p.hp -= tw.drain * dt;
+        if (!p.god && p.invuln <= 0 && game.victoryT <= 0) p.hp -= tw.drain * dt;
       }
     } else if (tw.type === 'phones') {
       if ((this.t += dt) < tw.every || game.victoryT > 0) return;
