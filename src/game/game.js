@@ -36,6 +36,7 @@ import { Spawner } from './spawner.js';
 import { Meta } from './meta.js';
 import { Score } from './score.js';
 import { Fx } from './fx.js';
+import { recordWiki } from './wiki.js';
 import { Hud } from '../ui/hud.js';
 import { Screens } from '../ui/screens.js';
 import { Debug, DEBUG_ALLOWED } from '../ui/debug.js';
@@ -179,6 +180,7 @@ export class Game {
         .map((w) => ({ name: w.def.name, icon: w.def.icon, evolved: !!w.def.evolved, damage: Math.round(w.damageDone) }))
         .sort((a, b) => b.damage - a.damage),
     };
+    const wikiNew = recordWiki(this);
     const { pay, records, newMap } = this.meta.finishShift(stats);
     const r = this.achievements.run;
     r.ended = true;
@@ -186,7 +188,7 @@ export class Game {
     r.time = this.time;
     r.kills = this.score.kills;
     this.achievements.check();
-    this.screens.gameOver({ ...stats, pay, records, newMap, balance: this.meta.data.pay });
+    this.screens.gameOver({ ...stats, pay, records, newMap, wikiNew, balance: this.meta.data.pay });
   }
 
   // Union Rep (shop): come back from burnout once per revive, clearing some space.
@@ -270,6 +272,7 @@ export class Game {
     this.bossParts.push([e, e.uid]);
     this.bossMax = e.maxHp;
     this.bossDef = e.def; // the pieces' pool objects may be reused by the time it's over
+    this.achievements.run.bossesMet.push(e.def.sprite); // for the Help Desk Wiki
     this.camera.shake(5);
   }
 

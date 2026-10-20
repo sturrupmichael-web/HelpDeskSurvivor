@@ -15,7 +15,7 @@ export class Achievements {
   startRun() {
     this.run = {
       time: 0, kills: 0, killsById: {}, maxMult: 1, evolutions: 0, pizzas: 0,
-      incident: false, bosses: [], won: false, ended: false, revived: false, minHpFrac: 1,
+      incident: false, bosses: [], bossesMet: [], won: false, ended: false, revived: false, minHpFrac: 1,
     };
   }
 

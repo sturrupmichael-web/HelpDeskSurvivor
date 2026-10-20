@@ -42,6 +42,7 @@ export const ENEMIES = {
     name: 'Reply-All Reply', sprite: 'randy_small', behavior: 'chase',
     hp: 4, speed: 50, damage: 4, radius: 5, foot: 5, xp: 1, knockback: 1.3,
     particle: ['#f4f4f4', '#b13e53'],
+    flavor: '"+1" "Me too" "Please stop replying all" "Same"',
   },
   phish: {
     name: 'Phish Clicker', sprite: 'phish', behavior: 'summoner',
@@ -54,6 +55,7 @@ export const ENEMIES = {
     name: 'Malware', sprite: 'malware', behavior: 'chase',
     hp: 3, speed: 56, damage: 5, radius: 5, foot: 4, xp: 1, knockback: 1.4,
     particle: ['#b13e53', '#7a4ea0'],
+    flavor: 'FREE_GIFT_CARD.exe has been running since Tuesday.',
   },
   jammer: {
     name: 'Printer Jammer', sprite: 'jammer', behavior: 'dropper',

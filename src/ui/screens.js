@@ -15,6 +15,8 @@ import { DEBUG_ALLOWED } from './debug.js';
 import { MAPS, MAP_ORDER } from '../../data/maps.js';
 import { Floor } from '../game/floor.js';
 import { topScores, postScore, cleanName } from '../game/leaderboard.js';
+import { recordWiki } from '../game/wiki.js';
+import { wikiScreen, wikiProgress } from './wiki.js';
 import { LEADERBOARD } from '../../data/leaderboard.js';
 import { TITLE_TAGLINES, LEVEL_UP_LINES, BURNOUT_QUIPS, VICTORY_QUIPS, PAUSE_LINES } from '../../data/flavor.js';
 
@@ -101,6 +103,7 @@ export class Screens {
   title() {
     const m = this.game.meta.data;
     const ch = CHARACTERS[m.selected];
+    const wiki = wikiProgress(this.game.meta);
     const go = (act) => {
       sfx('click');
       if (act === 'start') this.game.newRun();
@@ -110,6 +113,7 @@ export class Screens {
       else if (act === 'settings') this.settings(() => this.title());
       else if (act === 'maps') this.maps();
       else if (act === 'board') this.leaderboard();
+      else if (act === 'wiki') wikiScreen(this);
       else if (act === 'install') {
         window.installPrompt?.prompt();
         window.installPrompt = null;
@@ -127,6 +131,7 @@ export class Screens {
         <button data-act="chars">Characters <kbd>C</kbd></button>
         <button data-act="shop">Overtime Shop ${PAY(m.pay)} <kbd>S</kbd></button>
         <button data-act="board">Leaderboard <kbd>B</kbd></button>
+        <button data-act="wiki">Help Desk Wiki ${wiki.found}/${wiki.total} <kbd>K</kbd></button>
         ${window.installPrompt ? '<button data-act="install">Install App</button>' : ''}
         <div class="row-buttons">
           <button data-act="ach">Achievements ${Object.keys(m.achievements ?? {}).length}/${ACHIEVEMENTS.length} <kbd>A</kbd></button>
@@ -148,6 +153,7 @@ export class Screens {
         else if (code === 'KeyC') go('chars');
         else if (code === 'KeyL') go('maps');
         else if (code === 'KeyB') go('board');
+        else if (code === 'KeyK') go('wiki');
         else if (code === 'KeyS') go('shop');
         else if (code === 'KeyA') go('ach');
         else if (code === 'KeyO') go('settings');
@@ -469,8 +475,11 @@ export class Screens {
   pause() {
     const go = (act) => {
       if (act === 'resume') this.game.resume();
-      else if (act === 'restart') this.game.newRun();
-      else if (act === 'quit') {
+      else if (act === 'restart') {
+        recordWiki(this.game);
+        this.game.newRun();
+      } else if (act === 'quit') {
+        recordWiki(this.game);
         this.game.newRun();
         this.game.setState('title');
         this.title();
@@ -659,6 +668,7 @@ export class Screens {
       `<div class="panel wide summary ${s.won ? 'win' : 'lose'}">
         <h1>${s.won ? 'CLOCKED OUT!' : 'BURNOUT'}</h1>
         <p class="sub">${pickLine(s.won ? VICTORY_QUIPS : BURNOUT_QUIPS)}</p>
+        ${s.wikiNew?.length ? `<p class="wiki-new">NEW IN THE WIKI: ${s.wikiNew.slice(0, 6).map((n) => `<b>${n}</b>`).join(', ')}${s.wikiNew.length > 6 ? ` and ${s.wikiNew.length - 6} more` : ''}</p>` : ''}
         ${s.newMap ? `<p class="unlock">NEW MAP UNLOCKED: <b>${MAPS[s.newMap].name}</b> (pick it under Map on the title screen)</p>` : ''}
         <div class="summary-cols">
           <table class="stats">

@@ -250,3 +250,18 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
   .panel .cards.levelup button.card { width: calc(25% - 8px); min-width: 150px; padding: 8px; gap: 4px; }
   .panel .cards.levelup .card-text, .panel .cards.levelup .card-hint { font-size: 11px; }
 }
+
+/* Help Desk Wiki */
+.wiki-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; text-align: left; margin-top: 6px; }
+.wiki-entry { display: flex; gap: 10px; align-items: flex-start; padding: 8px; background: var(--ink); border: 2px solid var(--gray); }
+.wiki-entry.evolved { border-color: var(--yellow); }
+.wiki-entry.locked { border-color: var(--slate); opacity: 0.6; }
+.wiki-entry.locked .icon { filter: brightness(0) invert(0.25); }
+.wiki-entry .icon, .wiki-thumb { flex: none; }
+.wiki-entry b { font-size: 13px; display: block; margin-bottom: 2px; }
+.wiki-entry i { font-size: 11px; display: block; color: var(--paper); opacity: 0.8; margin-bottom: 4px; }
+.wiki-entry span { font-size: 11px; display: block; color: var(--gray); }
+.wiki-entry .wiki-facts { color: var(--yellow); margin-top: 3px; }
+.wiki-new { color: var(--paper); font-size: 13px; margin: 0 0 10px; }
+.wiki-new b { color: var(--yellow); }
+@media (max-width: 600px) { .wiki-grid { grid-template-columns: 1fr; } }

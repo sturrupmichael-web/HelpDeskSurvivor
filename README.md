@@ -40,7 +40,7 @@ npm run build
 | 1 / 2 / 3 or click | Pick a level-up card |
 | Enter | Close the Change Approved (chest) screen |
 | R | Reroll the level-up cards (needs the Escalation Path upgrade) |
-| L / C / S / B / A / O | Office Maps / Characters / Overtime Shop / Leaderboard / Achievements / Settings (title screen) |
+| L / C / S / B / K / A / O | Office Maps / Characters / Overtime Shop / Leaderboard / Help Desk Wiki / Achievements / Settings (title screen) |
 | P | Post the shift to the online leaderboard (end-of-shift screen) |
 | T / O | Shift Stats / Settings (pause menu) |
 | A | When everything is maxed, always take the pizza from then on (no more level-up screens) |
@@ -65,6 +65,11 @@ ringing desk phones, darkness).
 **Achievements:** 24 of them in `data/achievements.js`; each is a name, icon, text and a
 `check(run, meta)` test. Unlocks pop a toast and are listed under Achievements on the
 title screen.
+
+**Help Desk Wiki** (`src/game/wiki.js` records, `src/ui/wiki.js` screen): a codex of
+users, bosses, tools and passives. An article unlocks the first time you close that
+user, face that boss, or finish a shift carrying that tool or passive; the end-of-shift
+screen lists new ones. Text comes from the `flavor` and `desc` fields in `data/`.
 
 **Debug mode hotkeys** (only while debug mode is on and the game is running):
 `1` spawn 50 enemies, `2` spawn 300 enemies (from the current wave mix), `3` level up,
@@ -183,3 +188,4 @@ current `manifest.json` for the full list):
    Night Janitor (Parking Garage) replace the Major Incident at 10:00 on their maps.
 9. **Online leaderboard:** top CSAT per map (Supabase), posted from the end-of-shift screen.
 10. **Installable app:** add to the home screen, runs full screen and offline.
+11. **Help Desk Wiki:** a codex of users, bosses, tools and passives that fills in as you play.
