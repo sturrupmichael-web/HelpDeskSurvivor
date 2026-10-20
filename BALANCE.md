@@ -117,7 +117,37 @@ shoved by the horde.
 | `minionEvery`, `minionCount`, `minion` | Status Update Requests it releases |
 | `enrageAt` | HP fraction below which it fires a second offset ring and rings 25% more often |
 
-It drops a Change Approved chest (`drops: { chest: 1 }`).
+Every non-final boss drops a Change Approved chest where it goes down (where the last
+piece goes down, for the Rat's Nest), and `downBanner` is the banner shown then.
+
+**Map bosses.** On the Server Room, Call Center and Parking Garage, the map's `boss`
+(data/maps.js) replaces the Major Incident at 10:00, banner text included.
+
+**The Rat's Nest** (`ratsnest`, Server Room, 13000 HP). `params`:
+
+| Param | Meaning |
+| --- | --- |
+| `lashEvery`, `lashTelegraph` | seconds between lashes; warning time (red strips on the floor) |
+| `lashLength`, `lashWidth`, `lashDamage` | size of each cable strip and its sanity damage (3-5 cables, one aimed at you) |
+| `snagEvery`, `snagCount`, `snagScatter`, `snag` | cable loops thrown around you: a zone (`radius`, `life`, `slow`) |
+| `splitAt`, `small` | HP fraction where it splits into three `ratsnest_small` nests sharing what is left |
+
+Smaller nests lash 2-3 shorter cables, 40% less often, and throw one loop at a time.
+
+**The Angry Caller** (`caller`, Call Center, 12500 HP). Keeps `keepAway` [near, far] px
+from you and circles. `attackGap` [normal, enraged], `enrageAt`. Attacks:
+
+| Attack | Params |
+| --- | --- |
+| `hold` | ring of `count` phone bombs at `radius` around you plus one on you, `gap` left out; enraged adds a wider ring `ringGap` s later with the gap in the same place |
+| `scream` | `telegraph`, cone `spread` and `range`, `damage`, `push` (shove speed) |
+| `conference` | `count` of enemy `id` (Reply-All Randy) in a ring at `radius` around you |
+
+**The Night Janitor** (`janitor`, Parking Garage, 13500 HP). Drops a `wet` patch every
+`trailEvery` s (three times as often while charging). On wet floor you keep momentum
+(`SLIP_GRIP` in src/game/player.js). Attacks: `mop` (`count` wet patches in a `spread`
+fan up to `reach` px), `charge` (as The Executive's), `lights` (flashlight shrinks to
+`scale` for `time` s; only on dark maps).
 
 **The Executive** (`executive`, 20:00, 80000 HP, `final: true`: closing it ends the
 shift). `params`:

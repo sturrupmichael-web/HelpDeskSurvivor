@@ -21,6 +21,17 @@ function canvas(w = 64, h = 64) {
           if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1 && clip(x, y)) api.px(x, y, c);
       return api;
     },
+    // Thick quadratic curve from (x0, y0) to (x1, y1) bending toward (cx, cy).
+    curve(x0, y0, cx, cy, x1, y1, c, t = 2) {
+      const steps = Math.ceil(Math.hypot(x1 - x0, y1 - y0) + Math.hypot(cx - x0, cy - y0)) * 2;
+      for (let i = 0; i <= steps; i++) {
+        const u = i / steps;
+        const x = (1 - u) ** 2 * x0 + 2 * (1 - u) * u * cx + u * u * x1;
+        const y = (1 - u) ** 2 * y0 + 2 * (1 - u) * u * cy + u * u * y1;
+        api.rect(Math.round(x - t / 2), Math.round(y - t / 2), t, t, c);
+      }
+      return api;
+    },
     // Black outline around every filled shape (transparent pixels touching paint).
     outline() {
       const marks = [];
@@ -100,6 +111,131 @@ function incident(frame, attack) {
   return c.outline().rows();
 }
 
+// Small seeded RNG so generated art is identical on every build.
+function rng(seed) {
+  return () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+}
+
+// --- The Rat's Nest (Server Room boss): a living tangle of patch cables ---------------
+// walk: dangling cables shuffle along like legs. attack: cables rear up, plugs out.
+// `size` 64 for the full nest, 40 for the three smaller nests it splits into.
+function ratsnest(frame, attack, size = 64) {
+  const c = canvas(size, size);
+  const k = size / 64;
+  const R = rng(7);
+  const cx = 32 * k;
+  const cy = 38 * k;
+  const COLS = ['B', 'y', 'e', 'r', 'o', 'b', 'g', 'q'];
+  // Dangling "legs": cables down to the floor ending in RJ45 plugs.
+  for (let i = 0; i < 5; i++) {
+    const x = (14 + i * 9) * k;
+    const sway = ((i + frame) % 2 ? 3 : -3) * k;
+    const col = COLS[i % COLS.length];
+    if (attack) {
+      // Reared up: cables whip outward and up.
+      const tx = cx + (x - cx) * 2.2;
+      c.curve(x, cy, x + sway, 6 * k, tx, 4 * k + (i % 2) * 6 * k, col, 2);
+      c.rect(Math.round(tx - 2), Math.round(4 * k + (i % 2) * 6 * k - 2), 4, 4, 'w');
+    } else {
+      c.curve(x, cy, x + sway * 2, 52 * k, x + sway, 60 * k, col, 2);
+      c.rect(Math.round(x + sway - 2), Math.round(59 * k), 4, 3, 'w');
+    }
+  }
+  // The body: dark core, then dozens of looping cables on top.
+  c.ellipse(cx, cy, 25 * k, 19 * k, 'K');
+  for (let i = 0; i < 46 * k; i++) {
+    const a0 = R() * Math.PI * 2;
+    const a1 = a0 + 1 + R() * 2.5;
+    const r0 = (0.5 + R() * 0.5) * 24 * k;
+    const r1 = (0.5 + R() * 0.5) * 24 * k;
+    const x0 = cx + Math.cos(a0) * r0;
+    const y0 = cy + Math.sin(a0) * r0 * 0.8;
+    const x1 = cx + Math.cos(a1) * r1;
+    const y1 = cy + Math.sin(a1) * r1 * 0.8;
+    const bx = cx + (R() - 0.5) * 50 * k;
+    const by = cy + (R() - 0.5) * 40 * k;
+    c.curve(x0, y0, bx, by, x1, y1, COLS[(R() * COLS.length) | 0], k > 0.8 ? 2 : 1);
+  }
+  // A gap in the tangle with two angry eyes.
+  const ey = cy - 4 * k;
+  c.ellipse(cx, ey, 11 * k, 5 * k, 'k');
+  const eye = attack ? 'r' : 'y';
+  c.rect(Math.round(cx - 7 * k), Math.round(ey - 1), 3, 2, eye).rect(Math.round(cx + 4 * k), Math.round(ey - 1), 3, 2, eye);
+  // A blinking link light.
+  c.rect(Math.round(cx + 14 * k), Math.round(cy + 8 * k), 2, 2, frame ? 'e' : 'o');
+  return c.outline().rows();
+}
+
+// --- The Angry Caller (Call Center boss): a huge furious customer on a headset -------
+// walk: stomps, cord swings. attack: 0 = screaming (mouth wide, red face),
+// 1 = phone raised to dial everyone in.
+function caller(step, pose) {
+  const c = canvas();
+  const lift = step ? 3 : 0;
+  c.rect(23, 50, 8, 10 - lift, 'h').rect(21, 60 - lift, 11, 3, 'K');
+  c.rect(34, 50, 8, 10 - (step ? 0 : 3), 'h').rect(33, 60 - (step ? 0 : 3), 11, 3, 'K');
+  // Puffy jacket, wide.
+  c.ellipse(32, 38, 18, 15, 'p').rect(16, 40, 33, 11, 'p');
+  c.rect(31, 26, 2, 25, 'k'); // zipper
+  c.rect(19, 44, 7, 1, 'k').rect(39, 44, 7, 1, 'k');
+  // Arms: left on hip, right holds a phone (raised in pose 1).
+  c.rect(10, 30, 7, 14, 'p').rect(12, 44, 6, 4, 's');
+  if (pose === 1) c.rect(48, 14, 7, 17, 'p').rect(48, 9, 7, 5, 's').rect(47, 2, 8, 9, 'K').rect(49, 3, 4, 6, 'q');
+  else c.rect(48, 30, 7, 14, 'p').rect(48, 44, 6, 4, 's').rect(48, 47, 5, 7, 'K').rect(49, 48, 3, 4, 'q');
+  // Head: red when screaming.
+  const skin = pose === 0 ? 'r' : 's';
+  c.rect(28, 20, 9, 5, skin);
+  c.ellipse(32, 13, 10, 10, skin);
+  c.ellipse(32, 6, 10, 5, 'h', (x, y) => y <= 7); // hair
+  // Headset: band, ear cups, mic boom.
+  c.curve(21, 13, 32, -2, 43, 13, 'G', 2);
+  c.rect(19, 10, 4, 7, 'K').rect(42, 10, 4, 7, 'K');
+  c.curve(21, 16, 22, 22, 28, 22, 'G', 1);
+  c.rect(28, 21, 2, 2, 'k');
+  // Face.
+  c.rect(26, 12, 2, 2, 'k').rect(36, 12, 2, 2, 'k');
+  c.px(25, 10, 'k').px(26, 10, 'k').px(27, 11, 'k').px(38, 10, 'k').px(37, 10, 'k').px(36, 11, 'k');
+  if (pose === 0) c.rect(28, 16, 8, 6, 'k').rect(29, 17, 6, 3, 'r');
+  else c.rect(29, 18, 6, 1, 'k').px(28, 19, 'k').px(35, 19, 'k');
+  // Curly phone cord from the headset down to the belt (swings with the step).
+  for (let y = 24; y < 44; y += 2) c.px(18 + ((y / 2 + step) % 2 ? 1 : -1), y, 'k');
+  return c.outline().rows();
+}
+
+// --- The Night Janitor (Parking Garage boss): rides a floor buffer, wields a mop -------
+// walk: buffer pad spins. attack: 0 = mop swung out, 1 = leaning in for a charge.
+function janitor(frame, pose) {
+  const c = canvas();
+  // Floor buffer machine: round pad and housing at the bottom, handle up to his hands.
+  c.ellipse(32, 56, 22, 6, 'G');
+  c.ellipse(32, 53, 18, 6, 'y');
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2 + (frame ? 0.5 : 0);
+    c.px(32 + Math.cos(a) * 14, 56 + Math.sin(a) * 4, 'k');
+  }
+  c.rect(30, 34, 3, 18, 'g'); // handle
+  c.rect(24, 33, 15, 3, 'K');
+  // Body: grey coveralls, hi-vis vest.
+  const lean = pose === 1 ? 4 : 0;
+  c.rect(22 + lean, 20, 20, 16, 'G').rect(22 + lean, 22, 20, 4, 'o').rect(22 + lean, 30, 20, 2, 'y');
+  c.rect(24 + lean, 36, 6, 12, 'G').rect(34 + lean, 36, 6, 12, 'G');
+  // Arms on the handle.
+  c.rect(18 + lean, 22, 5, 12, 'G').rect(41 + lean, 22, 5, 12, 'G').rect(22, 32, 4, 3, 'S').rect(37, 32, 4, 3, 'S');
+  // Head with a beanie.
+  c.ellipse(32 + lean, 13, 8, 8, 'S');
+  c.ellipse(32 + lean, 8, 9, 5, 'n', (x, y) => y <= 9).rect(23 + lean, 8, 18, 2, 'b');
+  c.rect(28 + lean, 13, 2, 2, 'k').rect(35 + lean, 13, 2, 2, 'k');
+  c.rect(29 + lean, 17, 7, 1, 'k');
+  // Mop over the shoulder, or swung out to the side.
+  if (pose === 0) c.curve(46, 26, 54, 34, 60, 44, 'h', 2).rect(54, 44, 10, 6, 'g');
+  else c.curve(46, 18, 50, 8, 54, 2, 'h', 2).rect(51, 0, 8, 4, 'g');
+  if (frame) c.px(10, 58, 'B').px(54, 58, 'B'); // water spray
+  return c.outline().rows();
+}
+
 // --- Status Update Request (Major Incident minion), 16x16 ----------------------------
 const STATUS = ['.kkkkkkkkk.', 'kyyyyyyyyyk', 'kykyykyykyk', 'kyyyyyyyyyk', '.kkykkkkkk.', '..kk.......'];
 const blank = '...........';
@@ -116,6 +252,26 @@ export default {
       size: [64, 64],
       fps: 4,
       anims: { walk: [incident(0), incident(1)], attack: [incident(0, true), incident(1, true)] },
+    },
+    ratsnest: {
+      size: [64, 64],
+      fps: 4,
+      anims: { walk: [ratsnest(0), ratsnest(1)], attack: [ratsnest(0, true), ratsnest(1, true)] },
+    },
+    ratsnest_small: {
+      size: [40, 40],
+      fps: 5,
+      anims: { walk: [ratsnest(0, false, 40), ratsnest(1, false, 40)], attack: [ratsnest(0, true, 40), ratsnest(1, true, 40)] },
+    },
+    caller: {
+      size: [64, 64],
+      fps: 4,
+      anims: { walk: [caller(0), caller(1)], attack: [caller(0, 0), caller(1, 1)] },
+    },
+    janitor: {
+      size: [64, 64],
+      fps: 6,
+      anims: { walk: [janitor(0), janitor(1)], attack: [janitor(0, 0), janitor(1, 1)] },
     },
     status_update: { size: [16, 16], fps: 4, anims: { walk: [[...STATUS, blank], [blank, ...STATUS]] } },
   },

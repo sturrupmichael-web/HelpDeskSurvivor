@@ -91,7 +91,9 @@ export class Spawner {
 
   events(game, dt) {
     const t = game.time;
-    const ev = EVENTS[this.nextEvent];
+    let ev = EVENTS[this.nextEvent];
+    // Each office map can swap the 10:00 boss for its own (`boss` in data/maps.js).
+    if (ev?.type === 'boss' && ev.boss === 'incident' && game.map.boss) ev = { ...ev, ...game.map.boss };
     if (ev) {
       if (this.warned !== this.nextEvent && t >= ev.t - ev.warn) {
         this.warned = this.nextEvent;

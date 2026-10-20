@@ -36,6 +36,11 @@ export function createPlayer(def, sprite, meta) {
     flash: 0,
     hurtCooldown: 0,
     slow: 1, // set each tick by floor hazards (zones.js)
+    slip: false, // standing on a wet floor (zones.js): movement keeps its momentum
+    vx: 0, // velocity (only lags behind your input while slipping)
+    vy: 0,
+    kx: 0, // shove from boss attacks (Angry Caller scream, Night Janitor charge)
+    ky: 0,
     god: false,
     invuln: 0, // seconds of PTO (Out of Office) left: no damage
     level: 1,
@@ -70,13 +75,28 @@ export function recomputeStats(p) {
   p.stats.damageTaken = Math.max(0.1, p.stats.damageTaken);
 }
 
+const SLIP_GRIP = 1.6; // how fast you change direction on a wet floor (1/s)
+const SHOVE_DAMP = 7; // how fast a shove from a boss dies down (1/s)
+
 export function updatePlayer(game, dt) {
   const p = game.player;
   moveAxis(axis);
   if (game.autopilot) game.autopilot(game, axis); // headless balance bot (see BALANCE.md)
   const speed = p.def.speed * p.stats.moveSpeed * p.slow;
-  p.x += axis.x * speed * dt;
-  p.y += axis.y * speed * dt;
+  if (p.slip) {
+    // Wet floor: you only slowly change direction.
+    const k = Math.min(1, SLIP_GRIP * dt);
+    p.vx += (axis.x * speed * 1.15 - p.vx) * k;
+    p.vy += (axis.y * speed * 1.15 - p.vy) * k;
+  } else {
+    p.vx = axis.x * speed;
+    p.vy = axis.y * speed;
+  }
+  p.x += (p.vx + p.kx) * dt;
+  p.y += (p.vy + p.ky) * dt;
+  const damp = Math.exp(-SHOVE_DAMP * dt);
+  p.kx *= damp;
+  p.ky *= damp;
   p.moving = axis.x !== 0 || axis.y !== 0;
   if (axis.x) p.flip = axis.x < 0;
   p.animT = p.moving ? p.animT + dt : 0;

@@ -12,5 +12,8 @@ import aura from './aura.js';
 import line from './line.js';
 import incidentBoss from './incidentBoss.js';
 import executiveBoss from './executiveBoss.js';
+import ratsnestBoss from './ratsnestBoss.js';
+import callerBoss from './callerBoss.js';
+import janitorBoss from './janitorBoss.js';
 
-export const BEHAVIORS = { chase, dart, summoner, dropper, teleport, aura, line, incidentBoss, executiveBoss };
+export const BEHAVIORS = { chase, dart, summoner, dropper, teleport, aura, line, incidentBoss, executiveBoss, ratsnestBoss, callerBoss, janitorBoss };

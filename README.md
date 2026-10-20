@@ -61,7 +61,7 @@ Parking Garage. Each one unlocks when you win a shift on the one before it, and 
 own floor art, music remix, Overtime Pay bonus, best times and a twist (hot aisles,
 ringing desk phones, darkness).
 
-**Achievements:** 21 of them in `data/achievements.js`; each is a name, icon, text and a
+**Achievements:** 24 of them in `data/achievements.js`; each is a name, icon, text and a
 `check(run, meta)` test. Unlocks pop a toast and are listed under Achievements on the
 title screen.
 
@@ -142,3 +142,5 @@ current `manifest.json` for the full list):
    Cloud Architect; Patch Cable, Delegate, Coffee Run, Auto-Scaling, Out-of-Office Reply
    and Ping Sweep; the Fiber Backbone, Outsourced Team and Espresso Machine evolutions;
    and the Standing Desk passive.
+8. **Map bosses:** The Rat's Nest (Server Room), The Angry Caller (Call Center) and The
+   Night Janitor (Parking Garage) replace the Major Incident at 10:00 on their maps.

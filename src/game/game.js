@@ -80,6 +80,9 @@ export class Game {
     this.time = 0;
     this.boss = null; // the boss on the HUD bar (check bossAlive(): pool objects get reused)
     this.bossUid = 0;
+    this.bossParts = []; // [enemy, uid] for every piece of a boss that splits (Rat's Nest)
+    this.bossMax = 1; // HP of the whole boss fight, for the HUD bar
+    this.bossDef = null;
     this.victoryT = 0;
 
     this.resize();
@@ -145,6 +148,7 @@ export class Game {
     this.achievements.startRun();
     this.time = 0;
     this.boss = null;
+    this.bossParts.length = 0;
     this.victoryT = 0;
     this.autoPizza = false; // everything maxed and the player chose "always take the pizza"
     this.camera.snap(0, 0);
@@ -260,16 +264,48 @@ export class Game {
   setBoss(e) {
     this.boss = e;
     this.bossUid = e.uid;
+    this.bossParts.length = 0;
+    this.bossParts.push([e, e.uid]);
+    this.bossMax = e.maxHp;
+    this.bossDef = e.def; // the pieces' pool objects may be reused by the time it's over
     this.camera.shake(5);
+  }
+
+  // Another piece of the current boss: the fight lasts until every piece is down.
+  addBossPart(e) {
+    this.bossParts.push([e, e.uid]);
   }
 
   bossAlive() {
     const b = this.boss;
-    return !!b && !b.dead && b.uid === this.bossUid;
+    if (b && !b.dead && b.uid === this.bossUid) return true;
+    // The tracked piece is down: follow another live one, if any.
+    for (const [e, uid] of this.bossParts) {
+      if (e.dead || e.uid !== uid) continue;
+      this.boss = e;
+      this.bossUid = uid;
+      return true;
+    }
+    return false;
+  }
+
+  // HUD bar: what is left of the whole fight (all pieces together).
+  bossHpFrac() {
+    let hp = 0;
+    for (const [e, uid] of this.bossParts) if (!e.dead && e.uid === uid) hp += Math.max(0, e.hp);
+    return Math.min(1, hp / this.bossMax);
   }
 
   // Called from killEnemy for any boss.
   onBossDown(e) {
+    if (this.bossParts.length > 1 && this.bossAlive()) {
+      // One piece of a split boss: the fight goes on.
+      this.camera.shake(4);
+      this.fx.ring(e.x, e.y, 50, '#ffcd75', 0.5, true);
+      this.fx.burst(e.x, e.y - 10, e.def.particle, 20);
+      sfx('pop');
+      return;
+    }
     this.camera.shake(8);
     this.fx.ring(e.x, e.y, 90, '#ffcd75', 0.6, true);
     this.fx.ring(e.x, e.y, 120, '#f4f4f4', 0.8);
@@ -291,8 +327,14 @@ export class Game {
       this.hud.banner('SHIFT COMPLETE', 'The Executive left for the board meeting. Everyone else went home.', VICTORY_DELAY);
       sfx('evolve');
     } else {
-      this.achievements.run.incident = true;
-      this.hud.banner('INCIDENT RESOLVED', 'Post-mortem scheduled for never. Grab the Change Approved.', 3);
+      // A split boss's last piece (no banner of its own) counts as the whole boss.
+      const def = e.def.downBanner || !this.bossDef ? e.def : this.bossDef;
+      const id = def.sprite;
+      if (id === 'incident') this.achievements.run.incident = true;
+      this.achievements.run.bosses.push(id);
+      const [title, text] = def.downBanner ?? ['BOSS DOWN', 'Grab the Change Approved.'];
+      this.hud.banner(title, text, 3);
+      dropItem(this, 'chest', e.x, e.y);
       sfx('chest');
     }
   }
@@ -396,7 +438,8 @@ export class Game {
   }
   // Starts a boss fight right now (the next boss on the timeline, or the Executive).
   debugBoss() {
-    const ev = EVENTS.find((e) => e.type === 'boss' && e.t > this.time) ?? EVENTS.filter((e) => e.type === 'boss').pop();
+    let ev = EVENTS.find((e) => e.type === 'boss' && e.t > this.time) ?? EVENTS.filter((e) => e.type === 'boss').pop();
+    if (ev.boss === 'incident' && this.map.boss) ev = { ...ev, ...this.map.boss };
     this.hud.banner(ev.title, ev.text, 3);
     sfx('siren');
     this.spawner.bossEvent(this, ev);

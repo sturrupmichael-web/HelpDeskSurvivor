@@ -8,15 +8,25 @@ export class MapTwist {
   constructor() {
     this.t = 0;
     this.hot = false; // player is standing in a hot aisle (HUD shows it)
+    this.dimT = 0; // Night Janitor "lights out": seconds left
+    this.dimScale = 1;
   }
 
   reset() {
     this.t = 0;
     this.hot = false;
+    this.dimT = 0;
+  }
+
+  // Shrinks the flashlight to `scale` for `time` seconds (dark maps only).
+  dim(time, scale) {
+    this.dimT = time;
+    this.dimScale = scale;
   }
 
   update(game, dt) {
     const tw = game.map.twist;
+    if (this.dimT > 0) this.dimT -= dt;
     if (!tw) return;
     const p = game.player;
     if (tw.type === 'hotAisles') {
@@ -44,7 +54,9 @@ export class MapTwist {
     if (tw?.type !== 'dark') return false;
     const s = game.view.scale;
     const wobble = 1 - tw.flicker * (Math.sin(performance.now() / 70) * 0.5 + 0.5) * (Math.random() < 0.03 ? 3 : 1);
-    const r = tw.radius * s * wobble;
+    // Lights out: ease down to dimScale, then back up over the last second.
+    const dim = this.dimT > 0 ? 1 - (1 - this.dimScale) * Math.min(1, this.dimT) : 1;
+    const r = tw.radius * s * wobble * dim;
     const g = ctx.createRadialGradient(px, py, r * 0.35, px, py, r);
     g.addColorStop(0, 'rgba(8, 9, 16, 0)');
     g.addColorStop(0.7, 'rgba(8, 9, 16, 0.75)');

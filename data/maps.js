@@ -7,6 +7,8 @@
 //   mixBoost    multiplies spawn weights per enemy id (see the `mix` in data/waves.js)
 //   music       remix of the background track: transpose (semitones), tempo (x), lead
 //               (oscillator type), cutoff (lead filter Hz)
+//   boss        replaces the Major Incident at 10:00: `boss` enemy id (data/enemies.js)
+//               plus the warning banner's `title` and `text`
 //   twist       the map's special rule, handled in src/game/maps.js:
 //               hotAisles  red strips on the floor: drain `drain` sanity/s, +`speed` move speed
 //               phones     every `every` s a desk phone rings near you and goes off after
@@ -38,6 +40,7 @@ export const MAPS = {
     mixBoost: { steve: 1.6, phish: 1.6 },
     music: { transpose: -3, tempo: 1.06, lead: 'sawtooth', cutoff: 1100 },
     twist: { type: 'hotAisles', drain: 2, speed: 0.3 },
+    boss: { boss: 'ratsnest', title: "THE RAT'S NEST", text: 'Someone opened the cable tray under rack 14. It opened back.' },
   },
   callcenter: {
     name: 'Call Center',
@@ -51,6 +54,7 @@ export const MAPS = {
     mixBoost: { randy: 2, walkup: 1.4 },
     music: { transpose: 2, tempo: 1.1, lead: 'square', cutoff: 2000 },
     twist: { type: 'phones', every: 3.5, delay: 1.4, radius: 50, damage: 12, damagePerMin: 1.5 },
+    boss: { boss: 'caller', title: 'THE ANGRY CALLER', text: 'Line 1 has been on hold for forty minutes. Line 1 is coming to you.' },
   },
   garage: {
     name: 'Night Shift: Parking Garage',
@@ -64,6 +68,7 @@ export const MAPS = {
     mixBoost: { phish: 1.3, vip: 1.5 },
     music: { transpose: -5, tempo: 0.92, lead: 'triangle', cutoff: 900 },
     twist: { type: 'dark', radius: 190, flicker: 0.06 },
+    boss: { boss: 'janitor', title: 'THE NIGHT JANITOR', text: "You're walking on his clean floor." },
   },
 };
 

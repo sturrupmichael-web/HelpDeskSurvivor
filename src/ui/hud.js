@@ -120,7 +120,7 @@ export class Hud {
       e.boss.hidden = !boss;
       if (boss) e.bossName.textContent = boss.def.name;
     });
-    if (boss) this.set('bossHp', Math.ceil((boss.hp / boss.maxHp) * 200), (v) => e.bossFill.setAttribute('width', v / 2));
+    if (boss) this.set('bossHp', Math.ceil(game.bossHpFrac() * 200), (v) => e.bossFill.setAttribute('width', v / 2));
     this.set('hp', Math.max(0, Math.ceil(p.hp)), (v) => {
       e.hp.setAttribute('width', (v / p.maxHp) * 100);
       e.hpText.textContent = v + '/' + p.maxHp;
