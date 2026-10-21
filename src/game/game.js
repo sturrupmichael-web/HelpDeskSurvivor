@@ -32,7 +32,7 @@ import { MAPS } from '../../data/maps.js';
 import { rollChoices, applyChoice, openChest } from './upgrades.js';
 import { setWeaponLevel } from './weapons/index.js';
 import { recomputeStats } from './player.js';
-import { Spawner } from './spawner.js';
+import { Spawner, mapEvent } from './spawner.js';
 import { Meta } from './meta.js';
 import { Score } from './score.js';
 import { Fx } from './fx.js';
@@ -123,23 +123,41 @@ export class Game {
     saveSettings(s);
   }
 
+  // The canvas is the size of the world view (one canvas pixel per world pixel) and the
+  // browser scales it up by a whole number with image-rendering: pixelated. Pixel art looks
+  // the same as drawing every sprite scaled up, at a fraction of the pixels to fill.
   resize() {
     const dpr = window.devicePixelRatio || 1;
     this.dpr = dpr;
-    this.canvas.width = Math.floor(innerWidth * dpr);
-    this.canvas.height = Math.floor(innerHeight * dpr);
+    const dw = innerWidth * dpr;
+    const dh = innerHeight * dpr;
     // Aim for ~TARGET_VIEW_HEIGHT world px tall, capped so narrow (portrait) screens still
     // show ~TARGET_VIEW_WIDTH_MIN wide instead of a huge world of tiny sprites.
-    const zoom = Math.min(this.canvas.height / TARGET_VIEW_HEIGHT, this.canvas.width / TARGET_VIEW_WIDTH_MIN);
-    const scale = Math.max(1, Math.round(zoom));
-    this.view.scale = scale;
-    this.view.w = this.canvas.width / scale;
-    this.view.h = this.canvas.height / scale;
+    const zoom = Math.max(1, Math.round(Math.min(dh / TARGET_VIEW_HEIGHT, dw / TARGET_VIEW_WIDTH_MIN)));
+    const w = Math.ceil(dw / zoom);
+    const h = Math.ceil(dh / zoom);
+    this.canvas.width = w;
+    this.canvas.height = h;
+    // Exactly zoom device pixels per canvas pixel (a hair larger than the window; the
+    // overflow is cropped), so every world pixel is the same size on screen.
+    this.canvas.style.width = (w * zoom) / dpr + 'px';
+    this.canvas.style.height = (h * zoom) / dpr + 'px';
+    this.view.scale = zoom;
+    this.view.w = w;
+    this.view.h = h;
+    // Touch stick: CSS px -> canvas px.
+    this.stickScale = dpr / zoom;
+    // Collision grid: just big enough for everything the spawner keeps (it moves users
+    // left further behind than SPAWNER.recycleDistance back to the screen edge).
+    const reach = (Math.hypot(w, h) / 2) * SPAWNER.recycleDistance + 64;
+    this.hash.resize(Math.min(128, Math.ceil((reach * 2) / this.hash.cell)));
+    this.dirty = true;
   }
 
   setState(s) {
     if (s === 'title' && this.state === 'over') startMusic(); // music plays everywhere but the summary
     this.state = s;
+    this.dirty = true; // draw the world once more in the new state
     this.hud.setVisible(s !== 'title');
   }
 
@@ -148,6 +166,7 @@ export class Game {
     this.mapId = id;
     this.map = MAPS[id];
     this.floor.setStyle(this.map.floor);
+    this.dirty = true;
     setMusicStyle(this.map.music);
   }
 
@@ -504,8 +523,7 @@ export class Game {
   }
   // Starts a boss fight right now (the next boss on the timeline, or the Executive).
   debugBoss() {
-    let ev = EVENTS.find((e) => e.type === 'boss' && e.t > this.time) ?? EVENTS.filter((e) => e.type === 'boss').pop();
-    if (ev.boss === 'incident' && this.map.boss) ev = { ...ev, ...this.map.boss };
+    const ev = mapEvent(EVENTS.find((e) => e.type === 'boss' && e.t > this.time) ?? EVENTS.filter((e) => e.type === 'boss').pop(), this.map);
     this.hud.banner(ev.title, ev.text, 3);
     sfx('siren');
     this.spawner.bossEvent(this, ev);
@@ -513,14 +531,18 @@ export class Game {
 
   // --- Rendering ----------------------------------------------------------------------
   render(frameDt) {
+    this.debug.frame(frameDt);
+    // Menus, level-ups and the summary freeze the world: draw it once, then leave the
+    // canvas alone until play resumes (or the window or map changes).
+    if (this.state !== 'run' && !this.dirty) return;
+    this.dirty = false;
     const { ctx, view, camera, player: p } = this;
-    const s = view.scale;
-    // Snap the camera to whole screen pixels to avoid shimmering.
-    const left = Math.round((camera.x + camera.ox - view.w / 2) * s) / s;
-    const top = Math.round((camera.y + camera.oy - view.h / 2) * s) / s;
+    // Snap the camera to whole world pixels (one canvas pixel each) to avoid shimmering.
+    const left = Math.round(camera.x + camera.ox - view.w / 2);
+    const top = Math.round(camera.y + camera.oy - view.h / 2);
     const right = left + view.w;
     const bottom = top + view.h;
-    ctx.setTransform(s, 0, 0, s, -left * s, -top * s);
+    ctx.setTransform(1, 0, 0, 1, -left, -top);
     ctx.imageSmoothingEnabled = false;
 
     this.floor.draw(ctx, left, top, view.w, view.h);
@@ -569,16 +591,14 @@ export class Game {
 
     // Screen-space overlays.
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    if (this.twist.drawOverlay(this, ctx, (p.x - left) * s, (p.y - 4 - top) * s)) {
+    if (this.twist.drawOverlay(this, ctx, p.x - left, p.y - 4 - top)) {
       // In the dark, attacks you have to dodge still show up.
-      ctx.setTransform(s, 0, 0, s, -left * s, -top * s);
+      ctx.setTransform(1, 0, 0, 1, -left, -top);
       this.hazards.drawTelegraphs(ctx);
       drawBossTelegraphs(this, ctx);
       this.hazards.draw(ctx);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
-    if (this.settings.stick) drawTouchStick(ctx, this.dpr);
-
-    this.debug.frame(frameDt);
+    if (this.settings.stick) drawTouchStick(ctx, this.stickScale);
   }
 }

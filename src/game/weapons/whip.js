@@ -6,9 +6,9 @@
 
 import { damageEnemy, nearestEnemy } from '../enemies.js';
 import { sfx } from '../../engine/audio.js';
+import { hitBuf as buf } from '../../engine/spatialHash.js';
 
 const SHOW = 0.2; // seconds the lash stays on screen
-const buf = new Int32Array(4096);
 
 export default {
   init(w) {

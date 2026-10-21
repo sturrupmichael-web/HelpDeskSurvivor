@@ -7,9 +7,9 @@
 
 import { damageEnemy, markEnemy } from '../enemies.js';
 import { sfx } from '../../engine/audio.js';
+import { hitBuf as buf } from '../../engine/spatialHash.js';
 
 const TAU = Math.PI * 2;
-const buf = new Int32Array(4096);
 
 export default {
   init(w) {

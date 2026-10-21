@@ -5,8 +5,8 @@
 
 import { damageEnemy, nearestEnemy } from '../enemies.js';
 import { sfx } from '../../engine/audio.js';
+import { hitBuf as buf } from '../../engine/spatialHash.js';
 
-const buf = new Int32Array(4096);
 const SWEEP = 0.6; // radians either side of the aim the beam swings through
 
 export default {

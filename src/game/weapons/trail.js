@@ -3,13 +3,21 @@
 // stats: damage, tick, radius, life, gap, slow
 
 import { damageEnemy } from '../enemies.js';
+import { Pool } from '../../engine/pool.js';
+import { hitBuf as buf } from '../../engine/spatialHash.js';
 
 const MAX = 48;
-const buf = new Int32Array(4096);
+
+// All puddles down: reuse the one closest to drying up.
+function oldest(pool) {
+  let best = pool.items[0];
+  for (let i = 1; i < pool.count; i++) if (pool.items[i].life < best.life) best = pool.items[i];
+  return best;
+}
 
 export default {
   init(w) {
-    w.puddles = [];
+    w.puddles = new Pool(MAX, () => ({ x: 0, y: 0, life: 0, max: 0, wob: 0 }));
   },
   update(w, game, dt) {
     const s = w.stats;
@@ -17,16 +25,20 @@ export default {
     const radius = s.radius * p.stats.area;
     if ((w.timer -= dt) <= 0) {
       w.timer += s.gap * p.stats.cooldown;
-      if (w.puddles.length >= MAX) w.puddles.shift();
-      w.puddles.push({ x: p.x + (Math.random() - 0.5) * 6, y: p.y + 6, life: s.life, max: s.life, wob: Math.random() * 6 });
+      const d = w.puddles.spawn() ?? oldest(w.puddles);
+      d.x = p.x + (Math.random() - 0.5) * 6;
+      d.y = p.y + 6;
+      d.life = d.max = s.life;
+      d.wob = Math.random() * 6;
     }
     const dmg = s.damage * p.stats.damage;
     const now = game.time;
     const items = game.enemies.items;
-    for (let i = w.puddles.length - 1; i >= 0; i--) {
-      const d = w.puddles[i];
+    const pool = w.puddles;
+    for (let i = pool.count - 1; i >= 0; i--) {
+      const d = pool.items[i];
       if ((d.life -= dt) <= 0) {
-        w.puddles.splice(i, 1);
+        pool.removeAt(i);
         continue;
       }
       const n = game.hash.query(d.x, d.y, radius + 12, buf);
@@ -46,7 +58,9 @@ export default {
   // Under everyone: a spreading brown puddle that fades out.
   drawUnder(w, game, ctx) {
     const radius = w.stats.radius * game.player.stats.area;
-    for (const d of w.puddles) {
+    const pool = w.puddles;
+    for (let i = 0; i < pool.count; i++) {
+      const d = pool.items[i];
       const k = Math.min(1, (d.max - d.life) * 6) * Math.min(1, d.life / 0.6);
       ctx.globalAlpha = 0.6 * k;
       ctx.fillStyle = w.def.color;

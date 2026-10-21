@@ -90,11 +90,10 @@ export class MapTwist {
   drawOverlay(game, ctx, px, py) {
     const tw = game.map.twist;
     if (tw?.type !== 'dark') return false;
-    const s = game.view.scale;
     const wobble = 1 - tw.flicker * (Math.sin(performance.now() / 70) * 0.5 + 0.5) * (Math.random() < 0.03 ? 3 : 1);
     // Lights out: ease down to dimScale, then back up over the last second.
     const dim = this.dimT > 0 ? 1 - (1 - this.dimScale) * Math.min(1, this.dimT) : 1;
-    const r = tw.radius * s * wobble * dim;
+    const r = tw.radius * wobble * dim;
     const g = ctx.createRadialGradient(px, py, r * 0.35, px, py, r);
     g.addColorStop(0, 'rgba(8, 9, 16, 0)');
     g.addColorStop(0.7, 'rgba(8, 9, 16, 0.75)');

@@ -8,6 +8,7 @@
 const CHUNK = 256;
 const TILE = 32;
 const MAX_CACHED = 64;
+const REBUILDS_PER_FRAME = 2; // outdated chunks repainted per frame (new ones always are)
 
 // Floor tile sprite per style, from global tile coordinates.
 const TILES = {
@@ -67,6 +68,7 @@ export class Floor {
   constructor(assets) {
     this.assets = assets;
     this.cache = new Map();
+    this.stale = new Set(); // cached chunk keys whose art is out of date (Merger Day borders)
     this.hot = new Map(); // chunk key -> hot-aisle rect [x, y, w, h] in world px, or null
     this.style = 'office';
     this.share = -1; // Merger Day: share of the floor the parent company owns (0..1)
@@ -77,8 +79,19 @@ export class Floor {
   setOwned(share) {
     if (share === this.share) return;
     this.share = share;
+    const before = this.owned;
     this.owned = LEGACY_QUANTILES[Math.min(LEGACY_QUANTILES.length - 1, Math.floor(share * LEGACY_QUANTILES.length))];
-    this.clear(); // repaint with the new borders
+    if (this.style !== 'merger') return this.clear();
+    // Repaint only the chunks whose floor changed hands, and their neighbours (whose
+    // integration line moved). The old art shows until draw() gets round to them.
+    const flipped = (cx, cy) => {
+      const l = legacy(cx, cy);
+      return l < before !== l < this.owned;
+    };
+    for (const k of this.cache.keys()) {
+      const [cx, cy] = this.unkey(k);
+      if (flipped(cx, cy) || flipped(cx - 1, cy) || flipped(cx + 1, cy) || flipped(cx, cy - 1) || flipped(cx, cy + 1)) this.stale.add(k);
+    }
   }
 
   acquiredChunk(cx, cy) {
@@ -105,6 +118,10 @@ export class Floor {
 
   key(cx, cy) {
     return (cx + 32768) * 65536 + (cy + 32768);
+  }
+
+  unkey(k) {
+    return [Math.floor(k / 65536) - 32768, (k % 65536) - 32768];
   }
 
   // Draws a sprite's first frame with its top-left corner at (x, y).
@@ -265,9 +282,10 @@ export class Floor {
   chunk(cx, cy) {
     const k = this.key(cx, cy);
     let c = this.cache.get(k);
-    if (!c) {
+    if (!c || (this.stale.has(k) && this.rebuilds-- > 0)) {
       c = this.build(cx, cy);
       this.cache.set(k, c);
+      this.stale.delete(k);
     }
     return c;
   }
@@ -278,6 +296,7 @@ export class Floor {
     const cy0 = Math.floor(top / CHUNK);
     const cx1 = Math.floor((left + w) / CHUNK);
     const cy1 = Math.floor((top + h) / CHUNK);
+    this.rebuilds = REBUILDS_PER_FRAME;
     for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) ctx.drawImage(this.chunk(cx, cy), cx * CHUNK, cy * CHUNK);
     if (this.cache.size > MAX_CACHED) this.prune((cx0 + cx1) / 2, (cy0 + cy1) / 2);
   }
@@ -285,13 +304,16 @@ export class Floor {
   // Drops cached chunks far from the view.
   prune(ccx, ccy) {
     for (const k of this.cache.keys()) {
-      const cx = Math.floor(k / 65536) - 32768;
-      const cy = (k % 65536) - 32768;
-      if (Math.abs(cx - ccx) > 4 || Math.abs(cy - ccy) > 3) this.cache.delete(k);
+      const [cx, cy] = this.unkey(k);
+      if (Math.abs(cx - ccx) > 4 || Math.abs(cy - ccy) > 3) {
+        this.cache.delete(k);
+        this.stale.delete(k);
+      }
     }
   }
 
   clear() {
     this.cache.clear();
+    this.stale.clear();
   }
 }

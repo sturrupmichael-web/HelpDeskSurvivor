@@ -7,9 +7,9 @@
 import { damageEnemy, nearestEnemy } from '../enemies.js';
 import { fireProjectile } from '../projectiles.js';
 import { sfx } from '../../engine/audio.js';
+import { hitBuf as buf } from '../../engine/spatialHash.js';
 
 const HIT_EVERY = 0.25;
-const buf = new Int32Array(4096);
 
 export default {
   init(w) {

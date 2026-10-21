@@ -155,18 +155,18 @@ export function moveAxis(out) {
   return out;
 }
 
-// Draws the touch joystick in screen space; `dpr` converts CSS px to canvas px.
-export function drawTouchStick(ctx, dpr) {
+// Draws the touch joystick in screen space; `k` converts CSS px to canvas px.
+export function drawTouchStick(ctx, k) {
   if (!touch.active) return;
-  const r = touch.radius * dpr;
+  const r = touch.radius * k;
   ctx.globalAlpha = 0.25;
   ctx.fillStyle = '#f4f4f4';
   ctx.beginPath();
-  ctx.arc(touch.ox * dpr, touch.oy * dpr, r, 0, Math.PI * 2);
+  ctx.arc(touch.ox * k, touch.oy * k, r, 0, Math.PI * 2);
   ctx.fill();
   ctx.globalAlpha = 0.6;
   ctx.beginPath();
-  ctx.arc((touch.ox + touch.ax * touch.radius) * dpr, (touch.oy + touch.ay * touch.radius) * dpr, r * 0.45, 0, Math.PI * 2);
+  ctx.arc((touch.ox + touch.ax * touch.radius) * k, (touch.oy + touch.ay * touch.radius) * k, r * 0.45, 0, Math.PI * 2);
   ctx.fill();
   ctx.globalAlpha = 1;
 }

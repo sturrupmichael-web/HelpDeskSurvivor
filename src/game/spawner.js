@@ -46,6 +46,17 @@ function pick(mix) {
   return Object.keys(mix)[0];
 }
 
+// Each office map can swap the 10:00 boss for its own (`boss` in data/maps.js). Cached,
+// so the merged event isn't rebuilt every tick.
+const mapEvents = new WeakMap();
+export function mapEvent(ev, map) {
+  if (ev?.type !== 'boss' || ev.boss !== 'incident' || !map.boss) return ev;
+  let byMap = mapEvents.get(ev);
+  if (!byMap) mapEvents.set(ev, (byMap = new Map()));
+  if (!byMap.has(map)) byMap.set(map, { ...ev, ...map.boss });
+  return byMap.get(map);
+}
+
 export class Spawner {
   constructor() {
     this.pt = { x: 0, y: 0 };
@@ -103,9 +114,7 @@ export class Spawner {
 
   events(game, dt) {
     const t = game.time;
-    let ev = EVENTS[this.nextEvent];
-    // Each office map can swap the 10:00 boss for its own (`boss` in data/maps.js).
-    if (ev?.type === 'boss' && ev.boss === 'incident' && game.map.boss) ev = { ...ev, ...game.map.boss };
+    const ev = mapEvent(EVENTS[this.nextEvent], game.map);
     if (ev) {
       if (this.warned !== this.nextEvent && t >= ev.t - ev.warn) {
         this.warned = this.nextEvent;

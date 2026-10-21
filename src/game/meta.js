@@ -10,8 +10,18 @@ import { UNLOCKS } from '../../data/unlocks.js';
 
 const KEY = 'helpdesk-survivors.save.v1';
 
+// Save format version. When content is renamed or reshaped, bump it and add a step to
+// MIGRATIONS: MIGRATIONS[n] turns a version-n save into version n+1 (saves from before
+// versioning count as version 0). Every save, local or from the cloud, is upgraded on load.
+export const SAVE_VERSION = 1;
+const MIGRATIONS = [
+  // 0 -> 1: nothing to convert; versioning starts here (the cleanup in upgradeSave runs).
+  (d) => d,
+];
+
 function fresh() {
   return {
+    version: SAVE_VERSION,
     pay: 0, // Overtime Pay balance
     earned: 0, // lifetime Overtime Pay
     shop: {}, // shop item id -> level bought
@@ -39,10 +49,9 @@ export class Meta {
     this.replace(saved);
   }
 
-  // Swaps in a whole save (from storage or the cloud), filling in anything missing.
+  // Swaps in a whole save (from storage or the cloud), upgraded to this version.
   replace(saved, store = false) {
-    this.data = Object.assign(fresh(), saved);
-    if (!CHARACTERS[this.data.selected]) this.data.selected = 'tier1';
+    this.data = upgradeSave(saved);
     if (!this.mapUnlocked(this.data.map)) this.data.map = 'office';
     if (store) this.save(false);
   }
@@ -179,3 +188,38 @@ export class Meta {
     this.save();
   }
 }
+
+// Brings any save (missing, old, partial or hand-edited) up to SAVE_VERSION: runs the
+// migrations, fills in missing fields, and drops ids this version of the game doesn't
+// know, so screens never look up a tool, tech or map that no longer exists. A save from a
+// newer build (an old copy of the app still running offline) is only filled in, never
+// trimmed, so it doesn't lose things this build hasn't heard of yet.
+export function upgradeSave(saved) {
+  let d = saved && typeof saved === 'object' ? structuredClone(saved) : {};
+  const from = Number.isInteger(d.version) ? d.version : 0;
+  for (let v = from; v < SAVE_VERSION; v++) d = MIGRATIONS[v](d) ?? d;
+  const base = fresh();
+  d = Object.assign(base, d, { version: Math.max(from, SAVE_VERSION) });
+  for (const k of ['pay', 'earned', 'shifts', 'wins']) if (!(d[k] >= 0)) d[k] = 0;
+  d.best = Object.assign(fresh().best, isObj(d.best) ? d.best : {});
+  if (!isObj(d.shop)) d.shop = {};
+  if (!isObj(d.mapBest)) d.mapBest = {};
+  if (!Array.isArray(d.unlocked)) d.unlocked = [];
+  if (!Array.isArray(d.mapsWon)) d.mapsWon = [];
+  if (from <= SAVE_VERSION) {
+    d.unlocked = [...new Set(d.unlocked.filter((id) => CHARACTERS[id]))];
+    d.mapsWon = [...new Set(d.mapsWon.filter((id) => MAPS[id]))];
+    for (const id of Object.keys(d.shop)) {
+      if (!SHOP[id] || !(d.shop[id] > 0)) delete d.shop[id];
+      else d.shop[id] = Math.min(Math.floor(d.shop[id]), SHOP[id].costs.length);
+    }
+    for (const id of Object.keys(d.mapBest)) if (!MAPS[id]) delete d.mapBest[id];
+  }
+  if (!d.unlocked.includes('tier1')) d.unlocked.unshift('tier1');
+  for (const id of Object.keys(d.mapBest)) d.mapBest[id] = { time: 0, tickets: 0, wins: 0, ...(isObj(d.mapBest[id]) ? d.mapBest[id] : {}) };
+  if (!CHARACTERS[d.selected] || !d.unlocked.includes(d.selected)) d.selected = 'tier1';
+  if (!MAPS[d.map]) d.map = 'office';
+  return d;
+}
+
+const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);

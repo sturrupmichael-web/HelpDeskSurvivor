@@ -168,6 +168,17 @@ src/game/      gameplay: player, enemies + behaviors/ (incl. bosses), weapons/, 
 src/ui/        SVG HUD, icons, menus, debug overlay
 ```
 
+Drawing: the canvas is exactly the size of the world view (one canvas pixel per world
+pixel) and the browser scales it up by a whole number (`Game.resize`). Draw everything in
+world pixels; text in the world uses the pixel font in `src/engine/pixelfont.js`. While a
+menu is open the world is drawn once and then left alone; set `game.dirty = true` if
+something on a menu screen needs the world redrawn.
+
+Saves: the save carries a `version` (`SAVE_VERSION` in `src/game/meta.js`). When you rename
+or remove a tool, passive, tech or map, bump the version and add a step to `MIGRATIONS`
+that converts old saves (for example, renames the id), or players lose that progress.
+Unknown ids are dropped on load.
+
 ## Editing art
 
 Sprites live in `sprites/defs/*.js` as grids of palette characters (`data/palette.js`,

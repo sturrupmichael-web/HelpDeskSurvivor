@@ -7,9 +7,9 @@
 
 import { Pool } from '../engine/pool.js';
 import { damageEnemy, nearestEnemy } from './enemies.js';
+import { hitBuf as buf } from '../engine/spatialHash.js';
 
 const MAX_HITS = 32;
-const buf = new Int32Array(4096);
 
 export function createProjectilePool() {
   return new Pool(800, () => ({
