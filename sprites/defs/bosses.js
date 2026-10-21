@@ -236,6 +236,61 @@ function janitor(frame, pose) {
   return c.outline().rows();
 }
 
+// --- The Hostile Takeover (Merger Day boss): a giant acquiring exec in a teal suit -----
+// walk: frames 0/1 swing the legs. attack: 0 = holding up a Restructuring memo,
+// 1 = arms wide ("welcome to the family").
+function takeover(step, pose) {
+  const c = canvas();
+  const lift = step ? 3 : 0;
+  c.rect(23, 50, 8, 10 - lift, 'a').rect(21, 60 - lift, 11, 3, 'K');
+  c.rect(34, 50, 8, 10 - (step ? 0 : 3), 'a').rect(33, 60 - (step ? 0 : 3), 11, 3, 'K');
+  // Broad teal suit with a white shirt and a gold tie.
+  c.rect(17, 24, 31, 27, 'a').rect(18, 25, 2, 25, 'A');
+  c.rect(28, 24, 9, 14, 'w').rect(31, 25, 3, 12, 'y');
+  c.px(27, 24, 'k').px(28, 25, 'k').px(29, 26, 'k').px(37, 24, 'k').px(36, 25, 'k').px(35, 26, 'k');
+  // Two lanyards: the old company's (navy) and the new one's (teal), both on him.
+  c.rect(24, 26, 1, 12, 'b').rect(40, 26, 1, 12, 'A').rect(23, 38, 3, 4, 'w').rect(39, 38, 3, 4, 'w');
+  // Arms.
+  if (pose === 0) {
+    // Memo raised high in the right hand; left hand on hip.
+    c.rect(10, 26, 7, 14, 'a').rect(11, 40, 6, 4, 's');
+    c.rect(48, 10, 7, 18, 'a').rect(48, 6, 7, 5, 's');
+    c.rect(45, 0, 16, 10, 'w').rect(47, 2, 12, 1, 'k').rect(47, 4, 9, 1, 'g').rect(47, 6, 11, 1, 'g').rect(56, 7, 3, 2, 'r');
+  } else if (pose === 1) {
+    // Arms wide open.
+    c.rect(2, 24, 15, 6, 'a').rect(0, 23, 4, 7, 's');
+    c.rect(48, 24, 15, 6, 'a').rect(60, 23, 4, 7, 's');
+  } else {
+    c.rect(10, 26, 7, 16, 'a').rect(10, 42, 6, 4, 's');
+    c.rect(48, 26, 7, 16, 'a').rect(49, 42, 6, 4, 's');
+    // Briefcase with the merged logo.
+    c.rect(46, 46, 14, 10, 'h').rect(51, 44, 4, 2, 'k').px(52, 50, 'y').px(54, 50, 'w');
+  }
+  // Head: slicked hair, smug grin.
+  c.rect(28, 19, 9, 6, 's');
+  c.ellipse(32, 12, 10, 10, 's');
+  c.ellipse(32, 6, 10, 5, 'k', (x, y) => y <= 7).rect(22, 6, 3, 5, 'k');
+  c.rect(26, 11, 3, 2, 'k').rect(36, 11, 3, 2, 'k');
+  c.rect(27, 17, 10, 1, 'k').px(26, 16, 'k').px(37, 16, 'k').rect(28, 18, 8, 1, 'w');
+  return c.outline().rows();
+}
+
+// The Subsidiary (spun off by the Hostile Takeover): a smaller exec in a navy suit.
+function subsidiary(step, pose) {
+  const c = canvas(40, 40);
+  const lift = step ? 2 : 0;
+  c.rect(14, 30, 5, 7 - lift, 'n').rect(13, 37 - lift, 7, 2, 'K');
+  c.rect(21, 30, 5, 7 - (step ? 0 : 2), 'n').rect(20, 37 - (step ? 0 : 2), 7, 2, 'K');
+  c.rect(11, 15, 18, 16, 'n').rect(18, 15, 4, 8, 'w').rect(19, 16, 2, 7, 'A');
+  if (pose === 0) c.rect(29, 6, 4, 11, 'n').rect(28, 1, 10, 6, 'w').rect(29, 3, 7, 1, 'g');
+  else c.rect(29, 16, 4, 10, 'n').rect(29, 26, 4, 3, 's');
+  c.rect(7, 16, 4, 10, 'n').rect(7, 26, 4, 3, 's');
+  c.ellipse(20, 8, 6, 6, 's');
+  c.ellipse(20, 4, 6, 3, 'y', (x, y) => y <= 4);
+  c.rect(17, 7, 2, 2, 'k').rect(22, 7, 2, 2, 'k').rect(18, 11, 4, 1, 'k');
+  return c.outline().rows();
+}
+
 // --- Status Update Request (Major Incident minion), 16x16 ----------------------------
 const STATUS = ['.kkkkkkkkk.', 'kyyyyyyyyyk', 'kykyykyykyk', 'kyyyyyyyyyk', '.kkykkkkkk.', '..kk.......'];
 const blank = '...........';
@@ -272,6 +327,16 @@ export default {
       size: [64, 64],
       fps: 6,
       anims: { walk: [janitor(0), janitor(1)], attack: [janitor(0, 0), janitor(1, 1)] },
+    },
+    takeover: {
+      size: [64, 64],
+      fps: 4,
+      anims: { walk: [takeover(0), takeover(1)], attack: [takeover(0, 0), takeover(1, 1)] },
+    },
+    subsidiary: {
+      size: [40, 40],
+      fps: 5,
+      anims: { walk: [subsidiary(0), subsidiary(1)], attack: [subsidiary(0, 0), subsidiary(1, 0)] },
     },
     status_update: { size: [16, 16], fps: 4, anims: { walk: [[...STATUS, blank], [blank, ...STATUS]] } },
   },

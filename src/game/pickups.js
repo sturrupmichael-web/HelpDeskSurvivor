@@ -109,6 +109,8 @@ export function dropItem(game, id, x, y) {
 
 // Called when an enemy is closed: per-kill item chances, plus the enemy's own `drops`.
 export function rollItemDrops(game, e) {
+  const loot = e.def.loot;
+  if (loot) return dropItem(game, loot[(Math.random() * loot.length) | 0], e.x, e.y);
   const drops = e.def.drops;
   if (drops) {
     for (const id in drops) if (Math.random() < drops[id]) dropItem(game, id, e.x, e.y);
@@ -117,6 +119,7 @@ export function rollItemDrops(game, e) {
   if (game.items.count >= MAX_ITEMS) return;
   const luck = game.player.stats.luck; // Lucky Lanyard
   for (const id in ITEMS) {
+    if (ITEMS[id].maps && !ITEMS[id].maps.includes(game.mapId)) continue;
     const c = ITEMS[id].chance * luck;
     if (c && Math.random() < c) return dropItem(game, id, e.x, e.y);
   }
@@ -130,6 +133,12 @@ function collect(game, it) {
     game.achievements.run.pizzas++;
     p.hp = Math.min(p.maxHp, p.hp + d.heal);
     game.fx.burst(p.x, p.y - 8, ['#38b764', '#f4f4f4'], 10);
+    sfx('heal');
+  } else if (it.id === 'swag_bag') {
+    p.hp = Math.min(p.maxHp, p.hp + d.heal);
+    p.boost = d.speed;
+    p.boostT = d.time;
+    game.fx.burst(p.x, p.y - 8, ['#3fb6a8', '#ffcd75', '#f4f4f4'], 12);
     sfx('heal');
   } else if (it.id === 'bulk_close') {
     // Every ticket on the floor flies to you.

@@ -488,9 +488,10 @@ export class Screens {
     const floor = new Floor(g.assets);
     this.root.querySelectorAll('canvas[data-map]').forEach((c) => {
       floor.setStyle(c.dataset.map);
+      floor.setOwned(0.5);
       const cx = c.getContext('2d');
       cx.imageSmoothingEnabled = false;
-      cx.drawImage(floor.build(1, 3), 0, 0, 256, 256, 0, 0, c.width, c.height);
+      cx.drawImage(floor.build(...floor.previewChunk()), 0, 0, 256, 256, 0, 0, c.width, c.height);
     });
   }
 

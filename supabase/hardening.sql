@@ -22,7 +22,7 @@ grant insert (name, map, character, seconds, csat, won) on table public.scores t
 -- closes well under 60 users a second.
 alter table public.scores drop constraint if exists scores_map_known;
 alter table public.scores add constraint scores_map_known
-  check (map in ('office', 'server', 'callcenter', 'garage')) not valid;
+  check (map in ('office', 'server', 'callcenter', 'garage', 'merger')) not valid;
 alter table public.scores drop constraint if exists scores_character_len;
 alter table public.scores add constraint scores_character_len
   check (char_length(character) between 1 and 40) not valid;

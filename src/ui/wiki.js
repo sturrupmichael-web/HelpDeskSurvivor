@@ -20,7 +20,7 @@ export const WIKI_TABS = [
 
 const KEYS = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Numpad1: 0, Numpad2: 1, Numpad3: 2, Numpad4: 3 };
 
-const USERS = Object.keys(ENEMIES).filter((id) => !ENEMIES[id].boss);
+const USERS = Object.keys(ENEMIES).filter((id) => !ENEMIES[id].boss && !ENEMIES[id].wikiAs);
 const BOSSES = Object.keys(ENEMIES).filter((id) => ENEMIES[id].boss && !ENEMIES[id].params?.isSmall);
 const TOOLS = Object.keys(WEAPONS).filter((id) => !WEAPONS[id].evolved);
 const EVOLVED = Object.keys(WEAPONS).filter((id) => WEAPONS[id].evolved);
@@ -31,7 +31,10 @@ const name = (id) => ENEMIES[id].name;
 // Short field notes worked out from the user's data.
 function userNotes(d) {
   const notes = [];
-  if (d.onDeath) notes.push(`Splits into ${d.onDeath.count} ${name(d.onDeath.spawn)}s when closed.`);
+  if (d.onDeath) notes.push(d.onDeath.count === 1 ? `Comes back as ${name(d.onDeath.spawn)} when closed.` : `Splits into ${d.onDeath.count} ${name(d.onDeath.spawn)}s when closed.`);
+  if (d.behavior === 'pair') notes.push('Always in pairs. Close one and the other gets faster and angrier.');
+  if (d.behavior === 'tailgate') notes.push('Slows you down while she is close behind you.');
+  if (d.loot) notes.push('Never moves. Always drops a pickup.');
   if (d.behavior === 'summoner') notes.push(`Keeps its distance and summons ${name(d.params.minion)}.`);
   if (d.behavior === 'dart') notes.push('Dashes at you every few seconds.');
   if (d.behavior === 'teleport') notes.push('Teleports next to you.');

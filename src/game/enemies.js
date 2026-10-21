@@ -29,7 +29,8 @@ export function makeEnemy() {
     flash: 0, animT: 0, flip: false, dead: false, noSep: false,
     t0: 0, t1: 0, // scratch timers for behaviors
     anim: 'walk', pose: -1, state: 0, stateT: 0, phase: 0, ax: 0, ay: 0, n: 0, // boss attack state
-    heavy: false, // bosses: the horde can't shove them around
+    heavy: false, // bosses (and anchored boxes): the horde can't shove them around
+    scale: 1, // drawn size (the Hostile Takeover grows as it absorbs users)
     hitAt: new Float64Array(HIT_SLOTS),
   };
 }
@@ -50,7 +51,7 @@ export function spawnEnemy(game, id, x, y, hpMult = 1, speedMult = 1, behaviorId
   e.kx = e.ky = e.dx = e.dy = 0;
   // The current map toughens regular users (bosses keep their tuned HP).
   const map = def.boss ? null : game.map;
-  e.hp = e.maxHp = def.hp * hpMult * (map?.hpMult ?? 1);
+  e.hp = e.maxHp = def.hp * hpMult * (map?.hpMult ?? 1) * (map ? game.twist.hpMult(game, x, y) : 1);
   e.speed = def.speed * speedMult * (map?.speedMult ?? 1);
   e.damage = def.damage;
   e.xp = def.xp;
@@ -67,7 +68,8 @@ export function spawnEnemy(game, id, x, y, hpMult = 1, speedMult = 1, behaviorId
   e.anim = 'walk';
   e.pose = -1;
   e.state = e.stateT = e.phase = e.ax = e.ay = e.n = 0;
-  e.heavy = !!def.boss;
+  e.heavy = !!def.boss || !!def.anchored;
+  e.scale = 1;
   e.hitAt.fill(-1e9);
   if (e.behavior.init) e.behavior.init(e, game);
   return e;
@@ -205,7 +207,7 @@ export function markEnemy(e, seconds, amp) {
 export function killEnemy(game, e, weapon) {
   e.dead = true;
   if (e.xp > 0) {
-    const t = dropTicket(game, e.x, e.y, e.xp);
+    const t = dropTicket(game, e.x, e.y, e.xp * game.twist.xpMult(game, e.x, e.y));
     if (weapon?.def.vacuum) t.magnet = true;
   }
   game.fx.burst(e.x, e.y - 6, e.def.particle, 6);
@@ -276,12 +278,17 @@ export function drawEnemies(game, ctx, shadowImg, left, top, right, bottom) {
     const fy = e.y + e.foot;
     const spr = e.spr;
     if (e.x < left - spr.w || e.x > right + spr.w || fy < top || fy > bottom + spr.h) continue;
-    if (e.heavy) ctx.drawImage(shadowImg, Math.round(e.x - 26), Math.round(fy - 6), 52, 12);
+    if (e.def.boss) ctx.drawImage(shadowImg, Math.round(e.x - 26 * e.scale), Math.round(fy - 6), Math.round(52 * e.scale), 12);
     else if (shadows) ctx.drawImage(shadowImg, Math.round(e.x - 10), Math.round(fy - 3));
     const a = spr.anims[e.anim] ?? spr.anims.walk;
     const frames = e.flash > 0 && a.hit ? a.hit : a.frames;
     const f = frames[(e.pose >= 0 ? e.pose : Math.floor(e.animT * spr.fps)) % frames.length];
-    if (e.flip) {
+    if (e.scale !== 1) {
+      // Grown boss: same frame, drawn bigger around its feet.
+      const k = e.scale;
+      const ax = e.flip ? spr.w - spr.anchor[0] : spr.anchor[0];
+      ctx.drawImage(e.flip ? spr.imageFlipped : spr.image, e.flip ? spr.sheetWidth - f[0] - spr.w : f[0], f[1], spr.w, spr.h, Math.round(e.x - ax * k), Math.round(fy - spr.anchor[1] * k), Math.round(spr.w * k), Math.round(spr.h * k));
+    } else if (e.flip) {
       ctx.drawImage(spr.imageFlipped, spr.sheetWidth - f[0] - spr.w, f[1], spr.w, spr.h, Math.round(e.x - (spr.w - spr.anchor[0])), Math.round(fy - spr.anchor[1]), spr.w, spr.h);
     } else {
       ctx.drawImage(spr.image, f[0], f[1], spr.w, spr.h, Math.round(e.x - spr.anchor[0]), Math.round(fy - spr.anchor[1]), spr.w, spr.h);

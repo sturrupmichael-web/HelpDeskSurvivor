@@ -358,6 +358,56 @@ const MALWARE = [
   ],
 ];
 
+// --- Merger Day users -----------------------------------------------------------------
+
+// Synergy Consultants: grey suits, teal lanyards from the new parent company, a laptop
+// showing a slide with an arrow going up. They come in pairs (the second has red hair).
+const consultant = (hair) =>
+  person({ hair, top: 'G', pants: 'G' }, ({ px, rect }) => {
+    patch(px, 13, 16, ['wwww', '.aa.', '.aa.', '.aa.']); // shirt + teal tie
+    rect(10, 16, 1, 6, 'A'); // lanyard
+    patch(px, 1, 16, ['kkkkkkk', 'kwwwwwk', 'kwwwewk', 'kwweewk', 'kweewwk', 'kkkkkkk', 'kgggggk', 'kkkkkkk']); // slide deck
+  });
+const CONSULTANT = consultant('h');
+const CONSULTANT_B = consultant('r');
+
+// Duplicate Dave: two badges, two laptops' worth of stress. Dave (2) has the copy's
+// orange shirt and a "2" tag.
+const DAVE = person({ hair: 'h', top: 'b', pants: 'k', mouth: 'k' }, ({ px }) => {
+  patch(px, 11, 17, ['ww..ww', 'wy..wa']); // one old badge, one new badge
+});
+const DAVE2 = person({ hair: 'h', top: 'o', pants: 'k', mouth: 'k' }, ({ px }) => {
+  patch(px, 11, 17, ['ww..ww', 'wy..wa']);
+  patch(px, 21, 1, ['kkkkk', 'kwwwk', 'kkkwk', 'kwwwk', 'kwkkk', 'kwwwk', 'kkkkk']); // (2)
+});
+
+// Badge Brenda: teal new-hire top, holding up a badge that blinks red at every door.
+const BRENDA = person({ hair: 'y', top: 'a', pants: 'n' }, ({ px, frame }) => {
+  patch(px, 21, 14, ['kkkkk', 'kwwwk', 'kw' + (frame % 2 ? 'r' : 'k') + 'wk', 'kwwwk', 'kkkkk', '..A..', '..A..']); // badge on a lanyard
+});
+
+// Unclaimed Moving Box: it doesn't walk, it waits. Smash it open for whatever is inside.
+const MOVING_BOX = [
+  [
+    '..kkkkkkkkkkkkkkkkkkkk..',
+    '..kyyyyyyyyhhyyyyyyyyk..',
+    '..kddddddddhhddddddddk..',
+    '..kddddddddhhddddddddk..',
+    '..kddkkkkkkhhddddddddk..',
+    '..kddkwwwwkhhddddddddk..',
+    '..kddkwkkwkhhddddddddk..',
+    '..kddkwwwwkhhddddddddk..',
+    '..kddkkkkkkhhddddddddk..',
+    '..kddddddddhhddddddddk..',
+    '..kddddddddhhddhdhdddk..',
+    '..kddddddddhhdddhddddk..',
+    '..kddddddddhhddhdhdddk..',
+    '..kddddddddhhddddddddk..',
+    '..khhhhhhhhhhhhhhhhhhk..',
+    '..kkkkkkkkkkkkkkkkkkkk..',
+  ],
+];
+
 export default {
   sheet: 'characters',
   sprites: {
@@ -381,5 +431,11 @@ export default {
     steve: { size: [32, 32], fps: 6, anims: { walk: STEVE } },
     vip: { size: [32, 32], fps: 5, anims: { walk: VIP } },
     walkup: { size: [32, 32], fps: 10, anims: { walk: WALKUP } },
+    consultant: { size: [32, 32], fps: 6, anims: { walk: CONSULTANT } },
+    consultant_b: { size: [32, 32], fps: 6, anims: { walk: CONSULTANT_B } },
+    dave: { size: [32, 32], fps: 7, anims: { walk: DAVE } },
+    dave2: { size: [32, 32], fps: 9, anims: { walk: DAVE2 } },
+    brenda: { size: [32, 32], fps: 8, anims: { walk: BRENDA } },
+    moving_box: { size: [32, 32], fps: 1, anims: { walk: MOVING_BOX } },
   },
 };

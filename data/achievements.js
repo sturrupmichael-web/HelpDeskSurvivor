@@ -25,8 +25,10 @@ export const ACHIEVEMENTS = [
   { id: 'boss_ratsnest', name: 'Cable Management', icon: 'cable', desc: "Untangle the Rat's Nest in the Server Room.", check: (r) => r.bosses?.includes('ratsnest') },
   { id: 'boss_caller', name: 'Customer Satisfied', icon: 'headphones', desc: 'Resolve the Angry Caller in the Call Center.', check: (r) => r.bosses?.includes('caller') },
   { id: 'boss_janitor', name: 'Clean Sweep', icon: 'mug', desc: 'Outlast the Night Janitor in the Parking Garage.', check: (r) => r.bosses?.includes('janitor') },
+  { id: 'boss_takeover', name: 'Due Diligence', icon: 'cert', desc: 'Close the Hostile Takeover (and its Subsidiary) on Merger Day.', check: (r) => r.bosses?.includes('takeover') },
   { id: 'map_server', name: 'Cold Aisle Containment', icon: 'ssd', desc: 'Win a shift in the Server Room.', check: (r, m) => m.mapsWon?.includes('server') },
   { id: 'map_call', name: 'First Call Resolution', icon: 'headphones', desc: 'Win a shift in the Call Center.', check: (r, m) => m.mapsWon?.includes('callcenter') },
   { id: 'map_garage', name: 'Night Owl', icon: 'key', desc: 'Win the Night Shift in the Parking Garage.', check: (r, m) => m.mapsWon?.includes('garage') },
+  { id: 'map_merger', name: 'Synergy Achieved', icon: 'laptop', desc: 'Win a shift on Merger Day.', check: (r, m) => m.mapsWon?.includes('merger') },
   { id: 'veteran', name: 'Employee of the Month', icon: 'chair', desc: 'Work 25 shifts.', check: (r, m) => m.shifts >= 25 },
 ];

@@ -380,3 +380,18 @@ Bot check (every shop upgrade maxed, Tier 1 Tech, kiting bot; average survival t
 | --- | --- | --- |
 | Open Office | 20:26, 9 reached 20:00 | 22:05, 17 reached 20:00 |
 | Call Center | 9:06 | 9:32 |
+
+## Merger Day (idea 5)
+
+Bot check with a new headless bot (every shop upgrade maxed, Tier 1 Tech, keeps its
+distance, orbits the crowd, can't see boss telegraphs and never closes a 10:00 boss), so
+only the comparison between maps means anything. Average survival time: Open Office 21:40,
+Parking Garage 14:02, Merger Day 12:41 at first. Most Merger Day losses were during the
+Hostile Takeover fight (the bot can't dodge the memo lanes), so the map was toned down:
+enemy HP x1.1 (was x1.15), the Takeover heals 25 per user it absorbs (was 40), memos hit
+for 16 (was 18) with a 1.2 s warning (was 1.1). After: 15:28 average over 8 shifts, about
+the same as the Parking Garage.
+
+The parent company's floor starts at 30% and grows 3.5% a minute, to 92% at most
+(`twist` in `data/maps.js`); the share is measured over the chunks around the start, so
+it reads right whatever the noise does.

@@ -16,6 +16,7 @@ export const MANAGERS = {
   server: 'Gary, Head of Infrastructure',
   callcenter: 'Denise, Call Center Supervisor',
   garage: 'Rick, Facilities (covering nights)',
+  merger: 'Chad, VP of Integration (your new manager, apparently)',
 };
 
 // Manager's comments. Each has a test, a priority (higher shows first) and lines to
@@ -91,5 +92,6 @@ export const BOSS_NAMES = {
   ratsnest: "the Rat's Nest",
   caller: 'the Angry Caller',
   janitor: 'the Night Janitor',
+  takeover: 'the Hostile Takeover',
   executive: 'the Executive',
 };

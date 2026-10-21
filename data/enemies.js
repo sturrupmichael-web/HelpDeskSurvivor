@@ -16,6 +16,9 @@
 //   stunResist multiplier on stun duration (bosses barely flinch)
 //   drops     extra drop chances on death, e.g. { chest: 0.5 }
 //   particle  palette colors for the death burst
+//   anchored  can't be shoved by the horde or knockback (Unclaimed Moving Box)
+//   wikiAs    counts toward another user's Help Desk Wiki entry instead of its own
+//   loot      drops one of these items, picked at random, when closed
 
 export const ENEMIES = {
   pam: {
@@ -88,6 +91,49 @@ export const ENEMIES = {
     flavor: '"I didn\'t make a ticket, I figured I\'d just swing by."',
   },
 
+  // --- Merger Day users (newUsers in data/maps.js) ---
+  consultant: {
+    name: 'Synergy Consultant', sprite: 'consultant', behavior: 'pair',
+    params: { partner: 'consultant_b', gap: 24, enrage: 1.7 },
+    hp: 20, speed: 36, damage: 9, radius: 7, xp: 3, knockback: 0.9,
+    particle: ['#566c86', '#3fb6a8', '#f4f4f4'],
+    flavor: '"We\'re not here to cut jobs. We\'re here to right-size the org." (Always in pairs.)',
+  },
+  consultant_b: {
+    name: 'Synergy Consultant', sprite: 'consultant_b', behavior: 'pair', wikiAs: 'consultant',
+    params: { gap: 24, enrage: 1.7 },
+    hp: 20, speed: 36, damage: 9, radius: 7, xp: 3, knockback: 0.9,
+    particle: ['#566c86', '#3fb6a8', '#f4f4f4'],
+    flavor: '"Let\'s take this offline and circle back with a deck."',
+  },
+  dave: {
+    name: 'Duplicate Dave', sprite: 'dave', behavior: 'chase',
+    hp: 12, speed: 38, damage: 8, radius: 7, xp: 2, knockback: 1,
+    onDeath: { spawn: 'dave2', count: 1 },
+    particle: ['#3b5dc9', '#ffcd75', '#f4f4f4'],
+    flavor: 'Has an account in both directories. Neither one works. Close him and his other account shows up.',
+  },
+  dave2: {
+    name: 'Dave (2)', sprite: 'dave2', behavior: 'chase',
+    hp: 8, speed: 50, damage: 6, radius: 7, xp: 2, knockback: 1.1,
+    particle: ['#ef7d57', '#ffcd75', '#f4f4f4'],
+    flavor: 'dave.smith2@newparent.com. Same Dave. Same ticket. Different mailbox.',
+  },
+  brenda: {
+    name: 'Badge Brenda', sprite: 'brenda', behavior: 'tailgate',
+    params: { radius: 56, slow: 0.78 },
+    hp: 18, speed: 46, damage: 5, radius: 7, xp: 3, knockback: 0.9,
+    particle: ['#257179', '#ffcd75', '#b13e53'],
+    flavor: '"My new badge doesn\'t open anything. Mind if I just follow you in?" (Slows you while she\'s close.)',
+  },
+  moving_box: {
+    name: 'Unclaimed Moving Box', sprite: 'moving_box', behavior: 'still', anchored: true,
+    hp: 30, speed: 0, damage: 0, radius: 9, foot: 1, xp: 2, knockback: 0,
+    loot: ['pizza', 'pizza', 'swag_bag', 'swag_bag', 'bulk_close', 'pto'],
+    particle: ['#a0703c', '#5d3a1a', '#ffcd75'],
+    flavor: 'Labeled "MISC - DO NOT OPEN". Smash it open: there\'s always something inside.',
+  },
+
   // --- Bosses (spawned by events in data/waves.js; HP is not scaled by the timeline) ---
   incident: {
     name: 'Major Incident', sprite: 'incident', behavior: 'incidentBoss', boss: true,
@@ -154,6 +200,31 @@ export const ENEMIES = {
     downBanner: ['FLOOR CLEAN', 'He clocked out. Caution: still wet. Grab the Change Approved.'],
     particle: ['#566c86', '#ef7d57', '#41a6f6', '#ffcd75'],
     flavor: 'Has keys to every door in the building. Has never once been asked his name.',
+  },
+  takeover: {
+    name: 'The Hostile Takeover', sprite: 'takeover', behavior: 'takeoverBoss', boss: true,
+    params: {
+      attackGap: [3, 2.2], enrageAt: 0.5,
+      attacks: ['memo', 'allhands'],
+      absorb: { heal: 25, perSec: 6, grow: 0.012, maxScale: 1.5 },
+      memo: { telegraph: 1.2, lanes: 3, gap: 92, width: 36, length: 560, damage: 16 },
+      allhands: { id: 'consultant', pairs: 2, radius: 150 },
+      spinAt: 0.5, spin: 'subsidiary',
+    },
+    hp: 13500, speed: 24, damage: 22, radius: 22, foot: 26, xp: 60, knockback: 0, stunResist: 0.1,
+    downBanner: ['DEAL CLOSED', 'The merger is complete. Your badge works now. Grab the Change Approved.'],
+    particle: ['#257179', '#3fb6a8', '#ffcd75', '#f4f4f4'],
+    flavor: '"Nothing changes for you. Except your email, your laptop, your manager and your job title."',
+  },
+  subsidiary: {
+    name: 'The Subsidiary', sprite: 'subsidiary', behavior: 'takeoverBoss', boss: true,
+    params: {
+      isSmall: true, attackGap: [2.6, 2.6], enrageAt: 0,
+      attacks: ['memo'],
+      memo: { telegraph: 1.0, lanes: 1, gap: 0, width: 32, length: 420, damage: 14 },
+    },
+    hp: 3500, speed: 34, damage: 14, radius: 14, foot: 16, xp: 20, knockback: 0, stunResist: 0.1,
+    particle: ['#29366f', '#3fb6a8', '#f4f4f4'],
   },
   status_update: {
     name: 'Status Update Request', sprite: 'status_update', behavior: 'chase',

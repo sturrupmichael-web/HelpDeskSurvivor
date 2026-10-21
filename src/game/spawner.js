@@ -11,17 +11,29 @@ function mixAt(t) {
   return m;
 }
 
-// The timeline mix with the current map's mixBoost applied (cached per mix and map).
+// The timeline mix with the current map's mixBoost applied, plus the map's own users
+// (newUsers) that have started showing up by time t. Cached per mix, map and how many
+// of the map's users are in.
 const boosted = new WeakMap();
-function mapMix(mix, map) {
-  if (!map || !Object.keys(map.mixBoost).length) return mix;
+function mapMix(mix, map, t) {
+  if (!map) return mix;
+  const extra = map.newUsers ?? {};
+  let n = 0;
+  for (const id in extra) if (t >= extra[id].from) n++;
+  if (!n && !Object.keys(map.mixBoost).length) return mix;
   let byMap = boosted.get(mix);
   if (!byMap) boosted.set(mix, (byMap = new Map()));
-  let m = byMap.get(map);
+  let list = byMap.get(map);
+  if (!list) byMap.set(map, (list = []));
+  let m = list[n];
   if (!m) {
     m = {};
-    for (const id in mix) m[id] = mix[id] * (map.mixBoost[id] ?? 1);
-    byMap.set(map, m);
+    let total = 0;
+    for (const id in mix) total += m[id] = mix[id] * (map.mixBoost[id] ?? 1);
+    Object.keys(extra)
+      .slice(0, n)
+      .forEach((id) => (m[id] = total * extra[id].share));
+    list[n] = m;
   }
   return m;
 }
@@ -71,7 +83,7 @@ export class Spawner {
   spawn(game, id, angle) {
     const t = game.time;
     const pt = this.ringPoint(game, angle);
-    return spawnEnemy(game, id ?? pick(mapMix(mixAt(t), game.map)), pt.x, pt.y, this.sample(t, 'hpMult'), this.sample(t, 'speedMult'));
+    return spawnEnemy(game, id ?? pick(mapMix(mixAt(t), game.map, t)), pt.x, pt.y, this.sample(t, 'hpMult'), this.sample(t, 'speedMult'));
   }
 
   update(game, dt) {

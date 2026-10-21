@@ -28,6 +28,9 @@ export const PALETTE = {
   o: '#ef7d57', // orange (hot aisle, warning stripes)
   q: '#73eff7', // cyan (server LEDs, wallboard)
   R: '#2a2f45', // raised-floor seam / server room shadow
+  // Added for Merger Day: the parent company's brand colors.
+  a: '#257179', // teal (acquirer carpet, logos)
+  A: '#3fb6a8', // light teal (acquirer highlights)
 };
 
 // Color used for the auto-generated hit-flash frames.

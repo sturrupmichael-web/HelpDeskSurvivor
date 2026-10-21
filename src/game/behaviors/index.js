@@ -15,5 +15,9 @@ import executiveBoss from './executiveBoss.js';
 import ratsnestBoss from './ratsnestBoss.js';
 import callerBoss from './callerBoss.js';
 import janitorBoss from './janitorBoss.js';
+import pair from './pair.js';
+import tailgate from './tailgate.js';
+import still from './still.js';
+import takeoverBoss from './takeoverBoss.js';
 
-export const BEHAVIORS = { chase, dart, summoner, dropper, teleport, aura, line, incidentBoss, executiveBoss, ratsnestBoss, callerBoss, janitorBoss };
+export const BEHAVIORS = { chase, dart, summoner, dropper, teleport, aura, line, incidentBoss, executiveBoss, ratsnestBoss, callerBoss, janitorBoss, pair, tailgate, still, takeoverBoss };

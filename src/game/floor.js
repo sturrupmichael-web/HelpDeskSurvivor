@@ -1,9 +1,9 @@
 // Endless floor in one of the map styles from data/maps.js (office, server, callcenter,
-// garage). The world is split into 256x256 chunks; each chunk is generated
+// garage, merger). The world is split into 256x256 chunks; each chunk is generated
 // deterministically from its coordinates (floor tiles + a random furniture layout),
 // rendered once to an offscreen canvas and cached. Decoration only: nothing here
-// collides with anything. The Server Room's hot aisles are the one gameplay feature,
-// read back with isHot().
+// collides with anything. The gameplay features are read back from the same layout:
+// the Server Room's hot aisles (isHot) and Merger Day's acquired floor (isAcquired).
 
 const CHUNK = 256;
 const TILE = 32;
@@ -11,6 +11,8 @@ const MAX_CACHED = 64;
 
 // Floor tile sprite per style, from global tile coordinates.
 const TILES = {
+  merger: (gx, gy, acquired) =>
+    acquired ? (hash2(gx, gy) % 29 === 0 ? 'teal_logo' : (gx + gy) & 1 ? 'teal_a' : 'teal_b') : TILES.office(gx, gy),
   office: (gx, gy) => (hash2(gx, gy) % 37 === 0 ? 'carpet_c' : (gx + gy) & 1 ? 'carpet_a' : 'carpet_b'),
   server: (gx, gy) => (hash2(gx, gy) % 7 === 0 ? 'raised_vent' : 'raised_a'),
   callcenter: (gx, gy) => ((gx + gy) & 1 ? 'call_carpet_a' : 'call_carpet_b'),
@@ -26,6 +28,32 @@ function hash2(x, y) {
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return (h ^ (h >>> 16)) >>> 0;
 }
+// Value noise in 0..1, bilinearly interpolated between integer grid points.
+function smooth(x, y) {
+  const x0 = Math.floor(x);
+  const y0 = Math.floor(y);
+  const fx = x - x0;
+  const fy = y - y0;
+  const v = (i, j) => (hash2(x0 + i + 911, y0 + j + 377) % 1000) / 999;
+  const sx = fx * fx * (3 - 2 * fx);
+  const sy = fy * fy * (3 - 2 * fy);
+  const top = v(0, 0) + (v(1, 0) - v(0, 0)) * sx;
+  const bottom = v(0, 1) + (v(1, 1) - v(0, 1)) * sx;
+  return top + (bottom - top) * sy;
+}
+
+// How "legacy" a Merger Day chunk is (0..1): smooth noise, so the parent company's
+// floor arrives as rounded regions, a little higher around the start so you begin on
+// the old company's floor.
+function legacy(cx, cy) {
+  return 0.15 * Math.max(0, 1 - Math.hypot(cx, cy) / 4) + 0.85 * smooth(cx / 2.5, cy / 2.5);
+}
+
+// legacy() values of the chunks around the start, sorted: share -> threshold.
+const LEGACY_QUANTILES = [];
+for (let x = -8; x <= 8; x++) for (let y = -8; y <= 8; y++) if (Math.hypot(x, y) <= 8) LEGACY_QUANTILES.push(legacy(x, y));
+LEGACY_QUANTILES.sort((a, b) => a - b);
+
 function rng(seed) {
   return () => {
     seed = (seed + 0x6d2b79f5) | 0;
@@ -41,6 +69,32 @@ export class Floor {
     this.cache = new Map();
     this.hot = new Map(); // chunk key -> hot-aisle rect [x, y, w, h] in world px, or null
     this.style = 'office';
+    this.share = -1; // Merger Day: share of the floor the parent company owns (0..1)
+    this.owned = -1; // ...as a threshold on legacy(): chunks below it are acquired
+  }
+
+  // Merger Day: the parent company now owns about `share` of the floor.
+  setOwned(share) {
+    if (share === this.share) return;
+    this.share = share;
+    this.owned = LEGACY_QUANTILES[Math.min(LEGACY_QUANTILES.length - 1, Math.floor(share * LEGACY_QUANTILES.length))];
+    this.clear(); // repaint with the new borders
+  }
+
+  acquiredChunk(cx, cy) {
+    return legacy(cx, cy) < this.owned;
+  }
+
+  // A chunk that shows off the style: on Merger Day, the first acquired chunk next to
+  // the old office (so the integration line is in the picture).
+  previewChunk() {
+    if (this.style === 'merger')
+      for (let cx = 1; cx < 30; cx++) if (this.acquiredChunk(cx, 3) && !this.acquiredChunk(cx - 1, 3)) return [cx, 3];
+    return [1, 3];
+  }
+
+  isAcquired(x, y) {
+    return this.style === 'merger' && this.acquiredChunk(Math.floor(x / CHUNK), Math.floor(y / CHUNK));
   }
 
   setStyle(style) {
@@ -77,8 +131,9 @@ export class Floor {
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     const tiles = TILES[this.style];
+    const acquired = this.style === 'merger' && this.acquiredChunk(cx, cy);
     for (let ty = 0; ty < CHUNK / TILE; ty++) {
-      for (let tx = 0; tx < CHUNK / TILE; tx++) this.put(ctx, tiles(cx * 8 + tx, cy * 8 + ty), tx * TILE, ty * TILE);
+      for (let tx = 0; tx < CHUNK / TILE; tx++) this.put(ctx, tiles(cx * 8 + tx, cy * 8 + ty, acquired), tx * TILE, ty * TILE);
     }
     // Furniture layout for this chunk.
     const r = rng(hash2(cx * 7 + 3, cy * 13 + 5));
@@ -102,6 +157,38 @@ export class Floor {
     } else if (roll < 0.8) {
       this.put(ctx, 'plant', ox + 60, oy + 60);
     }
+  }
+
+  // Merger Day: the old office (cubicles, half packed into moving boxes) next to the
+  // parent company's floor (hot-desk benches, bean bags, SYNERGY banners). A dashed
+  // integration line marks every border between the two.
+  merger(ctx, r, ox, oy, roll, cx, cy) {
+    if (!this.acquiredChunk(cx, cy)) {
+      this.office(ctx, r, ox, oy, roll);
+      if (r() < 0.6) this.put(ctx, r() < 0.5 ? 'box_stack' : 'box_single', 200 - Math.floor(r() * 30), 190 + Math.floor(r() * 30));
+    } else if (roll < 0.6) {
+      const rows = r() < 0.5 ? 2 : 1;
+      for (let i = 0; i < rows; i++) this.put(ctx, 'bench_desk', ox + 20, oy + 20 + i * 70);
+      if (r() < 0.5) this.put(ctx, 'bean_bag', ox + 110, oy + 50);
+    } else if (roll < 0.85) {
+      this.put(ctx, 'synergy_banner', ox + 30, oy + 30);
+      this.put(ctx, 'bean_bag', ox + 40, oy + 80);
+      this.put(ctx, 'bean_bag', ox + 80, oy + 90);
+    }
+    const mine = this.acquiredChunk(cx, cy);
+    const edge = (x, y, w, h, horizontal) => {
+      ctx.fillStyle = '#1a1c2c';
+      ctx.fillRect(x, y, w, h);
+      for (let i = 0; i < (horizontal ? w : h); i += 16) {
+        ctx.fillStyle = (i >> 4) & 1 ? '#3fb6a8' : '#ffcd75';
+        if (horizontal) ctx.fillRect(x + i, y + 1, 12, h - 2);
+        else ctx.fillRect(x + 1, y + i, w - 2, 12);
+      }
+    };
+    if (this.acquiredChunk(cx, cy - 1) !== mine) edge(0, 0, CHUNK, 4, true);
+    if (this.acquiredChunk(cx, cy + 1) !== mine) edge(0, CHUNK - 4, CHUNK, 4, true);
+    if (this.acquiredChunk(cx - 1, cy) !== mine) edge(0, 0, 4, CHUNK, false);
+    if (this.acquiredChunk(cx + 1, cy) !== mine) edge(CHUNK - 4, 0, 4, CHUNK, false);
   }
 
   // Server Room: a row of racks with its hot aisle (exhaust side) glowing in front.
