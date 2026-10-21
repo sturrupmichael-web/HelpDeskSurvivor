@@ -1,7 +1,10 @@
 // Passive items. Each level adds `perLevel` to the stat multiplier:
 //   final multiplier = 1 + perLevel * level   (negative perLevel reduces the stat)
 // Stats: moveSpeed, attackSpeed, area, damage, growth (XP gain), damageTaken,
-//        cooldown, pickupRadius, maxHp.
+//        cooldown, pickupRadius, maxHp, luck (item drops, rarer cards, bigger chests).
+// `add` instead adds perLevel * level to a flat player number: extraCount (extra
+// projectiles, shields, helpers, traps and ducks on every tool) or regen (sanity/s).
+// `revives` grants that many comebacks from burnout when picked.
 
 export const PASSIVES = {
   coldBrew: {
@@ -48,6 +51,28 @@ export const PASSIVES = {
     name: 'Standing Desk', icon: 'desk', stat: 'maxHp', perLevel: 0.1, maxLevel: 5, weight: 8,
     desc: '+10% max sanity per level.',
     flavor: 'Raised to "standing" once. Has been at "sitting" ever since.',
+  },
+
+  // --- Added with ideas 37-40 ---
+  spareCharger: {
+    name: 'Spare Charger', icon: 'charger', add: 'extraCount', perLevel: 1, maxLevel: 2, weight: 5,
+    desc: '+1 projectile, shield, intern, zip tie or duck on every tool that uses them, per level.',
+    flavor: 'USB-C. Found in a drawer. Belongs to nobody. Now it belongs to you.',
+  },
+  warranty: {
+    name: 'Extended Warranty', icon: 'warranty', revives: 1, maxLevel: 1, weight: 5,
+    desc: 'Once per shift, a burnout is covered: you come back at half sanity.',
+    flavor: 'Covers accidental damage, water damage and emotional damage. Excludes Mondays.',
+  },
+  snackDrawer: {
+    name: 'Snack Drawer', icon: 'snack', add: 'regen', perLevel: 0.25, maxLevel: 5, weight: 7,
+    desc: '+0.25 sanity per second per level.',
+    flavor: 'Bottom left drawer. Granola bars, emergency chocolate, one fossilised mint.',
+  },
+  luckyLanyard: {
+    name: 'Lucky Lanyard', icon: 'lanyard', stat: 'luck', perLevel: 0.2, maxLevel: 5, weight: 7,
+    desc: '+20% luck per level: more pizza, PTO and Bulk Close drops, rarer level-up cards, bigger chests.',
+    flavor: 'From the 2014 vendor conference. Has never once been washed. Do not wash it.',
   },
 };
 

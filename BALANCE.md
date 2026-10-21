@@ -74,7 +74,16 @@ Other per-enemy knobs: `onDeath: { spawn, count }` (Randy splitting), `explode: 
 | `trail` | Coffee Run | `damage`, `cooldown` (drop rate × `gap`), `tick`, `radius`, `life`, `slow` |
 | `projectile` + `scalePer` | Auto-Scaling | as `projectile`, plus one extra shot per `scalePer` users within `scaleRadius`, up to `maxCount` |
 | `shield` | Out-of-Office Reply | `damage`, `cooldown`, `duration`, `radius`, `knockback` (also deletes boss bullets inside) |
-| `sweep` | Ping Sweep | `damage`, `range`, `rotSpeed`, `width` (radians), `hitInterval` |
+| `sweep` | Ping Sweep | `damage`, `range`, `rotSpeed`, `width` (radians), `hitInterval`; SIEM adds `beams`, `mark`, `markAmp` |
+| `projectile` + `ring` | Reply-All Storm | as `projectile`, but the whole burst goes out at once in a ring |
+| `trap` | Zip Ties | `damage`, `cooldown`, `count`, `radius` (trigger), `root` (stun s), `uses` (users per tie), `life`, `spread` |
+| `chain` + `confuse` | Password Expired | as `chain`, but `confuse` seconds of walking the wrong way instead of `stun` |
+| `beam` | Screen Share | `damage`, `cooldown`, `duration`, `tick`, `length`, `width`, `knockback` (aims at the nearest user, sweeps ±0.6 rad) |
+| `duck` | Rubber Duck | `damage`, `cooldown`, `radius` (quack), `orbit`, `rotSpeed`, `mark` (s), `markAmp` (+damage taken) |
+
+A flagged user (`mark`) takes `markAmp` extra damage from every tool; flags from the duck
+and the SIEM don't stack, the bigger one counts. Bosses shake off confusion like stuns
+(`stunResist`).
 
 How passives apply: Domain Admin Rights multiplies every `damage`. Runbook multiplies every
 `cooldown` (and the Group Policy `tick`). Second Monitor multiplies `radius`, `range`,
@@ -91,6 +100,11 @@ How passives apply: Domain Admin Rights multiplies every `damage`. Runbook multi
   `first + (L-1) × step` (see `XP_CURVE`).
 
 Passive multipliers are `1 + perLevel × level`. A negative `perLevel` reduces the stat.
+Flat passives (`add`): Spare Charger adds 1 to `extraCount` per level (max 2), Snack Drawer
+adds 0.25 sanity/s per level. Extended Warranty grants one comeback (`revives`), used
+before the Union Rep. Lucky Lanyard (`luck`, +20%/level) multiplies the pizza / Bulk Close /
+PTO drop chances, the weight of rare cards (weight under 8: Reimage, Spare Charger,
+Extended Warranty, Out-of-Office Reply) and the weight of the 3-upgrade chest.
 
 ## Level-up offers
 
@@ -183,6 +197,12 @@ in `data/weapons.js` (`evolved: true`, one level row):
 | Fiber Backbone | Patch Cable | Second Monitor | `full: true`, the cable whirls all the way round |
 | Outsourced Team | Delegate | ITIL Certification | 5 contractors, faster and harder-hitting |
 | Espresso Machine | Coffee Run | Cold Brew | bigger, hotter puddles that also `slow` |
+| Confluence Space | KB Article | Mechanical Keyboard | `ring: true` 6 articles all round, `curl` spirals them |
+| Passwordless | MFA Prompt | Spare Charger | `chains: 3`, 12 jumps each, long stun |
+| Domain Lockdown | Group Policy Push | Standing Desk | radius 110, users in the outer `edge` 30% `freeze` |
+| Remote Wipe | Remote Desktop Session | Ticket Queue Filter | 8 cursors that `pierce` 2, `vacuum` closed users' tickets to you |
+| Sabbatical | Out-of-Office Reply | Extended Warranty | big bubble almost always up, boss bullets come back as `reflect` damage |
+| SIEM | Ping Sweep | Runbook | `beams: 2`, flags users (`mark`) for +30% damage |
 
 ## Pickups (`data/pickups.js`)
 
@@ -337,3 +357,26 @@ Changes from that pass:
   far across the map, so levelling stalled late in a shift. Now the farthest ticket moves
   to the new drop and takes its XP.
 The wave curve (`data/waves.js`) is unchanged.
+
+## Ideas 32-46 (5 tools, 4 passives, 6 evolutions)
+
+Max-level crowd DPS (same headless test as above, standing still in a crowd of 60):
+Reply-All Storm ~800, Zip Ties ~700, Password Expired ~250 (it's mostly crowd control),
+Screen Share ~1,600, Rubber Duck ~1,650 before the bonus damage its flags give your other
+tools. Evolutions: Confluence Space ~3,900 (was ~9,300 at 40 damage / 1.4 s, cut to
+30 / 2.2 s), SIEM ~2,300 (damage 40 to 26), Domain Lockdown ~2,500 (15 to 11), Remote
+Wipe ~1,600 (raised: 60 damage, 8 cursors, pierce 2), Passwordless ~1,400 (30 to 45 damage,
+plus long stuns), Sabbatical ~2,300.
+
+With 20 tools and 13 passives each owned item turned up about a quarter less often on
+level-up cards, so upgrades to things you already own now get `OWNED_WEIGHT` (x1.35,
+`src/game/upgrades.js`). The bot also showed Zip Ties, Password Expired and Rubber Duck
+were weak early, so Zip Ties drop one more tie at every level, Password Expired has one more
+jump and a 0.3 s shorter cooldown, and Rubber Duck does 20% more damage.
+
+Bot check (every shop upgrade maxed, Tier 1 Tech, kiting bot; average survival time):
+
+| Map | Before (20 shifts) | After (24 shifts) |
+| --- | --- | --- |
+| Open Office | 20:26, 9 reached 20:00 | 22:05, 17 reached 20:00 |
+| Call Center | 9:06 | 9:32 |

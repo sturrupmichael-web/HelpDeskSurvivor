@@ -17,8 +17,11 @@ import minion from './minion.js';
 import trail from './trail.js';
 import shield from './shield.js';
 import sweep from './sweep.js';
+import trap from './trap.js';
+import beam from './beam.js';
+import duck from './duck.js';
 
-export const WEAPON_BEHAVIORS = { pulse, projectile, boomerang, orbit, aura, homing, chain, turret, nuke, whip, minion, trail, shield, sweep };
+export const WEAPON_BEHAVIORS = { pulse, projectile, boomerang, orbit, aura, homing, chain, turret, nuke, whip, minion, trail, shield, sweep, trap, beam, duck };
 
 // `slot` indexes the per-enemy hit timers (enemy.hitAt) used by damage-over-time weapons.
 export function createWeapon(id, slot) {

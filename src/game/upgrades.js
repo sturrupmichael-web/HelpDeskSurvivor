@@ -10,17 +10,25 @@ import { recomputeStats } from './player.js';
 import { EVOLUTIONS } from '../../data/evolutions.js';
 import { CHEST_REWARDS } from '../../data/pickups.js';
 
+// Lucky Lanyard: the rarer cards (weight below RARE_WEIGHT) turn up more often.
+const RARE_WEIGHT = 8;
+const lucky = (weight, luck) => (weight < RARE_WEIGHT ? weight * luck : weight);
+// Level-ups for things you already own are offered a bit more often than new items, so
+// with 20 tools and 13 passives your build still comes together.
+const OWNED_WEIGHT = 1.35;
+
 export function rollChoices(game, count = LEVEL_UP_CHOICES) {
   const p = game.player;
+  const luck = p.stats.luck;
   const pool = [];
   const owned = new Set(p.weapons.map((w) => w.id));
   for (const w of p.weapons) {
-    if (w.level < w.def.levels.length) pool.push({ kind: 'weapon', id: w.id, level: w.level + 1, weight: w.def.weight });
+    if (w.level < w.def.levels.length) pool.push({ kind: 'weapon', id: w.id, level: w.level + 1, weight: w.def.weight * OWNED_WEIGHT });
   }
   if (p.weapons.length < MAX_WEAPONS) {
     for (const [id, d] of Object.entries(WEAPONS)) {
       if (owned.has(id) || d.evolved || p.weapons.some((w) => w.def.from === id)) continue;
-      pool.push({ kind: 'weapon', id, level: 1, weight: d.weight });
+      pool.push({ kind: 'weapon', id, level: 1, weight: lucky(d.weight, luck) });
     }
   }
   const passiveCount = Object.keys(p.passives).length;
@@ -28,7 +36,7 @@ export function rollChoices(game, count = LEVEL_UP_CHOICES) {
     const lvl = p.passives[id] ?? 0;
     if (lvl >= d.maxLevel) continue;
     if (lvl === 0 && passiveCount >= MAX_PASSIVES) continue;
-    pool.push({ kind: 'passive', id, level: lvl + 1, weight: d.weight });
+    pool.push({ kind: 'passive', id, level: lvl + 1, weight: lucky(d.weight, luck) * (lvl ? OWNED_WEIGHT : 1) });
   }
 
   const picks = [];
@@ -53,8 +61,8 @@ function describe(c) {
   }
   if (c.kind === 'passive') {
     const d = PASSIVES[c.id];
-    const evo = Object.entries(EVOLUTIONS).find(([, v]) => v.passive === c.id);
-    const hint = evo && `Pairs with ${WEAPONS[evo[0]].name} to evolve it into ${WEAPONS[evo[1].into].name}.`;
+    const evos = Object.entries(EVOLUTIONS).filter(([, v]) => v.passive === c.id);
+    const hint = evos.length ? `Pairs with ${evos.map(([from, v]) => `${WEAPONS[from].name} (into ${WEAPONS[v.into].name})`).join(' and ')} to evolve it.` : undefined;
     return { ...c, name: d.name, icon: d.icon, text: d.desc, flavor: d.flavor, maxLevel: d.maxLevel, hint };
   }
   const d = FALLBACK_REWARDS[c.id];
@@ -69,6 +77,7 @@ export function applyChoice(game, c) {
     else p.weapons.push(createWeapon(c.id, p.weapons.length));
   } else if (c.kind === 'passive') {
     p.passives[c.id] = c.level;
+    if (PASSIVES[c.id].revives) p.warranty += PASSIVES[c.id].revives; // Extended Warranty
     recomputeStats(p);
   } else if (c.kind === 'reward') {
     game.achievements.run.pizzas++;
@@ -98,11 +107,13 @@ export function openChest(game) {
     p.weapons[i] = w;
     return { evolved: { from: old.def, to: w.def }, upgrades: [] };
   }
+  // Lucky Lanyard makes the bigger chest rewards more likely.
+  const weight = (r) => (r.upgrades > 1 ? r.weight * p.stats.luck : r.weight);
   let total = 0;
-  for (const r of CHEST_REWARDS) total += r.weight;
+  for (const r of CHEST_REWARDS) total += weight(r);
   let roll = Math.random() * total;
   let n = CHEST_REWARDS[0].upgrades;
-  for (const r of CHEST_REWARDS) if ((roll -= r.weight) <= 0) {
+  for (const r of CHEST_REWARDS) if ((roll -= weight(r)) <= 0) {
     n = r.upgrades;
     break;
   }

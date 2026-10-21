@@ -64,6 +64,22 @@ export default {
     proj_ticket_gold: one(['kkkkkkkkkk', 'kyyyyyyyyk', 'kyrrrrrryk', 'kyrwwwwryk', 'kyrrrrrryk', 'kyyyyyyyyk', 'kkkkkkkkkk']),
     turret_evo: one(['kkkkkkkkkkkkkk', 'keeeeeeeeeeeek', 'kewEeeeeeeeeek', 'keewEeeeeeeeek', 'kewEewwweeeeek', 'keeeeeeeeeeeek', 'kkkkkkkkkkkkkk', '......kk......', '.....kGGk.....', '....kk..kk....', '...kk....kk...'].map((r) => r.replaceAll('E', 'e'))),
     proj_bolt_evo: one(['.kk.', 'keek', 'keek', '.kk.']),
+    // Reply-All Storm and Sabbatical replies: an envelope.
+    proj_email: one(['kkkkkkkkkk', 'kwkwwwwkwk', 'kwwkwwkwwk', 'kwwwkkwwwk', 'kwwwwwwwwk', 'kkkkkkkkkk']),
+    // Rubber Duck.
+    duck: one([
+      '...kkkk.....',
+      '..kyyyyk....',
+      '..kykyyykk..',
+      '..kyyyyyook.',
+      '...kyyykkk..',
+      'kk.kyyyk....',
+      'kykkyyyykk..',
+      'kyyyyywwyyk.',
+      'kyyyywwyyyk.',
+      '.kyyyyyyyyk.',
+      '..kkkkkkkk..',
+    ]),
     // Boss attacks (hurt the player).
     hazard_phone: one(['.kkk....kkk.', 'krrrk..krrrk', 'krrrkkkkrrrk', '.krrrrrrrrk.', '..kkkkkkkk..']),
     hazard_slide: one(['kkkkkkkkkkkk', 'kwwwwwwwwwwk', 'kwrrrrwwwwwk', 'kwwwwwwwBwwk', 'kwwwwwBwBwwk', 'kwwwBwBwBwwk', 'kwBwBwBwBwwk', 'kwwwwwwwwwwk', 'kkkkkkkkkkkk']),

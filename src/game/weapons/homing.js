@@ -1,6 +1,7 @@
 // "Homing" behavior: launches seeking shots that go after far-away enemies.
-// Used by: Remote Desktop Session.
-// stats: damage, cooldown, count, speed, turn, life
+// Used by: Remote Desktop Session, Remote Wipe (evolved: `pierce`, and the def's
+// `vacuum: true` sends each closed user's ticket straight to you, see killEnemy).
+// stats: damage, cooldown, count, speed, turn, life, pierce
 
 import { fireProjectile } from '../projectiles.js';
 import { sfx } from '../../engine/audio.js';
@@ -35,7 +36,7 @@ export default {
       const a = Math.random() * Math.PI * 2; // launch in a random direction, then curve in
       fireProjectile(game, w, p.x, p.y - 6, Math.cos(a), Math.sin(a), {
         kind: 'homing', spr: w.def.sprite, speed: s.speed * p.stats.attackSpeed, damage: s.damage * p.stats.damage,
-        pierce: 0, life: s.life, turn: s.turn, target: t, r: 5 * p.stats.area, knockback: 40,
+        pierce: s.pierce ?? 0, life: s.life, turn: s.turn, target: t, r: 5 * p.stats.area, knockback: 40,
       });
     }
   },

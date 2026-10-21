@@ -16,6 +16,7 @@ function tierSprite(game, value) {
   return game.assets.sprite(s);
 }
 
+// Returns the ticket (a magnetized one flies to you).
 export function dropTicket(game, x, y, value) {
   const pool = game.tickets;
   let t = pool.spawn();
@@ -38,9 +39,10 @@ export function dropTicket(game, x, y, value) {
   t.value = value;
   t.spr = tierSprite(game, value);
   t.magnet = false;
-  t.speed = 0;
+  t.speed = TICKETS.magnetSpeed;
   t.t = Math.random() * 6;
   t.dead = false;
+  return t;
 }
 
 export function updateTickets(game, dt) {
@@ -113,8 +115,9 @@ export function rollItemDrops(game, e) {
     return;
   }
   if (game.items.count >= MAX_ITEMS) return;
+  const luck = game.player.stats.luck; // Lucky Lanyard
   for (const id in ITEMS) {
-    const c = ITEMS[id].chance;
+    const c = ITEMS[id].chance * luck;
     if (c && Math.random() < c) return dropItem(game, id, e.x, e.y);
   }
 }

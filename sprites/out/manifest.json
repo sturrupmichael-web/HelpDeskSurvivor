@@ -2247,7 +2247,7 @@
     }
    }
   },
-  "hazard_phone": {
+  "proj_email": {
    "sheet": "projectiles",
    "w": 16,
    "h": 16,
@@ -2267,7 +2267,7 @@
     }
    }
   },
-  "hazard_slide": {
+  "duck": {
    "sheet": "projectiles",
    "w": 16,
    "h": 16,
@@ -2287,6 +2287,46 @@
     }
    }
   },
+  "hazard_phone": {
+   "sheet": "projectiles",
+   "w": 16,
+   "h": 16,
+   "anchor": [
+    8,
+    16
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       192
+      ]
+     ]
+    }
+   }
+  },
+  "hazard_slide": {
+   "sheet": "projectiles",
+   "w": 16,
+   "h": 16,
+   "anchor": [
+    8,
+    16
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       208
+      ]
+     ]
+    }
+   }
+  },
   "paperjam": {
    "sheet": "projectiles",
    "w": 32,
@@ -2301,7 +2341,7 @@
      "frames": [
       [
        0,
-       192
+       224
       ]
      ]
     }
@@ -2321,7 +2361,7 @@
      "frames": [
       [
        0,
-       212
+       244
       ]
      ]
     }
@@ -2341,7 +2381,7 @@
      "frames": [
       [
        0,
-       232
+       264
       ]
      ]
     }

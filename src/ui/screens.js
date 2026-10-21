@@ -360,6 +360,7 @@ export class Screens {
           <div>Users on floor <b>${g.enemies.count}</b></div>
           <div>Rerolls left <b>${p.rerolls}</b></div>
           <div>Union Rep <b>${p.revives ? 'on call' : 'none'}</b></div>
+          ${p.passives.warranty ? `<div>Extended Warranty <b>${p.warranty ? 'covered' : 'claimed'}</b></div>` : ''}
         </div>
         <div class="section-head">YOUR STATS</div>
         <div class="stat-grid">
@@ -371,6 +372,9 @@ export class Screens {
           <div>Damage taken <b>${pct(s.damageTaken)}</b></div>
           <div>XP gain <b>${pct(s.growth)}</b></div>
           <div>Pickup radius <b>${pct(s.pickupRadius)}</b></div>
+          ${s.luck !== 1 ? `<div>Luck <b>${pct(s.luck)}</b></div>` : ''}
+          ${p.regen ? `<div>Sanity regen <b>${p.regen.toFixed(2)}/s</b></div>` : ''}
+          ${p.extraCount ? `<div>Extra projectiles <b>+${p.extraCount}</b></div>` : ''}
         </div>
         <div class="section-head">TOOLS (damage, average per second)</div>
         <div class="tools">${tools}</div>
