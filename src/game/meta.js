@@ -5,6 +5,7 @@
 import { SHOP, PAYOUT } from '../../data/meta.js';
 import { CHARACTERS } from '../../data/player.js';
 import { MAPS } from '../../data/maps.js';
+import { PREVIEW } from '../version.js';
 
 const KEY = 'helpdesk-survivors.save.v1';
 
@@ -101,9 +102,10 @@ export class Meta {
     return true;
   }
 
+  // Preview builds open every map, so a new one can be tried before it's earned.
   mapUnlocked(id) {
     const m = MAPS[id];
-    return !!m && (!m.unlockAfter || this.data.mapsWon.includes(m.unlockAfter));
+    return !!m && (PREVIEW || !m.unlockAfter || this.data.mapsWon.includes(m.unlockAfter));
   }
 
   selectMap(id) {
