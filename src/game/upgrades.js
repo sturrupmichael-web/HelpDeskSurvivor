@@ -27,7 +27,7 @@ export function rollChoices(game, count = LEVEL_UP_CHOICES) {
   }
   if (p.weapons.length < MAX_WEAPONS) {
     for (const [id, d] of Object.entries(WEAPONS)) {
-      if (owned.has(id) || d.evolved || p.weapons.some((w) => w.def.from === id)) continue;
+      if (owned.has(id) || d.evolved || p.weapons.some((w) => w.def.from === id) || p.locked?.('tools', id)) continue;
       pool.push({ kind: 'weapon', id, level: 1, weight: lucky(d.weight, luck) });
     }
   }
@@ -35,7 +35,7 @@ export function rollChoices(game, count = LEVEL_UP_CHOICES) {
   for (const [id, d] of Object.entries(PASSIVES)) {
     const lvl = p.passives[id] ?? 0;
     if (lvl >= d.maxLevel) continue;
-    if (lvl === 0 && passiveCount >= MAX_PASSIVES) continue;
+    if (lvl === 0 && (passiveCount >= MAX_PASSIVES || p.locked?.('passives', id))) continue;
     pool.push({ kind: 'passive', id, level: lvl + 1, weight: lucky(d.weight, luck) * (lvl ? OWNED_WEIGHT : 1) });
   }
 
@@ -48,20 +48,23 @@ export function rollChoices(game, count = LEVEL_UP_CHOICES) {
     picks.push(pool.splice(i, 1)[0]);
   }
   if (!picks.length) picks.push({ kind: 'reward', id: 'pizza', level: 0 });
-  return picks.map(describe);
+  return picks.map((c) => describe(c, p));
 }
 
+// An evolution this shift can reach (unlocked on this save).
+const canEvolve = (p, evo) => evo && !p?.locked?.('evolutions', evo.into);
+
 // Adds display fields (name, icon, text) to a choice.
-function describe(c) {
+function describe(c, p) {
   if (c.kind === 'weapon') {
     const d = WEAPONS[c.id];
     const evo = EVOLUTIONS[c.id];
-    const hint = evo && `Evolves at max level with ${PASSIVES[evo.passive].name} into ${WEAPONS[evo.into].name}.`;
+    const hint = canEvolve(p, evo) && `Evolves at max level with ${PASSIVES[evo.passive].name} into ${WEAPONS[evo.into].name}.`;
     return { ...c, name: d.name, icon: d.icon, text: c.level === 1 ? d.desc : d.notes[c.level - 1], flavor: d.flavor, maxLevel: d.levels.length, hint };
   }
   if (c.kind === 'passive') {
     const d = PASSIVES[c.id];
-    const evos = Object.entries(EVOLUTIONS).filter(([, v]) => v.passive === c.id);
+    const evos = Object.entries(EVOLUTIONS).filter(([, v]) => v.passive === c.id && canEvolve(p, v));
     const hint = evos.length ? `Pairs with ${evos.map(([from, v]) => `${WEAPONS[from].name} (into ${WEAPONS[v.into].name})`).join(' and ')} to evolve it.` : undefined;
     return { ...c, name: d.name, icon: d.icon, text: d.desc, flavor: d.flavor, maxLevel: d.maxLevel, hint };
   }
@@ -89,7 +92,7 @@ export function applyChoice(game, c) {
 export function findEvolution(p) {
   for (const w of p.weapons) {
     const evo = EVOLUTIONS[w.id];
-    if (evo && w.level >= w.def.levels.length && p.passives[evo.passive]) return { weapon: w, into: evo.into };
+    if (canEvolve(p, evo) && w.level >= w.def.levels.length && p.passives[evo.passive]) return { weapon: w, into: evo.into };
   }
   return null;
 }

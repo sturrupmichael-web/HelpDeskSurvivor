@@ -156,6 +156,8 @@ export class Game {
     const def = CHARACTERS[charId];
     this.player = createPlayer(def, this.assets.sprite(def.sprite), this.meta);
     this.player.weapons.push(createWeapon(def.starter, 0));
+    // Tools, passives and evolutions this save hasn't unlocked yet (data/unlocks.js).
+    this.player.locked = (kind, id) => !this.meta.itemUnlocked(kind, id);
     this.enemies.clear();
     this.tickets.clear();
     this.items.clear();
@@ -224,7 +226,7 @@ export class Game {
         .sort((a, b) => b.damage - a.damage),
     };
     const wikiNew = recordWiki(this);
-    const { pay, records, newMap } = this.meta.finishShift(stats);
+    const { pay, records, newMap, newUnlocks } = this.meta.finishShift(stats);
     const r = this.achievements.run;
     r.ended = true;
     r.won = won;
@@ -232,7 +234,7 @@ export class Game {
     r.kills = this.score.kills;
     this.achievements.check();
     const review = performanceReview(stats, r);
-    this.screens.gameOver({ ...stats, pay, records, newMap, wikiNew, review, balance: this.meta.data.pay });
+    this.screens.gameOver({ ...stats, pay, records, newMap, newUnlocks, wikiNew, review, balance: this.meta.data.pay });
   }
 
   // Extended Warranty (passive) or Union Rep (shop): come back from burnout, clearing

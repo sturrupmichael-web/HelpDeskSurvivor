@@ -42,6 +42,9 @@ function reviewCard(s) {
   </div>`;
 }
 const DIGITS = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8, Numpad1: 0, Numpad2: 1, Numpad3: 2, Numpad4: 3, Numpad5: 4, Numpad6: 5, Numpad7: 6, Numpad8: 7, Numpad9: 8 };
+// Display name of a map-win unlock ({ kind, id } from Meta.unlocksFor).
+const unlockName = ({ kind, id }) =>
+  kind === 'characters' ? `${CHARACTERS[id].name} (hire)` : kind === 'passives' ? PASSIVES[id].name : kind === 'evolutions' ? `${WEAPONS[id].name} (evolution)` : WEAPONS[id].name;
 const PAY = (n) => `<span class="pay">$${n.toLocaleString()}</span>`;
 // Names on the leaderboard come from other players: always escape before showing them.
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -511,8 +514,17 @@ export class Screens {
       const c = CHARACTERS[id];
       const unlocked = meta.isUnlocked(id);
       const selected = meta.data.selected === id;
-      const afford = meta.data.pay >= c.cost;
-      const status = selected ? '<b class="ok">ON SHIFT</b>' : unlocked ? 'Select' : afford ? `Hire for ${PAY(c.cost)}` : `Locked: ${PAY(c.cost)}`;
+      const hireable = meta.itemUnlocked('characters', id); // some need a map win first (data/unlocks.js)
+      const afford = hireable && meta.data.pay >= c.cost;
+      const status = selected
+        ? '<b class="ok">ON SHIFT</b>'
+        : unlocked
+          ? 'Select'
+          : !hireable
+            ? `Locked: win a shift in the ${MAPS[meta.unlockedBy('characters', id)].name}`
+            : afford
+              ? `Hire for ${PAY(c.cost)}`
+              : `Locked: ${PAY(c.cost)}`;
       return `<button class="card char ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}" data-i="${i}" ${!unlocked && !afford ? 'disabled' : ''}>
         <div class="card-head"><canvas data-spr="${c.sprite}" width="64" height="64"></canvas>
           <div class="card-name">${c.name}</div><kbd>${i + 1}</kbd></div>
@@ -760,6 +772,7 @@ export class Screens {
         <p class="sub">${pickLine(s.won ? VICTORY_QUIPS : BURNOUT_QUIPS)}</p>
         ${s.wikiNew?.length ? `<p class="wiki-new">NEW IN THE WIKI: ${s.wikiNew.slice(0, 6).map((n) => `<b>${n}</b>`).join(', ')}${s.wikiNew.length > 6 ? ` and ${s.wikiNew.length - 6} more` : ''}</p>` : ''}
         ${s.newMap ? `<p class="unlock">NEW MAP UNLOCKED: <b>${MAPS[s.newMap].name}</b> (pick it under Map on the title screen)</p>` : ''}
+        ${s.newUnlocks?.length ? `<p class="unlock">NOW AVAILABLE: ${s.newUnlocks.map((u) => `<b>${unlockName(u)}</b>`).join(', ')}</p>` : ''}
         <div class="summary-cols">
           <table class="stats">
             <tr><td>Technician</td><td>${s.character}</td></tr>

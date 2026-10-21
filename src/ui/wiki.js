@@ -28,6 +28,13 @@ const ALL_TOOLS = TOOLS.flatMap((id) => [id, ...EVOLVED.filter((e) => WEAPONS[e]
 
 const name = (id) => ENEMIES[id].name;
 
+// The save being shown (set by wikiScreen), for "unlocks when you win..." notes.
+let shownMeta = null;
+function lockNote(kind, id) {
+  if (!shownMeta || shownMeta.itemUnlocked(kind, id)) return '';
+  return `Unlocks when you win a shift in the ${MAPS[shownMeta.unlockedBy(kind, id)].name}.`;
+}
+
 // Short field notes worked out from the user's data.
 function userNotes(d) {
   const notes = [];
@@ -76,13 +83,13 @@ function toolCard(w, id) {
     const base = WEAPONS[d.from];
     const passive = PASSIVES[EVOLUTIONS[d.from].passive];
     if (!known) {
-      const hint = isKnown(w, 'tool', d.from) ? `Evolves from ${base.name}. Max it out and bring the right passive.` : 'An evolved tool.';
+      const hint = lockNote('evolutions', id) || (isKnown(w, 'tool', d.from) ? `Evolves from ${base.name}. Max it out and bring the right passive.` : 'An evolved tool.');
       return `<div class="wiki-entry locked evolved">${icon(d.icon, 32)}<div><b>???</b><span>${hint}</span></div></div>`;
     }
     return `<div class="wiki-entry evolved">${icon(d.icon, 32)}<div><b>${d.name}</b><i>${d.flavor ?? ''}</i><span>${d.desc}</span>
       <span class="wiki-facts">Evolved: ${base.name} at max level + ${passive.name}</span></div></div>`;
   }
-  if (!known) return `<div class="wiki-entry locked">${icon(d.icon, 32)}<div><b>???</b><span>Not used yet.</span></div></div>`;
+  if (!known) return `<div class="wiki-entry locked">${icon(d.icon, 32)}<div><b>???</b><span>${lockNote('tools', id) || 'Not used yet.'}</span></div></div>`;
   const evo = EVOLUTIONS[id];
   const into = evo && WEAPONS[evo.into];
   const evoLine = evo
@@ -93,7 +100,7 @@ function toolCard(w, id) {
 
 function passiveCard(w, id) {
   const d = PASSIVES[id];
-  if (!isKnown(w, 'passive', id)) return `<div class="wiki-entry locked">${icon(d.icon, 32)}<div><b>???</b><span>Not picked yet.</span></div></div>`;
+  if (!isKnown(w, 'passive', id)) return `<div class="wiki-entry locked">${icon(d.icon, 32)}<div><b>???</b><span>${lockNote('passives', id) || 'Not picked yet.'}</span></div></div>`;
   const evolves = Object.entries(EVOLUTIONS)
     .filter(([, e]) => e.passive === id)
     .map(([t]) => WEAPONS[t].name);
@@ -139,6 +146,7 @@ function drawThumbs(root, assets) {
 
 export function wikiScreen(screens, tab = 'users', back = () => screens.title()) {
   const game = screens.game;
+  shownMeta = game.meta;
   const w = wikiData(game.meta);
   const sec = SECTIONS[tab];
   const found = sec.ids.filter((id) => isKnown(w, sec.kind, id)).length;
