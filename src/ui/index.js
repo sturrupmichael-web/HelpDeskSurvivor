@@ -21,6 +21,13 @@ export function attachUi(game) {
   game.hud.onPause(() => {
     if (game.state === 'run') game.pause();
   });
+  // Switching apps, a call or the notification shade: come back to the pause menu, not to
+  // a shift that carries on the moment the page is visible again.
+  const away = () => {
+    if (game.state === 'run') game.pause();
+  };
+  document.addEventListener('visibilitychange', () => document.hidden && away());
+  addEventListener('blur', away);
   // Both sides changed: ask on the next menu, never mid-shift.
   game.cloud.onConflict = (local, cloud, choose) => {
     const s = game.screens;

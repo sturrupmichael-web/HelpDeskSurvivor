@@ -12,9 +12,12 @@ import { pickLine, DIGITS } from './common.js';
 // `tip` is the training shift's explanation, shown above the cards (or null).
 export function levelUp(scr, choices, tip, onReroll, rerollsLeft, onPick) {
   let done = false;
+  // Ignore taps for a moment: a thumb put back down to steer could otherwise land on a card.
+  let ready = false;
+  setTimeout(() => (ready = true), 400);
   const onlyPizza = choices.length === 1 && choices[0].kind === 'reward';
   const pick = (i, always = false) => {
-    if (done || !choices[i]) return;
+    if (done || !ready || !choices[i]) return;
     done = true;
     sfx('click');
     onPick(choices[i], always);
@@ -47,7 +50,7 @@ export function levelUp(scr, choices, tip, onReroll, rerollsLeft, onPick) {
       const n = DIGITS[code];
       if (n !== undefined) pick(n);
       else if (onlyPizza && code === 'KeyA') pick(0, true);
-      else if (onReroll && code === 'KeyR' && !done) {
+      else if (onReroll && code === 'KeyR' && !done && ready) {
         done = true;
         sfx('click');
         onReroll();
@@ -58,7 +61,7 @@ export function levelUp(scr, choices, tip, onReroll, rerollsLeft, onPick) {
   scr.bind('.card', (i) => pick(i));
   scr.bind('[data-act=always]', () => pick(0, true));
   scr.bind('[data-act=reroll]', () => {
-    if (done) return;
+    if (done || !ready) return;
     done = true;
     sfx('click');
     onReroll();

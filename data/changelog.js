@@ -4,6 +4,17 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-ux1',
+    date: 'Oct 21, 2026',
+    title: 'Fewer lost shifts',
+    items: [
+      'The end-of-shift buttons now stay on screen while you scroll the summary, so Next Shift is always one tap away.',
+      'The game pauses itself when you switch apps, take a call or pull down notifications.',
+      'Restart Shift and Quit to Title ask for a second tap, so a slip no longer throws a shift away.',
+      'Level-up cards ignore taps for a split second after they appear, so putting your thumb back down to steer no longer picks a card by accident.',
+    ],
+  },
+  {
     id: '2026-10-21-policies',
     date: 'Oct 21, 2026',
     title: 'Shift Policies',

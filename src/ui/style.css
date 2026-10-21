@@ -416,3 +416,23 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
   .panel button.card.policy .char-status:has(.hint:only-child) { display: none; }
   .pol-summary { font-size: 11px; }
 }
+
+/* Pause: Restart and Quit sit apart and need a second press (UX review 3) */
+.pause-danger { margin-top: 18px; padding-top: 10px; border-top: 2px dashed var(--ink); }
+.panel button.confirm.armed { background: var(--red); color: var(--paper); font-size: 13px; }
+.panel button.confirm.armed kbd { color: var(--paper); border-color: var(--paper); }
+
+/* End of shift: the buttons stay on screen while the summary scrolls (UX review 1) */
+.panel.summary { padding-bottom: 0; }
+.summary .summary-buttons { position: sticky; bottom: 0; z-index: 1; margin: 16px -4px 0; padding: 10px 4px 14px; background: var(--slate); border-top: 2px solid var(--ink); }
+.summary .summary-buttons button { margin: 0; min-height: 48px; }
+@media (max-width: 600px) {
+  .summary .summary-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px 4px 10px; }
+  .summary .summary-buttons button { min-width: 0; min-height: 44px; padding: 6px; font-size: 13px; }
+  .summary .summary-buttons kbd { display: none; }
+}
+@media (max-height: 500px) {
+  .summary .summary-buttons { padding: 6px 4px 8px; }
+  .summary .summary-buttons button { min-height: 40px; padding: 6px; font-size: 13px; }
+  .summary .summary-buttons kbd { display: none; }
+}
