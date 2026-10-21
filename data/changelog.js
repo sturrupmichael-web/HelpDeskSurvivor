@@ -4,6 +4,18 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-perf',
+    date: 'Oct 21, 2026',
+    title: 'Smoother on phones',
+    items: [
+      'The game now draws far fewer pixels each frame, so big late-game hordes should stay smooth on phones, with less heat and battery drain. It looks the same.',
+      'Damage numbers and pickup labels use a crisp pixel font that matches the art.',
+      'Menus, level-up cards and the pause screen no longer redraw the office 60 times a second while you read them.',
+      'Merger Day no longer stutters when the parent company takes over more of the floor.',
+      'Your save now has a version number, so future updates can rename or rework things without losing your progress.',
+    ],
+  },
+  {
     id: '2026-10-21-clockin',
     date: 'Oct 21, 2026',
     title: 'Pick your tech and map when you Clock In',

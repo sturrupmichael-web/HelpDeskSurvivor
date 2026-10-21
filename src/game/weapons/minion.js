@@ -4,12 +4,15 @@
 // stats: count, damage, speed, leash, hitInterval, knockback
 
 import { damageEnemy, nearestEnemy } from '../enemies.js';
-
-const buf = new Int32Array(4096);
+import { hitBuf as buf } from '../../engine/spatialHash.js';
 
 export default {
   init(w) {
     w.minions = [];
+    // Target filters, made once: `w.leash` and `w.picking` (the helper choosing) are set
+    // before each use.
+    w.far = (e) => Math.hypot(e.x - w.px, e.y - w.py) > w.leash;
+    w.farOrTaken = (e) => w.far(e) || w.minions.some((o) => o !== w.picking && o.target === e);
   },
   update(w, game, dt) {
     const s = w.stats;
@@ -22,7 +25,8 @@ export default {
     const speed = s.speed * p.stats.moveSpeed;
     const now = game.time;
     const items = game.enemies.items;
-    w.minions.forEach((m, i) => {
+    for (let i = 0; i < count; i++) {
+      const m = w.minions[i];
       // Too far behind: catch up instantly (they took the stairs).
       if (Math.hypot(m.x - p.x, m.y - p.y) > leash * 1.8) {
         m.x = p.x;
@@ -31,13 +35,15 @@ export default {
       if (!m.target || m.target.dead || m.target.uid !== m.uid || Math.hypot(m.target.x - p.x, m.target.y - p.y) > leash) {
         // Spread out: prefer a user nobody else on the team is already tackling. A boss
         // in reach always gets one helper, so the team chips away at it too.
-        const far = (e) => Math.hypot(e.x - p.x, e.y - p.y) > leash;
-        const taken = (e) => w.minions.some((o) => o !== m && o.target === e);
+        w.px = p.x;
+        w.py = p.y;
+        w.leash = leash;
+        w.picking = m;
         const boss = game.bossAlive() ? game.boss : null;
         m.target =
-          (boss && !far(boss) && !taken(boss) ? boss : null) ??
-          nearestEnemy(game, m.x, m.y, leash, (e) => far(e) || taken(e)) ??
-          nearestEnemy(game, m.x, m.y, leash, far);
+          (boss && !w.farOrTaken(boss) ? boss : null) ??
+          nearestEnemy(game, m.x, m.y, leash, w.farOrTaken) ??
+          nearestEnemy(game, m.x, m.y, leash, w.far);
         m.uid = m.target ? m.target.uid : 0;
       }
       // Head for the target, or back to a spot in the formation around you.
@@ -55,7 +61,7 @@ export default {
         m.animT += dt;
       } else m.animT = 0;
       // Each helper swings on its own timer and hits everyone in reach.
-      if ((m.cd -= dt) > 0) return;
+      if ((m.cd -= dt) > 0) continue;
       const n = game.hash.query(m.x, m.y, 16, buf);
       for (let k = 0; k < n; k++) {
         const e = items[buf[k]];
@@ -66,7 +72,7 @@ export default {
         m.cd = s.hitInterval;
         damageEnemy(game, e, dmg, w, ex, ey, s.knockback);
       }
-    });
+    }
   },
   draw(w, game, ctx) {
     const spr = game.assets.sprite(w.def.sprite);

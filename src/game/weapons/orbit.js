@@ -8,8 +8,7 @@ const INNER = 0.6; // inner ring radius, relative to the outer one
 
 import { damageEnemy } from '../enemies.js';
 import { sfx } from '../../engine/audio.js';
-
-const buf = new Int32Array(4096);
+import { hitBuf as buf } from '../../engine/spatialHash.js';
 
 export default {
   init(w) {

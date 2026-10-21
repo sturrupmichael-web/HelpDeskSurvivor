@@ -6,9 +6,9 @@
 
 import { damageEnemy, stunEnemy } from '../enemies.js';
 import { sfx } from '../../engine/audio.js';
+import { hitBuf as buf } from '../../engine/spatialHash.js';
 
 const MAX = 40;
-const buf = new Int32Array(4096);
 
 export default {
   init(w) {

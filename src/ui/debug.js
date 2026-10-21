@@ -82,7 +82,7 @@ export class Debug {
       `tickets ${g.tickets.count} · items ${g.items.count} · projectiles ${g.projectiles.count} · zones ${g.zones.pool.count}<br>` +
       `boss bullets ${g.hazards.bullets.count} · bombs ${g.hazards.bombs.count}<br>` +
       `particles ${fx.particles.count} · numbers ${fx.numbers.count}<br>` +
-      `time ${fmtTime(g.time)} · scale ${g.view.scale}x · view ${Math.round(g.view.w)}x${Math.round(g.view.h)}<br>` +
+      `time ${fmtTime(g.time)} · zoom ${g.view.scale}x · view ${Math.round(g.view.w)}x${Math.round(g.view.h)}<br>` +
       `god ${g.player.god ? 'ON' : 'off'}<br>` +
       HELP.map(([k, t]) => `<kbd>${k}</kbd> ${t}`).join('<br>');
   }

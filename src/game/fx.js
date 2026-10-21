@@ -1,6 +1,7 @@
 // Visual effects: death particles and floating damage numbers. Pooled; no gameplay.
 
 import { Pool } from '../engine/pool.js';
+import { drawPixelText } from '../engine/pixelfont.js';
 
 // Cached number strings so damage numbers don't allocate.
 const NUM = Array.from({ length: 1000 }, (_, i) => String(i));
@@ -122,22 +123,12 @@ export class Fx {
       ctx.fillStyle = p.color;
       ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2);
     }
+    // Damage numbers at 1x, pickup labels at 2x, in the pixel font.
     const ns = this.numbers;
-    if (!ns.count) return;
-    ctx.textAlign = 'center';
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#1a1c2c';
-    // Two passes so the font is only set twice per frame (damage numbers, then labels).
-    for (let pass = 0; pass < 2; pass++) {
-      ctx.font = pass ? 'bold 10px monospace' : 'bold 8px monospace';
-      for (let i = 0; i < ns.count; i++) {
-        const n = ns.items[i];
-        if (n.big !== (pass === 1)) continue;
-        ctx.globalAlpha = n.t < 0.4 ? 1 : 1 - (n.t - 0.4) / 0.2;
-        ctx.strokeText(n.text, n.x, n.y);
-        ctx.fillStyle = n.color;
-        ctx.fillText(n.text, n.x, n.y);
-      }
+    for (let i = 0; i < ns.count; i++) {
+      const n = ns.items[i];
+      ctx.globalAlpha = n.t < 0.4 ? 1 : 1 - (n.t - 0.4) / 0.2;
+      drawPixelText(ctx, n.text, n.x, n.y, n.color, n.big ? 2 : 1);
     }
     ctx.globalAlpha = 1;
   }

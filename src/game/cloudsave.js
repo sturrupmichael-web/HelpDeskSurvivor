@@ -30,9 +30,11 @@ const canon = (v) =>
   : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(',')}}`
   : JSON.stringify(v ?? null);
 
-// Short fingerprint of a save, to spot changes.
+// Short fingerprint of a save, to spot changes. The format version is left out, so a save
+// that was only upgraded on load (src/game/meta.js) doesn't count as changed.
 function fingerprint(data) {
-  const str = canon(data);
+  const { version, ...rest } = data ?? {};
+  const str = canon(rest);
   let h = 2166136261;
   for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
   return (h >>> 0).toString(36);

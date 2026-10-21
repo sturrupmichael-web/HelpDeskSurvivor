@@ -8,15 +8,20 @@
 export class SpatialHash {
   constructor(cellSize, cols, rows, maxItems) {
     this.cell = cellSize;
-    this.cols = cols;
-    this.rows = rows;
     this.ox = 0; // world position of the grid's top-left corner
     this.oy = 0;
-    const n = cols * rows;
-    this.cellStart = new Int32Array(n + 1);
-    this.cellFill = new Int32Array(n);
     this.itemCell = new Int32Array(maxItems);
     this.sorted = new Int32Array(maxItems);
+    this.resize(cols, rows);
+  }
+
+  // Changes the window to cols x rows cells (the game sizes it to the screen).
+  resize(cols, rows = cols) {
+    if (cols === this.cols && rows === this.rows && this.cellStart) return;
+    this.cols = cols;
+    this.rows = rows;
+    this.cellStart = new Int32Array(cols * rows + 1);
+    this.cellFill = new Int32Array(cols * rows);
   }
 
   // Index items[0..count) (objects with x, y) around (cx, cy).
@@ -64,3 +69,8 @@ export class SpatialHash {
     return n;
   }
 }
+
+// Shared result buffer for weapon and projectile hit checks. They run one after another
+// and never nest a query inside another, so one buffer serves them all. (Game.scratch and
+// scratch2 are separate buffers for the queries that do nest.)
+export const hitBuf = new Int32Array(4096);

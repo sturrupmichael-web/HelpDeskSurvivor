@@ -5,8 +5,7 @@
 // stats: damage, tick, radius, slow, edge, freeze
 
 import { damageEnemy, stunEnemy } from '../enemies.js';
-
-const buf = new Int32Array(4096);
+import { hitBuf as buf } from '../../engine/spatialHash.js';
 
 export default {
   update(w, game, dt) {
