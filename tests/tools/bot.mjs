@@ -3,9 +3,12 @@
 // player, for comparing maps, techs and balance changes (see BALANCE.md).
 //
 //   node tests/tools/bot.mjs [--map office] [--tech tier1] [--runs 10] [--vet]
+//   node tests/tools/bot.mjs --profiles [--runs 8]
 //
 // --map / --tech take ids from data/maps.js and data/player.js, or "all".
 // --vet starts from a save with the whole shop maxed and everything unlocked.
+// --profiles plays the progression table in BALANCE.md: each map with the shop share and
+// map wins a player usually has when they get there (PROFILES below).
 
 import { readFileSync } from 'node:fs';
 import { headlessGame } from '../../src/game/headless.js';
@@ -95,9 +98,28 @@ export function veteranSave() {
   };
 }
 
+// Where players usually are when they reach each map: [map, share of the shop bought,
+// maps already won] (see "Map-win unlocks and the full rebalance" in BALANCE.md).
+export const PROFILES = [
+  ['office', 0, []],
+  ['office', 0.4, []],
+  ['server', 0.5, ['office']],
+  ['callcenter', 0.7, ['office', 'server']],
+  ['garage', 0.85, ['office', 'server', 'callcenter']],
+  ['merger', 1, ['office', 'server', 'callcenter', 'garage']],
+];
+
+// A save with `share` of every shop upgrade bought and `mapsWon` won (their unlocks open).
+export function profileSave(share, mapsWon) {
+  return {
+    shop: Object.fromEntries(Object.entries(SHOP).map(([id, s]) => [id, Math.round(s.costs.length * share)])),
+    mapsWon,
+  };
+}
+
 // Plays `runs` shifts; returns one summary per shift.
-export function playShifts({ map = 'office', tech = 'tier1', runs = 1, vet = false } = {}) {
-  const game = headlessGame(manifest, { pick: botPick, autopilot: botPilot, save: vet ? veteranSave() : null });
+export function playShifts({ map = 'office', tech = 'tier1', runs = 1, vet = false, save = null } = {}) {
+  const game = headlessGame(manifest, { pick: botPick, autopilot: botPilot, save: save ?? (vet ? veteranSave() : null) });
   const out = [];
   for (let i = 0; i < runs; i++) {
     game.startShift(map, tech);
@@ -116,16 +138,21 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const runs = +arg('runs', 5);
   const vet = process.argv.includes('--vet');
   const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
-  for (const map of maps) {
-    for (const tech of techs) {
-      const t0 = performance.now();
-      const res = playShifts({ map, tech, runs, vet });
-      const wins = res.filter((r) => r.won).length;
-      const avg = (f) => res.reduce((s, r) => s + f(r), 0) / res.length;
-      console.log(
-        `${map.padEnd(11)} ${tech.padEnd(14)} won ${wins}/${runs}  lasted ${fmt(avg((r) => r.time))}  level ${avg((r) => r.level).toFixed(0)}  ` +
-          `closed ${avg((r) => r.kills).toFixed(0)}  (${((performance.now() - t0) / 1000).toFixed(1)} s)`,
-      );
-    }
+  const report = (label, opts) => {
+    const t0 = performance.now();
+    const res = playShifts({ runs, ...opts });
+    const wins = res.filter((r) => r.won).length;
+    const avg = (f) => res.reduce((s, r) => s + f(r), 0) / res.length;
+    const past = res.filter((r) => r.time > 600).length;
+    console.log(
+      `${label} won ${wins}/${runs}  lasted ${fmt(avg((r) => r.time))}  level ${avg((r) => r.level).toFixed(0)}  ` +
+        `closed ${avg((r) => r.kills).toFixed(0)}  past 10:00 ${past}/${runs}  (${((performance.now() - t0) / 1000).toFixed(1)} s)`,
+    );
+  };
+  if (process.argv.includes('--profiles')) {
+    const only = arg('profile', null); // one row of the table, by index
+    for (const [map, share, won] of only === null ? PROFILES : [PROFILES[+only]]) report(`${map.padEnd(11)} shop ${String(share * 100).padStart(3)}%`, { map, save: profileSave(share, won) });
+  } else {
+    for (const map of maps) for (const tech of techs) report(`${map.padEnd(11)} ${tech.padEnd(14)}`, { map, tech, vet });
   }
 }

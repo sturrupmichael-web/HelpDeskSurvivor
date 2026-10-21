@@ -85,6 +85,7 @@ export class Game {
     this.bossParts = []; // [enemy, uid] for every piece of a boss that splits (Rat's Nest)
     this.bossMax = 1; // HP of the whole boss fight, for the HUD bar
     this.bossDef = null;
+    this.bossPhase2 = false; // the current fight has reached its second phase (behaviors/phase2.js)
     this.victoryT = 0;
 
     this.resize();
@@ -181,6 +182,7 @@ export class Game {
     this.time = 0;
     this.boss = null;
     this.bossParts.length = 0;
+    this.bossPhase2 = false;
     this.victoryT = 0;
     this.beatT = 0; // low-sanity heartbeat timer
     this.autoPizza = false; // everything maxed and the player chose "always take the pizza"
@@ -329,6 +331,7 @@ export class Game {
     this.bossParts.length = 0;
     this.bossParts.push([e, e.uid]);
     this.bossMax = e.maxHp;
+    this.bossPhase2 = false;
     this.bossDef = e.def; // the pieces' pool objects may be reused by the time it's over
     this.achievements.run.bossesMet.push(e.def.sprite); // for the Help Desk Wiki
     this.camera.shake(5);

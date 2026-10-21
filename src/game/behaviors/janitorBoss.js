@@ -5,16 +5,22 @@
 //   charge  points the buffer at you (red lane on the floor), then charges down it
 //   lights  kills the lights: the flashlight shrinks for a few seconds (dark maps only;
 //           elsewhere he charges instead)
-// Below `enrageAt` HP the gaps between attacks shrink.
+// Second phase (DOUBLE SHIFT, at `phase2.at` HP): the gaps between attacks shrink, every
+// charge comes straight back at you a second time, and he learns
+//   spin    a red circle around him first; then the buffer spins out, hurting and
+//           shoving you if you're inside, and leaves a ring of wet floor
 
 import { stepToward } from './chase.js';
 import { hurtPlayer } from '../player.js';
 import { sfx } from '../../engine/audio.js';
+import { belowPhase2, enterPhase2 } from './phase2.js';
 
 const WALK = 0;
 const CHARGE_TELL = 1;
 const CHARGING = 2;
 const POSE = 3;
+const SPIN_TELL = 4;
+const SPINNING = 5;
 const POSE_TIME = 0.6;
 const MOP = 0; // attack-animation frames (sprites/defs/bosses.js)
 const LEAN = 1;
@@ -40,15 +46,30 @@ function mop(e, game, m, wet) {
   sfx('slosh', e.x);
 }
 
+// Spin-out: drops a ring of wet floor around the buffer.
+function spinRing(e, game, s, wet) {
+  for (let i = 0; i < s.wet; i++) {
+    const a = (i / s.wet) * Math.PI * 2;
+    game.zones.add(e.x + Math.cos(a) * s.radius * 0.8, e.y + e.foot - 6 + Math.sin(a) * s.radius * 0.8, wet);
+  }
+}
+
 function startAttack(e, game) {
   const p = e.params;
-  const list = game.map.twist?.type === 'dark' ? p.attacks : p.attacks.filter((a) => a !== 'lights');
+  const all = e.ai.phase2 ? p.phase2.attacks : p.attacks;
+  const list = game.map.twist?.type === 'dark' ? all : all.filter((a) => a !== 'lights');
   let i = (Math.random() * list.length) | 0;
   if (list[i] === e.ai.lastAttack) i = (i + 1) % list.length; // no repeats
   e.ai.lastAttack = list[i];
+  e.ai.recharged = false;
   e.anim = 'attack';
   aim(e, game);
-  if (e.ai.lastAttack === 'charge') {
+  if (e.ai.lastAttack === 'spin') {
+    e.ai.state = SPIN_TELL;
+    e.ai.stateT = p.phase2.spin.telegraph;
+    sfx('warn', e.x);
+    e.pose = LEAN;
+  } else if (e.ai.lastAttack === 'charge') {
     e.ai.state = CHARGE_TELL;
     e.ai.stateT = p.charge.telegraph;
     sfx('warn', e.x);
@@ -84,14 +105,17 @@ export default {
       lastAttack: '', // never the same attack twice in a row
       aimX: 1, // unit vector of the current attack
       aimY: 0,
-      chargeHit: false, // has this charge hit you yet?
+      chargeHit: false, // has this charge (or spin) hit you yet?
+      phase2: false, // double shift (behaviors/phase2.js)
+      recharged: false, // phase 2: this attack's second charge has started
     };
   },
 
   update(e, game, dt) {
     const p = e.params;
     const pl = game.player;
-    const enraged = e.hp < e.maxHp * p.enrageAt;
+    if (!e.ai.phase2 && belowPhase2(e, game)) enterPhase2(e, game);
+    const enraged = e.ai.phase2;
     // The buffer leaves a wet trail wherever it goes.
     if ((e.ai.trailIn -= dt) <= 0) {
       e.ai.trailIn = e.ai.state === CHARGING ? p.trailEvery / 3 : p.trailEvery;
@@ -127,8 +151,44 @@ export default {
         }
         if ((e.ai.stateT -= dt) <= 0) {
           game.camera.shake(3);
-          endAttack(e, enraged);
+          if (enraged && !e.ai.recharged) {
+            // Double shift: turn round and come straight back.
+            e.ai.recharged = true;
+            aim(e, game);
+            e.ai.state = CHARGE_TELL;
+            e.ai.stateT = p.phase2.recharge;
+            e.pose = LEAN;
+            sfx('warn', e.x);
+          } else endAttack(e, enraged);
         }
+        break;
+      }
+      case SPIN_TELL:
+        if ((e.ai.stateT -= dt) <= 0) {
+          e.ai.state = SPINNING;
+          e.ai.stateT = p.phase2.spin.time;
+          e.ai.chargeHit = false;
+          e.pose = -1;
+          spinRing(e, game, p.phase2.spin, p.wet);
+          sfx('charge', e.x);
+          sfx('slosh', e.x);
+        }
+        break;
+      case SPINNING: {
+        const s = p.phase2.spin;
+        e.animT += dt * 6;
+        e.flip = ((game.time * 12) | 0) % 2 === 0;
+        const dx = pl.x - e.x;
+        const dy = pl.y - e.y;
+        const d = Math.hypot(dx, dy) || 1;
+        if (!e.ai.chargeHit && d < s.radius + pl.r) {
+          e.ai.chargeHit = true;
+          if (hurtPlayer(game, s.damage)) game.onPlayerHurt();
+          pl.kx += (dx / d) * s.push;
+          pl.ky += (dy / d) * s.push;
+          game.camera.shake(4);
+        }
+        if ((e.ai.stateT -= dt) <= 0) endAttack(e, enraged);
         break;
       }
       case POSE:
@@ -138,6 +198,26 @@ export default {
   },
 
   drawUnder(e, game, ctx) {
+    if (e.ai.state === SPIN_TELL || e.ai.state === SPINNING) {
+      // The buffer's reach: a red circle that fills up, then a swirl while it spins.
+      const sp = e.params.phase2.spin;
+      const tell = e.ai.state === SPIN_TELL;
+      const k = tell ? 1 - e.ai.stateT / sp.telegraph : 1;
+      ctx.globalAlpha = tell ? 0.2 + 0.25 * k : 0.35;
+      ctx.fillStyle = tell ? '#b13e53' : '#41a6f6';
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, sp.radius * k, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = (game.time * 10) & 1 ? 0.9 : 0.5;
+      ctx.strokeStyle = tell ? '#b13e53' : '#f4f4f4';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (tell) ctx.arc(e.x, e.y, sp.radius, 0, Math.PI * 2);
+      else ctx.arc(e.x, e.y, sp.radius, game.time * 14, game.time * 14 + Math.PI * 1.2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      return;
+    }
     if (e.ai.state !== CHARGE_TELL) return;
     const c = e.params.charge;
     const len = c.speed * c.time;

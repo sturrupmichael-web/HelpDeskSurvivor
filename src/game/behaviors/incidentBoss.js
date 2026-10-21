@@ -1,15 +1,20 @@
 // Major Incident (10:00 boss): a speakerphone on a cart, dragging the whole bridge call
 // toward you. Every `ringEvery` s it telegraphs, then fires a ring of ringing phones
-// outward with one gap (shown in green during the telegraph: stand there). Below
-// `enrageAt` HP it fires a second, offset ring through the same gap and rings faster.
-// Every `minionEvery` s it releases `minionCount` Status Update Requests.
+// outward with one gap (shown in green during the telegraph: stand there). Every
+// `minionEvery` s it releases `minionCount` Status Update Requests.
+// Second phase (SEV 0, at `phase2.at` HP): it fires a second, offset ring through the
+// same gap, rings faster, and every other attack is a spiral: `arms` streams of phones
+// sweeping round it (the arms show on the floor first). Circle with them to dodge.
 
 import { stepToward } from './chase.js';
 import { spawnEnemy } from '../enemies.js';
 import { sfx } from '../../engine/audio.js';
+import { belowPhase2, enterPhase2 } from './phase2.js';
 
 const WALK = 0;
 const RINGING = 1;
+const SPIRAL_TELL = 2;
+const SPIRAL = 3;
 const DOUBLE_GAP = 0.45; // seconds between the two rings when enraged
 const MOUTH_Y = -14; // phones come out of the speaker, above the collision center
 
@@ -27,6 +32,28 @@ function fireRing(e, game, p, offset) {
   game.camera.shake(2);
 }
 
+// Spiral telegraph: red strips where the arms start, turning the way they will sweep.
+function drawArms(e, game, ctx) {
+  const sp = e.params.phase2.spiral;
+  const k = 1 - e.ai.stateT / sp.telegraph;
+  ctx.save();
+  ctx.translate(e.x, e.y + MOUTH_Y);
+  for (let i = 0; i < sp.arms; i++) {
+    ctx.save();
+    ctx.rotate(e.ai.spiralA + (i / sp.arms) * Math.PI * 2 - sp.turn * 0.4 * (1 - k));
+    ctx.globalAlpha = 0.2 + 0.3 * k;
+    ctx.fillStyle = '#b13e53';
+    ctx.fillRect(0, -5, 170, 10);
+    ctx.globalAlpha = (game.time * 10) & 1 ? 0.9 : 0.5;
+    ctx.strokeStyle = '#b13e53';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, -5, 170, 10);
+    ctx.restore();
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
 export default {
   init(e) {
     // This boss's own state (pool objects are reused, so it's made fresh each fight).
@@ -36,26 +63,39 @@ export default {
       ringIn: 2.5, // seconds until the next ring of phones
       minionsIn: 1.5, // seconds until the next Status Update Requests
       gapAngle: 0, // direction of the safe gap in the ring
-      ringsLeft: 0, // rings still to fire in this attack (2 when enraged)
+      ringsLeft: 0, // rings still to fire in this attack (2 in phase 2)
+      phase2: false, // SEV 0 (behaviors/phase2.js)
+      spiralNext: false, // phase 2 alternates rings and spirals
+      spiralA: 0, // current angle of the first spiral arm
+      fireIn: 0, // seconds until the next phones of the spiral
     };
   },
 
   update(e, game, dt) {
     const p = e.params;
     const pl = game.player;
-    const enraged = e.hp < e.maxHp * p.enrageAt;
+    if (!e.ai.phase2 && belowPhase2(e, game)) enterPhase2(e, game);
+    const enraged = e.ai.phase2;
     if (e.ai.state === WALK) {
       e.anim = 'walk';
       stepToward(e, pl.x, pl.y, e.speed * e.slow * e.buff, dt);
       if ((e.ai.ringIn -= dt) <= 0) {
-        e.ai.state = RINGING;
-        e.ai.stateT = p.ringTelegraph;
-        e.ai.gapAngle = Math.random() * Math.PI * 2; // gap direction
-        e.ai.ringsLeft = enraged ? 2 : 1;
         e.anim = 'attack';
-        sfx('ring');
+        if (enraged && e.ai.spiralNext) {
+          e.ai.state = SPIRAL_TELL;
+          e.ai.stateT = p.phase2.spiral.telegraph;
+          e.ai.spiralA = Math.atan2(pl.y - e.y, pl.x - e.x) + 0.6; // first arm just misses you
+          sfx('warn', e.x);
+        } else {
+          e.ai.state = RINGING;
+          e.ai.stateT = p.ringTelegraph;
+          e.ai.gapAngle = Math.random() * Math.PI * 2; // gap direction
+          e.ai.ringsLeft = enraged ? 2 : 1;
+          sfx('ring');
+        }
+        e.ai.spiralNext = !e.ai.spiralNext;
       }
-    } else {
+    } else if (e.ai.state === RINGING) {
       e.flip = pl.x < e.x;
       if ((e.ai.stateT -= dt) <= 0) {
         fireRing(e, game, p, e.ai.ringsLeft === 1 ? 0 : 0.5);
@@ -63,6 +103,29 @@ export default {
         else {
           e.ai.state = WALK;
           e.ai.ringIn = p.ringEvery * (enraged ? 0.75 : 1);
+        }
+      }
+    } else {
+      const sp = p.phase2.spiral;
+      e.flip = pl.x < e.x;
+      if ((e.ai.stateT -= dt) <= 0) {
+        if (e.ai.state === SPIRAL_TELL) {
+          e.ai.state = SPIRAL;
+          e.ai.stateT = sp.time;
+          e.ai.fireIn = 0;
+          sfx('ring');
+        } else {
+          e.ai.state = WALK;
+          e.ai.ringIn = p.ringEvery * 0.75;
+        }
+      } else if (e.ai.state === SPIRAL) {
+        e.ai.spiralA += sp.turn * dt;
+        if ((e.ai.fireIn -= dt) <= 0) {
+          e.ai.fireIn = sp.every;
+          for (let k = 0; k < sp.arms; k++) {
+            const a = e.ai.spiralA + (k / sp.arms) * Math.PI * 2;
+            game.hazards.bullet(e.x, e.y + MOUTH_Y, a, sp.speed, sp.damage, 'hazard_phone', 6);
+          }
         }
       }
     }
@@ -77,8 +140,9 @@ export default {
     }
   },
 
-  // Telegraph: a red ring around the boss with the safe lane in green.
+  // Telegraphs: the spiral's arms, or a red ring around the boss with the safe lane in green.
   drawUnder(e, game, ctx) {
+    if (e.ai.state === SPIRAL_TELL) return drawArms(e, game, ctx);
     if (e.ai.state !== RINGING) return;
     const p = e.params;
     const half = (p.ringGap * Math.PI) / p.ringBullets;

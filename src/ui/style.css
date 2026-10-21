@@ -90,6 +90,11 @@ kbd { font-family: var(--font); font-size: 0.8em; padding: 1px 5px; border: 1px 
 .hud-boss { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); width: min(560px, 80vw); text-align: center; }
 .hud-boss .boss-name { font-size: 13px; font-weight: bold; color: var(--yellow); margin-bottom: 4px; letter-spacing: 1px; }
 .hud-boss svg { width: 100%; height: 12px; display: block; border: 2px solid var(--ink); box-shadow: 0 0 0 1px var(--gray); }
+.hud-boss.angry .boss-fill { fill: #ef7d57; }
+.hud-boss.angry svg { animation: boss-angry 0.5s steps(2) infinite; }
+.hud-boss.angry .boss-name::after { content: " \2022  ENRAGED"; color: #ef7d57; }
+@keyframes boss-angry { 50% { box-shadow: 0 0 0 1px #b13e53, 0 0 8px #b13e53; } }
+@media (prefers-reduced-motion: reduce) { .hud-boss.angry svg { animation: none; } }
 .slot.evolved { border-color: var(--yellow); box-shadow: 0 0 6px rgba(255, 205, 117, 0.6); }
 .slot.evolved .pips { font-size: 7px; letter-spacing: 0; font-weight: bold; }
 .card-hint { font-size: 11px; font-weight: normal; color: var(--yellow); border-top: 1px dashed var(--slate); padding-top: 6px; }

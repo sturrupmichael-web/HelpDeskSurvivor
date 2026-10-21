@@ -4,11 +4,15 @@
 //   snag    loose cable loops land around you and slow you down while you stand in them
 //   split   at `splitAt` HP it unplugs into three smaller nests (this one shrinks and two
 //           more appear); the fight ends when all three are down (see Game.addBossPart)
+//   fire    second phase, when the whole fight is down to `phase2.at`: every nest left
+//           catches fire, moves faster, lashes more often, and sparks run down each
+//           cable after it lands (a line of small blasts, shown as filling circles)
 
 import { stepToward } from './chase.js';
 import { spawnEnemy } from '../enemies.js';
 import { hurtPlayer } from '../player.js';
 import { sfx } from '../../engine/audio.js';
+import { belowPhase2, enterPhase2 } from './phase2.js';
 
 const WALK = 0;
 const LASH_TELL = 1;
@@ -60,6 +64,17 @@ function snag(e, game) {
   sfx('whoosh');
 }
 
+// On fire: sparks run down every cable of the lash that just landed.
+function sparks(e, game, k) {
+  const len = e.params.lashLength * (e.ai.small ? 0.75 : 1);
+  for (const a of e.ai.lashAngles) {
+    for (let i = 1; i <= k.count; i++) {
+      const d = (len * i) / k.count;
+      game.hazards.bomb(e.x + Math.cos(a) * d, e.y + BODY_Y + Math.sin(a) * d, k.radius, k.delay + i * k.step, k.damage);
+    }
+  }
+}
+
 // Unplugged: shrink into one of three smaller nests sharing what HP is left.
 function split(e, game) {
   const p = e.params;
@@ -99,6 +114,7 @@ export default {
       snagIn: 4, // seconds until the next cable snag
       small: !!e.def.params.isSmall, // one of the three nests after the split
       lashAngles: [], // directions of the cables in the current lash
+      phase2: false, // on fire (behaviors/phase2.js)
     };
   },
 
@@ -106,22 +122,26 @@ export default {
     const p = e.params;
     const pl = game.player;
     if (!e.ai.small && p.splitAt && e.hp < e.maxHp * p.splitAt) split(e, game);
+    // On fire once the whole fight (all three nests) is low enough.
+    if (!e.ai.phase2 && e.ai.small && belowPhase2(e, game, true)) enterPhase2(e, game);
     const small = e.ai.small;
+    const fire = e.ai.phase2 ? p.phase2 : null;
     if (e.ai.state === WALK) {
       e.anim = 'walk';
-      stepToward(e, pl.x, pl.y, e.speed * (small ? 1.5 : 1) * e.slow * e.buff, dt);
+      stepToward(e, pl.x, pl.y, e.speed * (small ? 1.5 : 1) * (fire ? fire.speed : 1) * e.slow * e.buff, dt);
       if ((e.ai.lashIn -= dt) <= 0) startLash(e, game);
     } else if (e.ai.state === LASH_TELL) {
       if ((e.ai.stateT -= dt) <= 0) {
         e.ai.state = LASH;
         e.ai.stateT = LASH_SHOW;
         if (lashHits(e, game) && hurtPlayer(game, p.lashDamage)) game.onPlayerHurt();
+        if (fire) sparks(e, game, fire.sparks);
         game.camera.shake(small ? 2 : 4);
         sfx('snap', e.x);
       }
     } else if ((e.ai.stateT -= dt) <= 0) {
       e.ai.state = WALK;
-      e.ai.lashIn = p.lashEvery * (small ? 1.4 : 1);
+      e.ai.lashIn = p.lashEvery * (small ? 1.4 : 1) * (fire ? fire.lashEvery : 1);
     }
     if ((e.ai.snagIn -= dt) <= 0) {
       e.ai.snagIn = p.snagEvery * (small ? 1.5 : 1);

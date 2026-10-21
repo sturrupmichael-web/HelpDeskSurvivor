@@ -131,7 +131,7 @@ shoved by the horde.
 | `ringBullets`, `ringGap` | phones per ring, and how many are left out to make the gap |
 | `bulletSpeed`, `bulletDamage` | speed and sanity damage of each phone |
 | `minionEvery`, `minionCount`, `minion` | Status Update Requests it releases |
-| `enrageAt` | HP fraction below which it fires a second offset ring and rings 25% more often |
+| `phase2` | second phase (see below): `at` HP fraction; then a second offset ring, rings 25% more often, and every other attack is a `spiral` |
 
 Every non-final boss drops a Change Approved chest where it goes down (where the last
 piece goes down, for the Rat's Nest), and `downBanner` is the banner shown then.
@@ -151,11 +151,11 @@ piece goes down, for the Rat's Nest), and `downBanner` is the banner shown then.
 Smaller nests lash 2-3 shorter cables, 40% less often, and throw one loop at a time.
 
 **The Angry Caller** (`caller`, Call Center, 12500 HP). Keeps `keepAway` [near, far] px
-from you and circles. `attackGap` [normal, enraged], `enrageAt`. Attacks:
+from you and circles. `attackGap` [normal, second phase]. Attacks:
 
 | Attack | Params |
 | --- | --- |
-| `hold` | ring of `count` phone bombs at `radius` around you plus one on you, `gap` left out; enraged adds a wider ring `ringGap` s later with the gap in the same place |
+| `hold` | ring of `count` phone bombs at `radius` around you plus one on you, `gap` left out; the second phase adds a wider ring `ringGap` s later with the gap in the same place |
 | `scream` | `telegraph`, cone `spread` and `range`, `damage`, `push` (shove speed) |
 | `conference` | `count` of enemy `id` (Reply-All Randy) in a ring at `radius` around you |
 
@@ -177,6 +177,24 @@ shift). `params`:
 | `cone` | `telegraph`, `bullets` per volley, `spread` (radians), `speed`, `damage`, `volleys` per phase |
 | `bombs` | `count` circles (the first on you), `radius`, `delay` before they go off, `damage`, `scatter` |
 | `summon` | enemy `id` and `count` |
+
+**Second phases** (idea 14, `params.phase2`, shared code in
+src/game/behaviors/phase2.js). Below `phase2.at` of its HP a boss switches once: the
+`title` / `text` banner, the `phase2` growl, a shockwave, then a red glow and embers on
+the boss and an orange boss bar marked ENRAGED. `wiki` is the line in the Help Desk Wiki.
+
+| Boss | When | What changes |
+| --- | --- | --- |
+| Major Incident | 50% | double rings, rings 25% sooner, every other attack a `spiral`: `arms` streams of phones turning `turn` rad/s for `time` s, one volley every `every` s |
+| The Rat's Nest | 25% of the whole fight (all three nests) | `speed` x walk speed, `lashEvery` x time between lashes, `sparks`: `count` small blasts down each cable after it lands, `delay` + `step` s apart |
+| The Angry Caller | 50% | `attackGap[1]`, double "please hold", `attacks` gains `transfer`: lands `behind` px past you after `telegraph` s, hurting and shoving inside `radius` |
+| The Night Janitor | 50% | `attackGap[1]`, every charge repeats once (`recharge` s telegraph), `attacks` gains `spin`: `radius` circle, then `time` s spin, ring of `wet` patches |
+| The Hostile Takeover | 25% of its own HP | `attackGap[1]`, every other attack a `reorg`: memo lanes across and down at once |
+| The Executive | final phase (33%) | `calendar` joins the final phase's attacks: `size` x `size` checkerboard of meetings `spacing` px apart, half after `delay` s, half after `delay2` s |
+
+The Rat's Nest and the Hostile Takeover already split at 50%, so their second phase
+comes later. The Major Incident, Angry Caller, Night Janitor and Hostile Takeover no
+longer have a separate `enrageAt`: the second phase replaced it.
 
 If you outlast 20:00 without closing The Executive, the clock keeps running as
 OVERTIME at the final timeline values.

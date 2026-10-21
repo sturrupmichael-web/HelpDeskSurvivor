@@ -6,15 +6,20 @@
 //   scream      "I want your manager!": a red cone first, then a shout that hurts and
 //               shoves you back
 //   conference  dials everyone in: a ring of Reply-All Randys closing in on you
-// Below `enrageAt` HP the gaps between attacks shrink.
+// Second phase (ESCALATED, at `phase2.at` HP): the gaps between attacks shrink, "please
+// hold" fires two rings, and it learns
+//   transfer    a red circle marks a spot just behind you; then it transfers itself
+//               there and lands with a shout that hurts and shoves you out
 
 import { spawnEnemy } from '../enemies.js';
 import { hurtPlayer } from '../player.js';
 import { sfx } from '../../engine/audio.js';
+import { belowPhase2, enterPhase2 } from './phase2.js';
 
 const WALK = 0;
 const SCREAM_TELL = 1;
 const POSE = 2;
+const TRANSFER_TELL = 3;
 const POSE_TIME = 0.7;
 const MOUTH_Y = -20;
 const SCREAM = 0; // attack-animation frames (sprites/defs/bosses.js)
@@ -79,14 +84,45 @@ function scream(e, game, s) {
   sfx('scream', e.x);
 }
 
+// Transfer: it lands on the marked spot (e.ai.tx, ty).
+function transfer(e, game, t) {
+  const pl = game.player;
+  game.fx.burst(e.x, e.y + MOUTH_Y, e.def.particle, 14);
+  e.x = e.ai.tx;
+  e.y = e.ai.ty;
+  const dx = pl.x - e.x;
+  const dy = pl.y - e.y;
+  const d = Math.hypot(dx, dy) || 1;
+  if (d < t.radius + pl.r) {
+    if (hurtPlayer(game, t.damage)) game.onPlayerHurt();
+    pl.kx += (dx / d) * t.push;
+    pl.ky += (dy / d) * t.push;
+  }
+  game.fx.ring(e.x, e.y, t.radius, '#b13e53', 0.4);
+  game.fx.ring(e.x, e.y, t.radius * 0.6, '#73eff7', 0.3, true);
+  game.camera.shake(5);
+  sfx('scream', e.x);
+}
+
 function startAttack(e, game) {
   const p = e.params;
-  let i = (Math.random() * p.attacks.length) | 0;
-  if (p.attacks[i] === e.ai.lastAttack) i = (i + 1) % p.attacks.length; // no repeats
-  e.ai.lastAttack = p.attacks[i];
+  const list = e.ai.phase2 ? p.phase2.attacks : p.attacks;
+  let i = (Math.random() * list.length) | 0;
+  if (list[i] === e.ai.lastAttack) i = (i + 1) % list.length; // no repeats
+  e.ai.lastAttack = list[i];
   e.anim = 'attack';
   aim(e, game);
-  if (e.ai.lastAttack === 'scream') {
+  if (e.ai.lastAttack === 'transfer') {
+    // The spot just behind you, as seen from the caller.
+    const t = p.phase2.transfer;
+    const pl = game.player;
+    e.ai.tx = pl.x + e.ai.aimX * t.behind;
+    e.ai.ty = pl.y + e.ai.aimY * t.behind;
+    e.ai.state = TRANSFER_TELL;
+    e.ai.stateT = t.telegraph;
+    e.pose = PHONE;
+    sfx('ring');
+  } else if (e.ai.lastAttack === 'scream') {
     e.ai.state = SCREAM_TELL;
     e.ai.stateT = p.scream.telegraph;
     sfx('warn', e.x);
@@ -95,9 +131,27 @@ function startAttack(e, game) {
     e.ai.state = POSE;
     e.ai.stateT = POSE_TIME;
     e.pose = PHONE;
-    if (e.ai.lastAttack === 'hold') hold(e, game, p.hold, e.hp < e.maxHp * p.enrageAt);
+    if (e.ai.lastAttack === 'hold') hold(e, game, p.hold, e.ai.phase2);
     else conference(e, game, p.conference);
   }
+}
+
+// Transfer telegraph: a red circle on the landing spot that fills up.
+function drawTransfer(e, game, ctx) {
+  const t = e.params.phase2.transfer;
+  const k = 1 - e.ai.stateT / t.telegraph;
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = '#b13e53';
+  ctx.beginPath();
+  ctx.arc(e.ai.tx, e.ai.ty, t.radius * k, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = (game.time * 10) & 1 ? 0.9 : 0.5;
+  ctx.strokeStyle = '#b13e53';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(e.ai.tx, e.ai.ty, t.radius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
 }
 
 export default {
@@ -111,13 +165,17 @@ export default {
       strafe: Math.random() < 0.5 ? 1 : -1, // which way it circles you
       aimX: 1, // unit vector of the scream
       aimY: 0,
+      phase2: false, // escalated (behaviors/phase2.js)
+      tx: 0, // where the transfer lands
+      ty: 0,
     };
   },
 
   update(e, game, dt) {
     const p = e.params;
     const pl = game.player;
-    const enraged = e.hp < e.maxHp * p.enrageAt;
+    if (!e.ai.phase2 && belowPhase2(e, game)) enterPhase2(e, game);
+    const enraged = e.ai.phase2;
     if (e.ai.state === WALK) {
       e.anim = 'walk';
       e.pose = -1;
@@ -141,6 +199,7 @@ export default {
       if ((e.ai.attackIn -= dt) <= 0) startAttack(e, game);
     } else if ((e.ai.stateT -= dt) <= 0) {
       if (e.ai.state === SCREAM_TELL) scream(e, game, p.scream);
+      else if (e.ai.state === TRANSFER_TELL) transfer(e, game, p.phase2.transfer);
       e.ai.state = WALK;
       e.ai.attackIn = p.attackGap[enraged ? 1 : 0];
       if (Math.random() < 0.3) e.ai.strafe = -e.ai.strafe;
@@ -148,6 +207,7 @@ export default {
   },
 
   drawUnder(e, game, ctx) {
+    if (e.ai.state === TRANSFER_TELL) return drawTransfer(e, game, ctx);
     if (e.ai.state !== SCREAM_TELL) return;
     const s = e.params.scream;
     const a = Math.atan2(e.ai.aimY, e.ai.aimX);

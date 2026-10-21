@@ -32,7 +32,7 @@ const lastPlayed = {};
 const THROTTLE = {
   hit: 0.05, bosshit: 0.07, pop: 0.035, ticket: 0.04, hurt: 0.3, pulse: 0.1, boom: 0.08, ring: 0.3, whoosh: 0.15,
   shoot: 0.06, zap: 0.08, launch: 0.1, throw: 0.1, blip: 0.06, snap: 0.1, warn: 0.15, hum: 0.5, bubble: 0.3,
-  ping: 0.3, deploy: 0.15, charge: 0.3, slosh: 0.3, scream: 0.5, heartbeat: 0.4,
+  ping: 0.3, deploy: 0.15, charge: 0.3, phase2: 1, slosh: 0.3, scream: 0.5, heartbeat: 0.4,
   mail: 0.2, ziptie: 0.2, error: 0.2, projector: 0.5, quack: 0.3,
 };
 // Random pitch spread (cents) so repeated sounds don't machine-gun.
@@ -345,6 +345,13 @@ const RECIPES = {
   scream: (t, o) => {
     for (const f of [520, 565, 610]) tone('sawtooth', f, f * 1.7, t, 0.5, 0.07, o);
     hiss('bandpass', 1500, 2600, t, 0.45, 0.2, o);
+  },
+  // A boss enters its second phase: a low growl under three rising stabs.
+  phase2: (t, o) => {
+    tone('sawtooth', 220, 55, t, 0.9, 0.2, o);
+    tone('square', 110, 40, t, 0.9, 0.1, o);
+    arp('square', [392, 466, 587], 0.12, 0.1, 0.12, o, t + 0.05);
+    hiss('lowpass', 1400, 90, t, 0.8, 0.45, o);
   },
   // Low sanity: your pulse.
   heartbeat: (t, o) => {

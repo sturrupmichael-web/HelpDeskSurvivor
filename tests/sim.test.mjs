@@ -45,4 +45,37 @@ export function simTests() {
       assert(boss, `no boss on ${map} at 10:00`);
     }
   });
+
+  // Each boss's second phase (src/game/behaviors/phase2.js): knock it down below the
+  // line, then watch for its new attack.
+  const SECOND_PHASE = {
+    incident: (e) => e.ai.state === 3, // spiral
+    ratsnest: (e, g) => g.hazards.bombs.count > 0, // sparks down the cables
+    caller: (e) => e.ai.lastAttack === 'transfer',
+    janitor: (e) => e.ai.state === 5 || e.ai.recharged, // spin-out or double charge
+    takeover: (e) => e.ai.cross, // Reorg
+    executive: (e) => e.ai.lastAttack === 'calendar',
+  };
+  test('node: every boss has a second phase with a new attack', async () => {
+    const game = headlessGame(manifest, { pick: botPick, save: veteranSave() });
+    const fights = [...Object.keys(MAPS).map((m) => [m, 600]), ['office', 1200]];
+    for (const [map, at] of fights) {
+      game.startShift(map);
+      game.player.god = true;
+      game.player.weapons.length = 0;
+      game.time = at - 2;
+      game.playShift(at + 1);
+      assert(game.bossAlive(), `no boss on ${map} at ${at} s`);
+      const id = game.boss.def.sprite;
+      let used = false;
+      for (let t = 0; t < 30 * 60 && !used; t++) {
+        for (const [e] of game.bossParts) if (!e.dead) e.hp = Math.max(1, Math.min(e.hp, e.maxHp * 0.2));
+        game.update(1 / 60);
+        for (const [e] of game.bossParts) if (!e.dead && e.def.sprite === id && SECOND_PHASE[id]?.(e, game)) used = true;
+        if (!game.bossAlive()) break;
+      }
+      assert(game.bossPhase2, `${id}: never reached its second phase`);
+      assert(used, `${id}: second-phase attack never seen in 30 s`);
+    }
+  });
 }

@@ -3,6 +3,7 @@
 
 import { ENEMIES } from '../../data/enemies.js';
 import { BEHAVIORS } from './behaviors/index.js';
+import { angryTick, drawAngryGlow } from './behaviors/phase2.js';
 import { hurtPlayer } from './player.js';
 import { dropTicket, rollItemDrops } from './pickups.js';
 import { sfx } from '../engine/audio.js';
@@ -32,6 +33,7 @@ export function makeEnemy() {
     anim: 'walk', pose: -1, // drawing: animation name, and a fixed frame (-1 = animate)
     heavy: false, // bosses (and anchored boxes): the horde can't shove them around
     scale: 1, // drawn size (the Hostile Takeover grows as it absorbs users)
+    angry: false, angryT: 0, // a boss in its second phase (behaviors/phase2.js), and its ember timer
     hitAt: new Float64Array(HIT_SLOTS),
   };
 }
@@ -72,6 +74,8 @@ export function spawnEnemy(game, id, x, y, hpMult = 1, speedMult = 1, behaviorId
   e.ai = null;
   e.heavy = !!def.boss || !!def.anchored;
   e.scale = 1;
+  e.angry = false;
+  e.angryT = 0;
   e.hitAt.fill(-1e9);
   if (e.behavior.init) e.behavior.init(e, game);
   return e;
@@ -106,6 +110,7 @@ export function updateEnemies(game, dt) {
     e.buff = 1;
     e.animT += dt;
     if (e.flash > -1) e.flash -= dt;
+    if (e.angry) angryTick(e, game, dt);
   }
 }
 
@@ -280,6 +285,7 @@ export function drawEnemies(game, ctx, shadowImg, left, top, right, bottom) {
     const fy = e.y + e.foot;
     const spr = e.spr;
     if (e.x < left - spr.w || e.x > right + spr.w || fy < top || fy > bottom + spr.h) continue;
+    if (e.angry) drawAngryGlow(e, game, ctx);
     if (e.def.boss) ctx.drawImage(shadowImg, Math.round(e.x - 26 * e.scale), Math.round(fy - 6), Math.round(52 * e.scale), 12);
     else if (shadows) ctx.drawImage(shadowImg, Math.round(e.x - 10), Math.round(fy - 3));
     const a = spr.anims[e.anim] ?? spr.anims.walk;

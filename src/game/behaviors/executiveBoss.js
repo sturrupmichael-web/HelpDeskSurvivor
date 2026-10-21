@@ -4,13 +4,17 @@
 //   cone    a wedge of slide decks thrown at you (more volleys in later phases)
 //   bombs   "urgent meeting" circles drop on and around you, then go off
 //   summon  calls in VIPs
+//   calendar  (final phase) Calendar Tetris: a checkerboard of meeting blocks around you
+//           goes off in two waves; stand on the second wave's squares, then step back
 // Phases start at the HP fractions in params.phases; each phase is faster, has a
-// shorter gap between attacks, and opens with a banner and a VIP summon.
+// shorter gap between attacks, and opens with a banner and a VIP summon. The final
+// phase is its second phase in the shared sense (behaviors/phase2.js: growl, red glow).
 
 import { stepToward } from './chase.js';
 import { spawnEnemy } from '../enemies.js';
 import { hurtPlayer } from '../player.js';
 import { sfx } from '../../engine/audio.js';
+import { enterPhase2 } from './phase2.js';
 
 const WALK = 0;
 const CHARGE_TELL = 1;
@@ -85,6 +89,22 @@ function startAttack(e, game) {
         game.hazards.bomb(pl.x + Math.cos(a) * r, pl.y + Math.sin(a) * r, b.radius, b.delay + k * 0.08, b.damage);
       }
       sfx('alarm');
+    } else if (name === 'calendar') {
+      // Calendar Tetris: wave A on the player's own square, wave B on its neighbours.
+      const c = p.calendar;
+      const pl = game.player;
+      const half = (c.size - 1) / 2;
+      for (let gx = 0; gx < c.size; gx++) {
+        for (let gy = 0; gy < c.size; gy++) {
+          const second = (gx + gy) % 2 === 1;
+          game.hazards.bomb(pl.x + (gx - half) * c.spacing, pl.y + (gy - half) * c.spacing, c.radius, second ? c.delay2 : c.delay, c.damage);
+        }
+      }
+      // The banner the first time; after that everyone knows the drill.
+      if (!e.ai.calendarSeen) game.hud.banner('CALENDAR TETRIS', 'Back-to-back meetings. Find a free slot.', 1.5);
+      else game.fx.text(pl.x, pl.y - 34, 'MEETINGS!', '#ef7d57');
+      e.ai.calendarSeen = true;
+      sfx('alarm');
     } else summon(e, game, p.summon);
   }
 }
@@ -109,6 +129,8 @@ export default {
       aimY: 0,
       chargeHit: false, // the current charge already hit you
       volleysLeft: 0,
+      phase2: false, // final phase reached (behaviors/phase2.js)
+      calendarSeen: false, // the Calendar Tetris banner shows only the first time
     };
   },
 
@@ -127,7 +149,8 @@ export default {
       game.camera.shake(6);
       game.fx.ring(e.x, e.y, 80, '#b13e53', 0.6);
       summon(e, game, p.summon);
-      sfx('siren');
+      if (phase === p.phases.length) enterPhase2(e, game);
+      else sfx('siren');
     }
 
     switch (e.ai.state) {

@@ -7,12 +7,16 @@
 //   allhands  calls in `pairs` pairs of Synergy Consultants around you
 //   spin off  at `spinAt` HP it spins off The Subsidiary (a smaller boss that only sends
 //             memos); the fight ends when both are down (see Game.addBossPart)
+//   reorg     second phase (at `phase2.at` of its own HP): it attacks faster, and every
+//             other attack is a Reorg, memo lanes both across and down at once, so only
+//             the squares between them are safe
 // The Subsidiary uses this behavior too, with `isSmall` and only the memo attack.
 
 import { stepToward } from './chase.js';
 import { spawnEnemy } from '../enemies.js';
 import { hurtPlayer } from '../player.js';
 import { sfx } from '../../engine/audio.js';
+import { belowPhase2, enterPhase2 } from './phase2.js';
 
 const WALK = 0;
 const MEMO_TELL = 1;
@@ -23,32 +27,46 @@ const POSE_TIME = 0.7;
 const MEMO_POSE = 0; // attack-animation frames (sprites/defs/bosses.js)
 const WIDE_POSE = 1;
 
-// Lanes run horizontally or vertically through the player, with the others to either side.
-function startMemo(e, game) {
-  const m = e.params.memo;
-  const pl = game.player;
-  e.ai.horizontal = Math.random() < 0.5;
-  e.ai.lanes.length = 0;
+// Lanes run horizontally or vertically through the player, with the others to either
+// side. A Reorg (`cross`) lays both sets at once.
+function addLanes(e, m, pl, horizontal) {
   const shift = (Math.random() - 0.5) * m.width * 0.6;
   for (let i = 0; i < m.lanes; i++) {
     const off = (i - (m.lanes - 1) / 2) * m.gap + shift;
-    e.ai.lanes.push(e.ai.horizontal ? pl.y + off : pl.x + off);
+    e.ai.lanes.push({ h: horizontal, c: horizontal ? pl.y + off : pl.x + off });
   }
-  e.ai.laneMid = e.ai.horizontal ? pl.x : pl.y; // middle of the strips along their length
+}
+
+function startMemo(e, game, cross) {
+  const m = cross ? e.params.phase2.reorg : e.params.memo;
+  const pl = game.player;
+  e.ai.lanes.length = 0;
+  e.ai.cross = cross;
+  const horizontal = Math.random() < 0.5;
+  addLanes(e, m, pl, horizontal);
+  if (cross) addLanes(e, m, pl, !horizontal);
+  e.ai.midX = pl.x; // middle of the strips along their length
+  e.ai.midY = pl.y;
   e.ai.state = MEMO_TELL;
   e.ai.stateT = m.telegraph;
   e.anim = 'attack';
   e.pose = MEMO_POSE;
   sfx('warn', e.x);
+  if (cross) game.fx.text(pl.x, pl.y - 34, 'REORG!', '#ef7d57');
+}
+
+function memoParams(e) {
+  return e.ai.cross ? e.params.phase2.reorg : e.params.memo;
 }
 
 function memoHits(e, game) {
-  const m = e.params.memo;
+  const m = memoParams(e);
   const pl = game.player;
-  const across = e.ai.horizontal ? pl.y : pl.x;
-  const along = e.ai.horizontal ? pl.x : pl.y;
-  if (Math.abs(along - e.ai.laneMid) > m.length / 2) return false;
-  return e.ai.lanes.some((c) => Math.abs(across - c) < m.width / 2 + pl.r);
+  return e.ai.lanes.some((l) => {
+    const across = l.h ? pl.y : pl.x;
+    const along = l.h ? pl.x - e.ai.midX : pl.y - e.ai.midY;
+    return Math.abs(along) <= m.length / 2 && Math.abs(across - l.c) < m.width / 2 + pl.r;
+  });
 }
 
 function allHands(e, game) {
@@ -83,11 +101,12 @@ function spinOff(e, game) {
 }
 
 function startAttack(e, game) {
+  if (e.ai.phase2 && (e.ai.reorgNext = !e.ai.reorgNext)) return startMemo(e, game, true);
   const list = e.params.attacks;
   let i = (Math.random() * list.length) | 0;
   if (list.length > 1 && list[i] === e.ai.lastAttack) i = (i + 1) % list.length; // no repeats
   e.ai.lastAttack = list[i];
-  if (e.ai.lastAttack === 'memo') return startMemo(e, game);
+  if (e.ai.lastAttack === 'memo') return startMemo(e, game, false);
   e.ai.state = POSE;
   e.ai.stateT = POSE_TIME;
   e.anim = 'attack';
@@ -100,7 +119,7 @@ function endAttack(e) {
   e.ai.state = WALK;
   e.anim = 'walk';
   e.pose = -1;
-  e.ai.attackIn = p.attackGap[e.hp < e.maxHp * p.enrageAt ? 1 : 0];
+  e.ai.attackIn = p.attackGap[e.ai.phase2 ? 1 : 0];
 }
 
 export default {
@@ -114,9 +133,12 @@ export default {
       absorbBudget: 0, // users it may still acquire this second
       calledAllHands: false, // the banner shows only the first time
       spunOff: false, // has it spun off The Subsidiary yet?
-      horizontal: false, // memo lanes run horizontally (else vertically)
-      lanes: [], // memo lane positions across the floor
-      laneMid: 0, // middle of the lanes along their length
+      lanes: [], // memo lanes: { h: runs horizontally, c: position across the floor }
+      midX: 0, // middle of the lanes along their length
+      midY: 0,
+      cross: false, // the current memo is a Reorg
+      phase2: false, // hostile (behaviors/phase2.js)
+      reorgNext: false, // phase 2 alternates Reorgs and its other attacks
     };
   },
 
@@ -125,6 +147,7 @@ export default {
     const pl = game.player;
     if (p.absorb) e.ai.absorbBudget = Math.min(p.absorb.perSec, e.ai.absorbBudget + p.absorb.perSec * dt);
     if (!e.ai.spunOff && p.spinAt && e.hp < e.maxHp * p.spinAt) spinOff(e, game);
+    if (!e.ai.phase2 && belowPhase2(e, game)) enterPhase2(e, game);
     switch (e.ai.state) {
       case WALK:
         stepToward(e, pl.x, pl.y, e.speed * e.slow * e.buff, dt);
@@ -134,7 +157,7 @@ export default {
         if ((e.ai.stateT -= dt) <= 0) {
           e.ai.state = MEMO;
           e.ai.stateT = MEMO_SHOW;
-          if (memoHits(e, game) && hurtPlayer(game, p.memo.damage)) game.onPlayerHurt();
+          if (memoHits(e, game) && hurtPlayer(game, memoParams(e).damage)) game.onPlayerHurt();
           game.camera.shake(3);
           sfx('whoosh', e.x);
         }
@@ -172,10 +195,10 @@ export default {
   // Restructuring telegraph: red strips with a blinking border, then the memo itself.
   drawUnder(e, game, ctx) {
     if (e.ai.state !== MEMO_TELL && e.ai.state !== MEMO) return;
-    const m = e.params.memo;
+    const m = memoParams(e);
     const half = m.length / 2;
-    for (const c of e.ai.lanes) {
-      const [x, y, w, h] = e.ai.horizontal ? [e.ai.laneMid - half, c - m.width / 2, m.length, m.width] : [c - m.width / 2, e.ai.laneMid - half, m.width, m.length];
+    for (const l of e.ai.lanes) {
+      const [x, y, w, h] = l.h ? [e.ai.midX - half, l.c - m.width / 2, m.length, m.width] : [l.c - m.width / 2, e.ai.midY - half, m.width, m.length];
       if (e.ai.state === MEMO_TELL) {
         const k = 1 - e.ai.stateT / m.telegraph;
         ctx.globalAlpha = 0.18 + 0.25 * k;
@@ -191,7 +214,7 @@ export default {
         ctx.fillStyle = '#f4f4f4';
         ctx.fillRect(x, y, w, h);
         ctx.fillStyle = '#94b0c2';
-        if (e.ai.horizontal) for (let i = 8; i < w - 8; i += 24) ctx.fillRect(x + i, y + h / 2 - 1, 14, 2);
+        if (l.h) for (let i = 8; i < w - 8; i += 24) ctx.fillRect(x + i, y + h / 2 - 1, 14, 2);
         else for (let i = 8; i < h - 8; i += 24) ctx.fillRect(x + w / 2 - 1, y + i, 2, 14);
       }
     }

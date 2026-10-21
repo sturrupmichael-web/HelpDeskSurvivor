@@ -13,12 +13,22 @@
 //   explode   { damage }: dies on contact, dealing this much sanity damage at once
 //   elite     draws a health bar
 //   boss      shown on the boss bar, can't be shoved by the horde; `final` ends the shift when closed
+//             (a boss's `params.phase2` is its second phase: see src/game/behaviors/phase2.js)
 //   stunResist multiplier on stun duration (bosses barely flinch)
 //   drops     extra drop chances on death, e.g. { chest: 0.5 }
 //   particle  palette colors for the death burst
 //   anchored  can't be shoved by the horde or knockback (Unclaimed Moving Box)
 //   wikiAs    counts toward another user's Help Desk Wiki entry instead of its own
 //   loot      drops one of these items, picked at random, when closed
+
+// The Rat's Nest's second phase (behaviors/phase2.js), shared by the big nest and the
+// two it splits into: when the whole fight is down to `at`, every nest left catches fire.
+const NEST_FIRE = {
+  at: 0.25, title: 'ELECTRICAL FIRE', wiki: 'At a quarter health, Electrical Fire: faster nests, sparks down every cable.',
+  text: 'Something shorted. Sparks run down every cable.',
+  speed: 1.25, lashEvery: 0.8, // x speed, x time between lashes
+  sparks: { count: 3, radius: 18, delay: 0.35, step: 0.15, damage: 10 },
+};
 
 export const ENEMIES = {
   pam: {
@@ -139,7 +149,13 @@ export const ENEMIES = {
     name: 'Major Incident', sprite: 'incident', behavior: 'incidentBoss', boss: true,
     params: {
       ringEvery: 4.5, ringTelegraph: 1.0, ringBullets: 22, ringGap: 5, bulletSpeed: 85, bulletDamage: 10,
-      minionEvery: 5, minionCount: 4, minion: 'status_update', enrageAt: 0.5,
+      minionEvery: 5, minionCount: 4, minion: 'status_update',
+      // Second phase (behaviors/phase2.js): double rings, and spirals between them.
+      phase2: {
+        at: 0.5, title: 'SEV 0', wiki: 'At half health, SEV 0: double rings and sweeping spirals of phones.',
+        text: 'Now it is two bridge calls. Circle with the spiral.',
+        spiral: { telegraph: 0.9, time: 2.6, every: 0.13, turn: 1.3, arms: 3, speed: 80, damage: 9 },
+      },
     },
     hp: 9000, speed: 20, damage: 20, radius: 22, foot: 16, xp: 60, knockback: 0, stunResist: 0.1,
     downBanner: ['INCIDENT RESOLVED', 'Post-mortem scheduled for never. Grab the Change Approved.'],
@@ -155,6 +171,7 @@ export const ENEMIES = {
       snagEvery: 6, snagCount: 3, snagScatter: 70,
       snag: { radius: 16, life: 7, slow: 0.4, sprite: 'cable_loop' },
       splitAt: 0.5, small: 'ratsnest_small',
+      phase2: NEST_FIRE,
     },
     hp: 13000, speed: 18, damage: 20, radius: 24, foot: 24, xp: 60, knockback: 0, stunResist: 0.1,
     downBanner: ['CABLES MANAGED', 'Labeled, zip-tied and finally documented. Grab the Change Approved.'],
@@ -168,6 +185,7 @@ export const ENEMIES = {
       snagEvery: 6, snagCount: 1, snagScatter: 50,
       snag: { radius: 16, life: 7, slow: 0.4, sprite: 'cable_loop' },
       isSmall: true,
+      phase2: NEST_FIRE,
     },
     hp: 4000, speed: 18, damage: 14, radius: 16, foot: 16, xp: 20, knockback: 0, stunResist: 0.1,
     particle: ['#41a6f6', '#ffcd75', '#38b764', '#ef7d57'],
@@ -175,8 +193,15 @@ export const ENEMIES = {
   caller: {
     name: 'The Angry Caller', sprite: 'caller', behavior: 'callerBoss', boss: true,
     params: {
-      keepAway: [120, 190], attackGap: [2.4, 1.7], enrageAt: 0.5,
+      keepAway: [120, 190], attackGap: [2.4, 1.7], // seconds between attacks: normal, phase 2
       attacks: ['hold', 'scream', 'conference'],
+      // Second phase (behaviors/phase2.js): shorter gaps, double "please hold", transfers.
+      phase2: {
+        at: 0.5, title: 'ESCALATED', wiki: 'At half health, Escalated: transfers itself to a spot right behind you.',
+        text: 'A supervisor is on the line. They can transfer themselves now.',
+        attacks: ['hold', 'scream', 'conference', 'transfer'],
+        transfer: { telegraph: 1.1, behind: 70, radius: 64, damage: 14, push: 380 },
+      },
       hold: { count: 8, radius: 62, bombRadius: 24, gap: 2, delay: 1.5, ringGap: 0.6, damage: 12 },
       scream: { telegraph: 0.8, spread: 0.9, range: 230, damage: 11, push: 420 },
       conference: { id: 'randy', count: 6, radius: 170 },
@@ -189,8 +214,16 @@ export const ENEMIES = {
   janitor: {
     name: 'The Night Janitor', sprite: 'janitor', behavior: 'janitorBoss', boss: true,
     params: {
-      attackGap: [2.6, 1.9], enrageAt: 0.5, trailEvery: 0.45,
+      attackGap: [2.6, 1.9], trailEvery: 0.45, // seconds between attacks: normal, phase 2
       attacks: ['mop', 'charge', 'lights'],
+      // Second phase (behaviors/phase2.js): shorter gaps, double charges, spin-outs.
+      phase2: {
+        at: 0.5, title: 'DOUBLE SHIFT', wiki: 'At half health, Double Shift: double charges and buffer spin-outs.',
+        text: "He's on overtime now. Stay out of the buffer's reach.",
+        attacks: ['mop', 'charge', 'lights', 'spin'],
+        recharge: 0.6, // telegraph of the second charge (s)
+        spin: { telegraph: 0.9, time: 1.0, radius: 80, damage: 18, push: 320, wet: 8 },
+      },
       wet: { radius: 18, life: 8, slip: true, sprite: 'wet_floor' },
       mop: { count: 6, spread: 1.3, reach: 130 },
       charge: { telegraph: 1.0, speed: 300, time: 0.85, damage: 24 },
@@ -204,12 +237,18 @@ export const ENEMIES = {
   takeover: {
     name: 'The Hostile Takeover', sprite: 'takeover', behavior: 'takeoverBoss', boss: true,
     params: {
-      attackGap: [3, 2.2], enrageAt: 0.5,
+      attackGap: [3, 2.2], // seconds between attacks: normal, phase 2
       attacks: ['memo', 'allhands'],
       absorb: { heal: 15, perSec: 6, grow: 0.012, maxScale: 1.5 },
       memo: { telegraph: 1.2, lanes: 3, gap: 92, width: 36, length: 560, damage: 16 },
       allhands: { id: 'consultant', pairs: 2, radius: 150 },
       spinAt: 0.5, spin: 'subsidiary',
+      // Second phase (behaviors/phase2.js), at `at` of its own HP: shorter gaps, Reorgs.
+      phase2: {
+        at: 0.25, title: 'REORG', wiki: 'At a quarter health, Reorg: memo lanes both ways at once.',
+        text: 'Everything is being restructured. Stand between the lines.',
+        reorg: { telegraph: 1.4, lanes: 3, gap: 100, width: 34, length: 520, damage: 16 },
+      },
     },
     hp: 13000, speed: 24, damage: 22, radius: 22, foot: 26, xp: 60, knockback: 0, stunResist: 0.1,
     downBanner: ['DEAL CLOSED', 'The merger is complete. Your badge works now. Grab the Change Approved.'],
@@ -219,7 +258,7 @@ export const ENEMIES = {
   subsidiary: {
     name: 'The Subsidiary', sprite: 'subsidiary', behavior: 'takeoverBoss', boss: true,
     params: {
-      isSmall: true, attackGap: [2.6, 2.6], enrageAt: 0,
+      isSmall: true, attackGap: [2.6, 2.6],
       attacks: ['memo'],
       memo: { telegraph: 1.0, lanes: 1, gap: 0, width: 32, length: 420, damage: 14 },
     },
@@ -243,8 +282,12 @@ export const ENEMIES = {
       cone: { telegraph: 0.7, bullets: 7, spread: 1.0, speed: 120, damage: 12, volleys: [1, 1, 2] },
       bombs: { count: 5, radius: 34, delay: 1.3, damage: 22, scatter: 90 },
       summon: { id: 'vip', count: 2 },
+      // Calendar Tetris (final phase): a size x size checkerboard of meetings round you,
+      // half going off after `delay` s and the other half after `delay2` s.
+      calendar: { size: 5, spacing: 52, radius: 24, delay: 1.3, delay2: 2.2, damage: 18 },
       // Attacks the boss picks from in each phase (never the same one twice in a row).
-      attacks: [['charge', 'cone'], ['charge', 'cone', 'bombs'], ['charge', 'cone', 'bombs', 'summon']],
+      attacks: [['charge', 'cone'], ['charge', 'cone', 'bombs'], ['charge', 'cone', 'bombs', 'summon', 'calendar']],
+      phase2: { wiki: 'Final phase: Calendar Tetris, two waves of meetings in a checkerboard.' }, // the final phase is its second phase (behaviors/phase2.js); the banner is its own
       phaseBanners: [
         null,
         ['ESCALATED', "Now cc'ing your manager's manager."],

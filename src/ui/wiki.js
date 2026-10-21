@@ -70,7 +70,7 @@ function enemyCard(w, id, boss) {
   const facts = boss
     ? [`Shows up: ${bossWhere(id)}`, `${d.hp.toLocaleString()} HP`, closed ? `Closed ${closed.toLocaleString()}x` : 'Not closed yet']
     : [`${d.hp} HP`, `Speed ${d.speed}`, `Closed ${closed.toLocaleString()}`];
-  const notes = boss ? [] : userNotes(d);
+  const notes = boss ? (d.params?.phase2?.wiki ? [d.params.phase2.wiki] : []) : userNotes(d);
   return `<div class="wiki-entry">${thumb}<div><b>${d.name}</b>
     ${d.flavor ? `<i>${d.flavor}</i>` : ''}
     ${notes.map((n) => `<span>${n}</span>`).join('')}

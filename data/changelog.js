@@ -4,6 +4,20 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-phase2',
+    date: 'Oct 21, 2026',
+    title: 'Bosses fight back harder',
+    items: [
+      'Every boss now has a second phase. When it switches you get a banner, a growl, a red glow under the boss and an orange ENRAGED boss bar.',
+      'Major Incident (half health): SEV 0. Double rings, plus spirals of phones that sweep around it. Circle with them.',
+      "The Rat's Nest (last quarter): Electrical Fire. The nests speed up and sparks run down every cable after it lands.",
+      'The Angry Caller (half health): Escalated. It can transfer itself to a spot right behind you. Step out of the red circle.',
+      "The Night Janitor (half health): Double Shift. Every charge comes straight back a second time, and he spins the buffer out around him.",
+      'The Hostile Takeover (last quarter): Reorg. Memo lanes come down both ways at once. Stand in the squares between them.',
+      'The Executive (final phase): Calendar Tetris. A checkerboard of meetings goes off in two waves. Hop to a free slot, then hop back.',
+    ],
+  },
+  {
     id: '2026-10-21-groundwork',
     date: 'Oct 21, 2026',
     title: 'Under the hood',
