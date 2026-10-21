@@ -1,0 +1,77 @@
+# Builds and publishes the site to GitHub Pages (Settings > Pages > Source: GitHub Actions).
+#   main     -> the live game at /
+#   preview  -> the test copy at /preview/ (if the branch exists)
+# A push to either branch rebuilds both, so neither overwrites the other. The tests must
+# pass first, so a broken build never goes live. The built files are not committed.
+name: Deploy
+
+on:
+  push:
+    branches: [main, preview]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: live
+      - name: Find the preview branch
+        id: pre
+        run: |
+          if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}" preview >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.pre.outputs.exists == 'true'
+        with:
+          ref: preview
+          path: pre
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test the pushed branch
+        working-directory: ${{ github.ref_name == 'preview' && 'pre' || 'live' }}
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run build
+          npm test
+      - name: Build the live game
+        working-directory: live
+        run: |
+          npm ci
+          npm run build
+          node site.mjs ../_site
+      - name: Build the preview
+        if: steps.pre.outputs.exists == 'true'
+        working-directory: pre
+        run: |
+          npm ci
+          npm run build:preview
+          cp -r preview ../_site/preview
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
