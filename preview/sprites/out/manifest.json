@@ -1,12 +1,12 @@
 {
  "version": 1,
  "sheets": {
-  "bosses": "bosses.png",
-  "characters": "characters.png",
-  "maps": "maps.png",
-  "office": "office.png",
-  "pickups": "pickups.png",
-  "projectiles": "projectiles.png"
+  "bosses": "bosses.png?v=4bc452c1c3",
+  "characters": "characters.png?v=6f0bc56060",
+  "maps": "maps.png?v=cbb97f4483",
+  "office": "office.png?v=2426fe9356",
+  "pickups": "pickups.png?v=9093137fd9",
+  "projectiles": "projectiles.png?v=a1ef10550b"
  },
  "sprites": {
   "executive": {
