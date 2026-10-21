@@ -170,6 +170,17 @@ page. Every push runs them on GitHub (`.github/workflows/test.yml`); a red X on 
 means a test failed. First time: `npm install` and `npx playwright install chromium`.
 Tests live in `tests/`; `tests/harness.mjs` has helpers (`T.start(map)`, `T.step(seconds)`).
 
+The game logic also runs in plain Node with no browser (`src/game/headless.js`): no
+canvas, HUD, menus or sound, just the simulation, about 40x faster than real time.
+`npm test -- node` runs only those tests. The balance bot plays whole shifts that way:
+
+    node tests/tools/bot.mjs --map all --runs 5 [--tech neteng] [--vet]
+
+(`--vet` = every shop upgrade maxed and everything unlocked.) To keep this working, game
+logic under `src/game/` must not touch the page: no `document`, `window` or DOM. The HUD,
+menus and debug overlay come in through `new Game(canvas, assets, ui)` (`src/ui/index.js`
+in the browser), and drawing only happens in `render()`, which headless skips.
+
 ## Project layout
 
 ```
@@ -180,7 +191,8 @@ sprites/build.js  renders defs -> PNG sheets
 src/engine/    loop, input (keyboard, gamepad, touch), camera, object pools, spatial hash, asset loading, audio synth
 src/game/      gameplay: player, enemies + behaviors/ (incl. bosses), weapons/, hazards
                (boss bullets and bombs), pickups, upgrades + evolutions, spawner, floor
-src/ui/        SVG HUD, icons, debug overlay; menus in screens.js + screens/ (one file per screen)
+src/ui/        SVG HUD, icons, debug overlay; menus in screens.js + screens/ (one file per screen);
+               index.js hands them to the game
 tests/         automated tests (npm test)
 ```
 

@@ -31,6 +31,16 @@ export async function loadAssets(base) {
     g.drawImage(img, 0, 0);
     mirrored[name] = c;
   }
+  return spriteTable(manifest, images, mirrored);
+}
+
+// The art's sizes, anchors and animations without any images, for running the game
+// without a page (src/game/headless.js). Drawing needs loadAssets.
+export function assetsWithoutImages(manifest) {
+  return spriteTable(manifest, {}, {});
+}
+
+function spriteTable(manifest, images, mirrored) {
   const sprites = {};
   for (const [id, s] of Object.entries(manifest.sprites)) {
     // Resolve the sheet images once so drawing never looks them up by name.
@@ -38,7 +48,7 @@ export async function loadAssets(base) {
       ...s,
       image: images[s.sheet],
       imageFlipped: mirrored[s.sheet],
-      sheetWidth: images[s.sheet].width,
+      sheetWidth: images[s.sheet]?.width ?? 0,
       anchor: s.anchor ?? [s.w / 2, s.h],
       fps: s.fps ?? 1,
     };

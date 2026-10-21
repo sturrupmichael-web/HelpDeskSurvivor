@@ -5,6 +5,7 @@ import { initInput, pollGamepad } from './engine/input.js';
 import { initAudio } from './engine/audio.js';
 import { startLoop } from './engine/loop.js';
 import { Game } from './game/game.js';
+import { browserUi, attachUi } from './ui/index.js';
 import { account } from './game/account.js';
 import { VERSION } from './version.js';
 import { watchErrors } from './ui/bugreport.js';
@@ -27,7 +28,8 @@ initInput(canvas);
 // Browsers only start audio after a user gesture.
 addEventListener('keydown', initAudio);
 addEventListener('pointerdown', initAudio);
-const game = new Game(canvas, assets);
+const game = new Game(canvas, assets, browserUi);
+attachUi(game);
 startLoop(
   (dt) => game.update(dt),
   (dt) => {

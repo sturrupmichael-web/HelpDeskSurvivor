@@ -4,7 +4,8 @@ import { fmtTime } from './hud.js';
 
 // Debug mode (cheat hotkeys) only on a local server or with ?debug in the address.
 export const DEBUG_ALLOWED =
-  ['localhost', '127.0.0.1'].includes(location.hostname) || new URLSearchParams(location.search).has('debug');
+  typeof location !== 'undefined' &&
+  (['localhost', '127.0.0.1'].includes(location.hostname) || new URLSearchParams(location.search).has('debug'));
 
 const HELP = [
   ['1', 'spawn 50 Pams'],
@@ -27,6 +28,7 @@ export class Debug {
     this.root = root;
     this.game = game;
     this.on = false;
+    this.allowed = DEBUG_ALLOWED;
     this.frames = 0;
     this.acc = 0;
     this.fps = 0;

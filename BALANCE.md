@@ -273,7 +273,7 @@ console to wipe it.
 
 ## Balance pass notes (Milestone 4)
 
-These numbers were tuned with a headless bot playing full 20-minute shifts as the Tier 1
+These numbers were tuned with a headless bot (now `node tests/tools/bot.mjs`, see README "Tests") playing full 20-minute shifts as the Tier 1
 Tech, with no shop upgrades:
 
 - **Strong player** (bot that ignores danger and vacuums every ticket): level ~33 at

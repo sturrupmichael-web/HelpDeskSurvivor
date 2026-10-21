@@ -40,20 +40,21 @@ import { recordWiki } from './wiki.js';
 import { Tutorial } from './tutorial.js';
 import { performanceReview } from './review.js';
 import { CloudSave } from './cloudsave.js';
-import { conflictScreen } from '../ui/account.js';
-import { Hud } from '../ui/hud.js';
-import { Screens } from '../ui/screens.js';
-import { Debug, DEBUG_ALLOWED } from '../ui/debug.js';
 
 const TARGET_VIEW_HEIGHT = 480; // world px visible vertically, before integer rounding
 const TARGET_VIEW_WIDTH_MIN = 300; // narrow (portrait) screens zoom in to about this width
 const PLAYER_FOOT = 10; // px from the player's collision center down to their feet
 const VICTORY_DELAY = 3.5; // seconds between closing the final boss and the summary screen
 
+const HEADLESS_VIEW = [854, 480]; // world px "on screen" when there is no canvas
+
+// The game itself knows nothing about the page: `ui(game)` returns its HUD, menus and
+// debug overlay (src/ui/index.js in the browser, src/game/headless.js in Node), and
+// `canvas` may be null, which runs the simulation without drawing (headless).
 export class Game {
-  constructor(canvas, assets) {
+  constructor(canvas, assets, ui) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d', { alpha: false });
+    this.ctx = canvas?.getContext('2d', { alpha: false }) ?? null;
     this.assets = assets;
     this.view = { w: 0, h: 0, scale: 1 };
     this.camera = new Camera();
@@ -71,33 +72,13 @@ export class Game {
     this.fx = new Fx();
     this.spawner = new Spawner();
     this.score = new Score();
-    this.hud = new Hud(document.getElementById('hud'));
-    this.screens = new Screens(document.getElementById('overlay'), this);
-    this.debug = new Debug(document.getElementById('debug'), this);
+    ({ hud: this.hud, screens: this.screens, debug: this.debug } = ui(this));
     this.meta = new Meta();
     this.cloud = new CloudSave(this.meta);
-    // Both sides changed: ask on the next menu, never mid-shift.
-    this.cloud.onConflict = (local, cloud, choose) => {
-      const s = this.screens;
-      s.pendingConflict = () => {
-        s.pendingConflict = null;
-        conflictScreen(s, local, cloud, choose);
-      };
-      if (s.root.querySelector('.panel.title')) s.title();
-    };
-    // The account's progress replaced this device's: refresh the title screen.
-    this.cloud.onChange = () => {
-      if (this.state !== 'title') return;
-      this.setMap(this.meta.data.map);
-      if (this.screens.root.querySelector('.panel.title')) this.screens.title();
-    };
     this.settings = loadSettings();
     this.setMap(this.meta.data.map);
     this.achievements = new Achievements(this);
     this.applySettings();
-    this.hud.onPause(() => {
-      if (this.state === 'run') this.pause();
-    });
     this.time = 0;
     this.boss = null; // the boss on the HUD bar (check bossAlive(): pool objects get reused)
     this.bossUid = 0;
@@ -107,8 +88,10 @@ export class Game {
     this.victoryT = 0;
 
     this.resize();
-    addEventListener('resize', () => this.resize());
-    onKeyPress((code) => this.onKey(code));
+    if (canvas) {
+      addEventListener('resize', () => this.resize());
+      onKeyPress((code) => this.onKey(code));
+    }
 
     this.newRun();
     this.setState('title');
@@ -127,6 +110,12 @@ export class Game {
   // browser scales it up by a whole number with image-rendering: pixelated. Pixel art looks
   // the same as drawing every sprite scaled up, at a fraction of the pixels to fill.
   resize() {
+    if (!this.canvas) {
+      [this.view.w, this.view.h] = HEADLESS_VIEW;
+      this.stickScale = 1;
+      this.hash.resize(128);
+      return;
+    }
     const dpr = window.devicePixelRatio || 1;
     this.dpr = dpr;
     const dw = innerWidth * dpr;
@@ -426,7 +415,7 @@ export class Game {
   }
 
   onKey(code) {
-    if (code === 'Backquote' && DEBUG_ALLOWED) {
+    if (code === 'Backquote' && this.debug.allowed) {
       this.debug.toggle();
       if (this.debug.on) this.cheated = true; // no leaderboard for this shift
       return;
@@ -530,6 +519,7 @@ export class Game {
 
   // --- Rendering ----------------------------------------------------------------------
   render(frameDt) {
+    if (!this.ctx) return; // headless
     this.debug.frame(frameDt);
     // Menus, level-ups and the summary freeze the world: draw it once, then leave the
     // canvas alone until play resumes (or the window or map changes).
