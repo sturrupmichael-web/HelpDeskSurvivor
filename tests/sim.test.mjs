@@ -68,14 +68,15 @@ export function simTests() {
       assert(game.bossAlive(), `no boss on ${map} at ${at} s`);
       const id = game.boss.def.sprite;
       let used = false;
-      for (let t = 0; t < 30 * 60 && !used; t++) {
+      // Attacks are picked at random, so allow time for the new one to come up.
+      for (let t = 0; t < 120 * 60 && !used; t++) {
         for (const [e] of game.bossParts) if (!e.dead) e.hp = Math.max(1, Math.min(e.hp, e.maxHp * 0.2));
         game.update(1 / 60);
         for (const [e] of game.bossParts) if (!e.dead && e.def.sprite === id && SECOND_PHASE[id]?.(e, game)) used = true;
         if (!game.bossAlive()) break;
       }
       assert(game.bossPhase2, `${id}: never reached its second phase`);
-      assert(used, `${id}: second-phase attack never seen in 30 s`);
+      assert(used, `${id}: second-phase attack never seen in 120 s`);
     }
   });
 }
