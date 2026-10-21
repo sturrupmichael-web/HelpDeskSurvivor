@@ -9,7 +9,7 @@ export const CHANGELOG = [
     title: 'New map: Merger Day',
     items: [
       "Congratulations, you've been acquired! Win the Night Shift in the Parking Garage to unlock Merger Day (1.5x Overtime Pay).",
-      "The new parent company's teal floor spreads every minute. Users who start on it are tougher, but every ticket closed there counts double.",
+      "The new parent company's navy-and-gold floor spreads every minute. Users who start on it are tougher, but every ticket closed there counts double.",
       'New users: Synergy Consultants (always in pairs; close one and the other gets angry), Duplicate Dave (comes back once as Dave (2)) and Badge Brenda (slows you down while she tailgates you).',
       'At 10:00 the Hostile Takeover tours the floor. It absorbs any user it touches to heal and grow, sends Restructuring memos down warned lanes, and spins off a Subsidiary at half HP.',
       'Smash Unclaimed Moving Boxes for a free pickup, and grab the Welcome Swag Bag for sanity and a burst of speed.',

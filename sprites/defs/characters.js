@@ -360,12 +360,12 @@ const MALWARE = [
 
 // --- Merger Day users -----------------------------------------------------------------
 
-// Synergy Consultants: grey suits, teal lanyards from the new parent company, a laptop
+// Synergy Consultants: grey suits, gold lanyards from the new parent company, a laptop
 // showing a slide with an arrow going up. They come in pairs (the second has red hair).
 const consultant = (hair) =>
   person({ hair, top: 'G', pants: 'G' }, ({ px, rect }) => {
-    patch(px, 13, 16, ['wwww', '.aa.', '.aa.', '.aa.']); // shirt + teal tie
-    rect(10, 16, 1, 6, 'A'); // lanyard
+    patch(px, 13, 16, ['wwww', '.aa.', '.aa.', '.aa.']); // shirt + navy tie
+    rect(10, 16, 1, 6, 'y'); // lanyard
     patch(px, 1, 16, ['kkkkkkk', 'kwwwwwk', 'kwwwewk', 'kwweewk', 'kweewwk', 'kkkkkkk', 'kgggggk', 'kkkkkkk']); // slide deck
   });
 const CONSULTANT = consultant('h');
@@ -381,9 +381,9 @@ const DAVE2 = person({ hair: 'h', top: 'o', pants: 'k', mouth: 'k' }, ({ px }) =
   patch(px, 21, 1, ['kkkkk', 'kwwwk', 'kkkwk', 'kwwwk', 'kwkkk', 'kwwwk', 'kkkkk']); // (2)
 });
 
-// Badge Brenda: teal new-hire top, holding up a badge that blinks red at every door.
-const BRENDA = person({ hair: 'y', top: 'a', pants: 'n' }, ({ px, frame }) => {
-  patch(px, 21, 14, ['kkkkk', 'kwwwk', 'kw' + (frame % 2 ? 'r' : 'k') + 'wk', 'kwwwk', 'kkkkk', '..A..', '..A..']); // badge on a lanyard
+// Badge Brenda: navy new-hire top, holding up a badge that blinks red at every door.
+const BRENDA = person({ hair: 'y', top: 'A', pants: 'G' }, ({ px, frame }) => {
+  patch(px, 21, 14, ['kkkkk', 'kwwwk', 'kw' + (frame % 2 ? 'r' : 'k') + 'wk', 'kwwwk', 'kkkkk', '..y..', '..y..']); // badge on a lanyard
 });
 
 // Unclaimed Moving Box: it doesn't walk, it waits. Smash it open for whatever is inside.

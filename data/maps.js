@@ -14,7 +14,7 @@
 //               phones     every `every` s a desk phone rings near you and goes off after
 //                          `delay` s for `damage` (+`damagePerMin` per minute) in `radius`
 //               dark       you only see `radius` px around you (`flicker` = light wobble)
-//               integration the parent company's (teal) floor spreads: it owns `start` of
+//               integration the parent company's (navy) floor spreads: it owns `start` of
 //                          the floor at 0:00, `+step` every `every` s, up to `max`. Users who spawn
 //                          on it get x`hpMult` HP and drop x`xpMult` tickets when closed
 //                          there. Every `boxEvery` s an Unclaimed Moving Box appears nearby
@@ -82,7 +82,7 @@ export const MAPS = {
     floor: 'merger',
     unlockAfter: 'garage',
     blurb: "Congratulations, you've been acquired! Two logos, two badge systems, two ticketing systems.",
-    twistText: 'The new parent company takes more of the floor every minute. On their teal floor users are tougher but drop double tickets.',
+    twistText: 'The new parent company takes more of the floor every minute. On their navy floor users are tougher but drop double tickets.',
     pay: 1.5,
     hpMult: 1.1,
     speedMult: 1.05,

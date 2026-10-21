@@ -2095,7 +2095,7 @@
     }
    }
   },
-  "teal_a": {
+  "corp_a": {
    "sheet": "maps",
    "w": 32,
    "h": 32,
@@ -2115,7 +2115,7 @@
     }
    }
   },
-  "teal_b": {
+  "corp_b": {
    "sheet": "maps",
    "w": 32,
    "h": 32,
@@ -2135,7 +2135,7 @@
     }
    }
   },
-  "teal_logo": {
+  "corp_logo": {
    "sheet": "maps",
    "w": 32,
    "h": 32,

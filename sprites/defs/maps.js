@@ -166,15 +166,16 @@ function pillar() {
 
 // --- Merger Day ----------------------------------------------------------------------
 
-// The parent company's polished teal floor: big glossy tiles with a diagonal sheen.
-function tealTile(seed, logo) {
+// The parent company's polished navy floor: big glossy tiles with a diagonal sheen and
+// gold seams.
+function corpTile(seed, logo) {
   const r = rng(seed);
   const g = grid(32, 32, 'a');
   for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
     if (((x + y) % 16 === 3 || (x + y) % 16 === 4) && x + y < 28) g.px(x, y, 'A');
     else if (r() < 0.02) g.px(x, y, 'A');
   }
-  g.rect(31, 0, 1, 32, 'R').rect(0, 31, 32, 1, 'R');
+  g.rect(31, 0, 1, 32, 'd').rect(0, 31, 32, 1, 'd');
   if (logo) {
     // Inlaid logo: two interlocking rings (the merged companies).
     for (let a = 0; a < 40; a++) {
@@ -222,8 +223,8 @@ function text(g, x, y, str, c) {
 // Hanging "SYNERGY!" banner with the new logo.
 function synergyBanner() {
   const g = grid(52, 14);
-  g.box(0, 0, 52, 14, 'a').rect(1, 1, 50, 1, 'A');
-  for (let x = 2; x < 50; x += 6) g.px(x, 12, 'A');
+  g.box(0, 0, 52, 14, 'a').rect(1, 1, 50, 1, 'y');
+  for (let x = 2; x < 50; x += 6) g.px(x, 12, 'y');
   text(g, 10, 5, 'SYNERGY!', 'w');
   g.rect(3, 4, 4, 4, 'y').px(4, 5, 'a');
   return g.rows();
@@ -237,7 +238,7 @@ function benchDesk() {
   return g.rows();
 }
 
-// A teal bean bag (the acquirer calls this "collaboration seating").
+// A navy bean bag (the acquirer calls this "collaboration seating").
 function beanBag() {
   const g = grid(22, 16);
   for (let y = 0; y < 16; y++) for (let x = 0; x < 22; x++) {
@@ -272,9 +273,9 @@ export default {
     car_white: single(car('w', 'g'), [30, 52]),
     car_green: single(car('e', 'h'), [30, 52]),
     pillar: single(pillar(), [24, 40]),
-    teal_a: single(tealTile(97), [32, 32]),
-    teal_b: single(tealTile(101), [32, 32]),
-    teal_logo: single(tealTile(103, true), [32, 32]),
+    corp_a: single(corpTile(97), [32, 32]),
+    corp_b: single(corpTile(101), [32, 32]),
+    corp_logo: single(corpTile(103, true), [32, 32]),
     box_stack: single(movingBox(true), [34, 34]),
     box_single: single(movingBox(false), [18, 16]),
     synergy_banner: single(synergyBanner(), [52, 14]),

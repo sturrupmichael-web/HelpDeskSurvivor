@@ -61,9 +61,9 @@ function allHands(e, game) {
   }
   // The banner the first time; after that everyone knows the drill.
   if (!e.ay2) game.hud.banner('ALL-HANDS MEETING', 'Mandatory. Cameras on. The consultants are here to help.', 2);
-  else game.fx.text(pl.x, pl.y - 34, 'ALL-HANDS!', '#3fb6a8');
+  else game.fx.text(pl.x, pl.y - 34, 'ALL-HANDS!', '#ffcd75');
   e.ay2 = 1;
-  game.fx.ring(e.x, e.y, 60, '#3fb6a8', 0.5);
+  game.fx.ring(e.x, e.y, 60, '#ffcd75', 0.5);
   sfx('alarm');
 }
 
@@ -76,7 +76,7 @@ function spinOff(e, game) {
   c.t0 = 1.5;
   game.addBossPart(c);
   game.hud.banner('SPIN-OFF', 'It spun off a Subsidiary. Close them both.', 2.5);
-  game.fx.ring(e.x, e.y, 70, '#3fb6a8', 0.5);
+  game.fx.ring(e.x, e.y, 70, '#ffcd75', 0.5);
   game.fx.burst(e.x, e.y, e.def.particle, 30);
   game.camera.shake(6);
   sfx('siren');
@@ -157,12 +157,12 @@ export default {
         e.scale = Math.min(a.maxScale, e.scale + a.grow);
         e.r = e.def.radius * e.scale;
       }
-      game.fx.burst(o.x, o.y - 6, ['#3fb6a8', '#257179', '#ffcd75'], 4);
-      if (Math.random() < 0.15) game.fx.text(o.x, o.y - 18, 'ACQUIRED', '#3fb6a8');
+      game.fx.burst(o.x, o.y - 6, ['#ffcd75', '#1f2a5c', '#f4f4f4'], 4);
+      if (Math.random() < 0.15) game.fx.text(o.x, o.y - 18, 'ACQUIRED', '#ffcd75');
     }
   },
 
-  // Restructuring telegraph: teal strips with a blinking border, then the memo itself.
+  // Restructuring telegraph: red strips with a blinking border, then the memo itself.
   drawUnder(e, game, ctx) {
     if (e.state !== MEMO_TELL && e.state !== MEMO) return;
     const m = e.params.memo;

@@ -236,7 +236,7 @@ function janitor(frame, pose) {
   return c.outline().rows();
 }
 
-// --- The Hostile Takeover (Merger Day boss): a giant acquiring exec in a teal suit -----
+// --- The Hostile Takeover (Merger Day boss): a giant acquiring exec in a navy suit -----
 // walk: frames 0/1 swing the legs. attack: 0 = holding up a Restructuring memo,
 // 1 = arms wide ("welcome to the family").
 function takeover(step, pose) {
@@ -244,12 +244,12 @@ function takeover(step, pose) {
   const lift = step ? 3 : 0;
   c.rect(23, 50, 8, 10 - lift, 'a').rect(21, 60 - lift, 11, 3, 'K');
   c.rect(34, 50, 8, 10 - (step ? 0 : 3), 'a').rect(33, 60 - (step ? 0 : 3), 11, 3, 'K');
-  // Broad teal suit with a white shirt and a gold tie.
-  c.rect(17, 24, 31, 27, 'a').rect(18, 25, 2, 25, 'A');
+  // Broad navy suit with gold pinstripe edge, a white shirt and a gold tie.
+  c.rect(17, 24, 31, 27, 'a').rect(18, 25, 2, 25, 'y');
   c.rect(28, 24, 9, 14, 'w').rect(31, 25, 3, 12, 'y');
   c.px(27, 24, 'k').px(28, 25, 'k').px(29, 26, 'k').px(37, 24, 'k').px(36, 25, 'k').px(35, 26, 'k');
-  // Two lanyards: the old company's (navy) and the new one's (teal), both on him.
-  c.rect(24, 26, 1, 12, 'b').rect(40, 26, 1, 12, 'A').rect(23, 38, 3, 4, 'w').rect(39, 38, 3, 4, 'w');
+  // Two lanyards: the old company's (navy) and the new one's (gold), both on him.
+  c.rect(24, 26, 1, 12, 'b').rect(40, 26, 1, 12, 'y').rect(23, 38, 3, 4, 'w').rect(39, 38, 3, 4, 'w');
   // Arms.
   if (pose === 0) {
     // Memo raised high in the right hand; left hand on hip.
@@ -275,16 +275,16 @@ function takeover(step, pose) {
   return c.outline().rows();
 }
 
-// The Subsidiary (spun off by the Hostile Takeover): a smaller exec in a navy suit.
+// The Subsidiary (spun off by the Hostile Takeover): a smaller exec in a grey suit.
 function subsidiary(step, pose) {
   const c = canvas(40, 40);
   const lift = step ? 2 : 0;
   c.rect(14, 30, 5, 7 - lift, 'n').rect(13, 37 - lift, 7, 2, 'K');
   c.rect(21, 30, 5, 7 - (step ? 0 : 2), 'n').rect(20, 37 - (step ? 0 : 2), 7, 2, 'K');
-  c.rect(11, 15, 18, 16, 'n').rect(18, 15, 4, 8, 'w').rect(19, 16, 2, 7, 'A');
-  if (pose === 0) c.rect(29, 6, 4, 11, 'n').rect(28, 1, 10, 6, 'w').rect(29, 3, 7, 1, 'g');
-  else c.rect(29, 16, 4, 10, 'n').rect(29, 26, 4, 3, 's');
-  c.rect(7, 16, 4, 10, 'n').rect(7, 26, 4, 3, 's');
+  c.rect(11, 15, 18, 16, 'G').rect(18, 15, 4, 8, 'w').rect(19, 16, 2, 7, 'y');
+  if (pose === 0) c.rect(29, 6, 4, 11, 'G').rect(28, 1, 10, 6, 'w').rect(29, 3, 7, 1, 'g');
+  else c.rect(29, 16, 4, 10, 'G').rect(29, 26, 4, 3, 's');
+  c.rect(7, 16, 4, 10, 'G').rect(7, 26, 4, 3, 's');
   c.ellipse(20, 8, 6, 6, 's');
   c.ellipse(20, 4, 6, 3, 'y', (x, y) => y <= 4);
   c.rect(17, 7, 2, 2, 'k').rect(22, 7, 2, 2, 'k').rect(18, 11, 4, 1, 'k');

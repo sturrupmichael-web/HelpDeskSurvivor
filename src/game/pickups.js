@@ -138,7 +138,7 @@ function collect(game, it) {
     p.hp = Math.min(p.maxHp, p.hp + d.heal);
     p.boost = d.speed;
     p.boostT = d.time;
-    game.fx.burst(p.x, p.y - 8, ['#3fb6a8', '#ffcd75', '#f4f4f4'], 12);
+    game.fx.burst(p.x, p.y - 8, ['#34488f', '#ffcd75', '#f4f4f4'], 12);
     sfx('heal');
   } else if (it.id === 'bulk_close') {
     // Every ticket on the floor flies to you.

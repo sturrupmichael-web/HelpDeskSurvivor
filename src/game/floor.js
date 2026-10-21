@@ -12,7 +12,7 @@ const MAX_CACHED = 64;
 // Floor tile sprite per style, from global tile coordinates.
 const TILES = {
   merger: (gx, gy, acquired) =>
-    acquired ? (hash2(gx, gy) % 29 === 0 ? 'teal_logo' : (gx + gy) & 1 ? 'teal_a' : 'teal_b') : TILES.office(gx, gy),
+    acquired ? (hash2(gx, gy) % 29 === 0 ? 'corp_logo' : (gx + gy) & 1 ? 'corp_a' : 'corp_b') : TILES.office(gx, gy),
   office: (gx, gy) => (hash2(gx, gy) % 37 === 0 ? 'carpet_c' : (gx + gy) & 1 ? 'carpet_a' : 'carpet_b'),
   server: (gx, gy) => (hash2(gx, gy) % 7 === 0 ? 'raised_vent' : 'raised_a'),
   callcenter: (gx, gy) => ((gx + gy) & 1 ? 'call_carpet_a' : 'call_carpet_b'),
@@ -180,7 +180,7 @@ export class Floor {
       ctx.fillStyle = '#1a1c2c';
       ctx.fillRect(x, y, w, h);
       for (let i = 0; i < (horizontal ? w : h); i += 16) {
-        ctx.fillStyle = (i >> 4) & 1 ? '#3fb6a8' : '#ffcd75';
+        ctx.fillStyle = (i >> 4) & 1 ? '#f4f4f4' : '#ffcd75';
         if (horizontal) ctx.fillRect(x + i, y + 1, 12, h - 2);
         else ctx.fillRect(x + 1, y + i, w - 2, 12);
       }

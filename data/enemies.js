@@ -96,14 +96,14 @@ export const ENEMIES = {
     name: 'Synergy Consultant', sprite: 'consultant', behavior: 'pair',
     params: { partner: 'consultant_b', gap: 24, enrage: 1.7 },
     hp: 20, speed: 36, damage: 9, radius: 7, xp: 3, knockback: 0.9,
-    particle: ['#566c86', '#3fb6a8', '#f4f4f4'],
+    particle: ['#566c86', '#ffcd75', '#f4f4f4'],
     flavor: '"We\'re not here to cut jobs. We\'re here to right-size the org." (Always in pairs.)',
   },
   consultant_b: {
     name: 'Synergy Consultant', sprite: 'consultant_b', behavior: 'pair', wikiAs: 'consultant',
     params: { gap: 24, enrage: 1.7 },
     hp: 20, speed: 36, damage: 9, radius: 7, xp: 3, knockback: 0.9,
-    particle: ['#566c86', '#3fb6a8', '#f4f4f4'],
+    particle: ['#566c86', '#ffcd75', '#f4f4f4'],
     flavor: '"Let\'s take this offline and circle back with a deck."',
   },
   dave: {
@@ -123,7 +123,7 @@ export const ENEMIES = {
     name: 'Badge Brenda', sprite: 'brenda', behavior: 'tailgate',
     params: { radius: 56, slow: 0.78 },
     hp: 18, speed: 46, damage: 5, radius: 7, xp: 3, knockback: 0.9,
-    particle: ['#257179', '#ffcd75', '#b13e53'],
+    particle: ['#34488f', '#ffcd75', '#b13e53'],
     flavor: '"My new badge doesn\'t open anything. Mind if I just follow you in?" (Slows you while she\'s close.)',
   },
   moving_box: {
@@ -213,7 +213,7 @@ export const ENEMIES = {
     },
     hp: 13500, speed: 24, damage: 22, radius: 22, foot: 26, xp: 60, knockback: 0, stunResist: 0.1,
     downBanner: ['DEAL CLOSED', 'The merger is complete. Your badge works now. Grab the Change Approved.'],
-    particle: ['#257179', '#3fb6a8', '#ffcd75', '#f4f4f4'],
+    particle: ['#1f2a5c', '#34488f', '#ffcd75', '#f4f4f4'],
     flavor: '"Nothing changes for you. Except your email, your laptop, your manager and your job title."',
   },
   subsidiary: {
@@ -224,7 +224,7 @@ export const ENEMIES = {
       memo: { telegraph: 1.0, lanes: 1, gap: 0, width: 32, length: 420, damage: 14 },
     },
     hp: 3500, speed: 34, damage: 14, radius: 14, foot: 16, xp: 20, knockback: 0, stunResist: 0.1,
-    particle: ['#29366f', '#3fb6a8', '#f4f4f4'],
+    particle: ['#566c86', '#ffcd75', '#f4f4f4'],
   },
   status_update: {
     name: 'Status Update Request', sprite: 'status_update', behavior: 'chase',

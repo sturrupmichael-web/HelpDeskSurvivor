@@ -32,8 +32,8 @@ export default {
       'kdwweedyyddddk', 'kdweewdyyddddk', 'kdwwwwdyyddddk', 'kddddddyyddddk', 'kkkkkkkkkkkkkk',
     ]),
     // PTO Request: a calendar page with a beach on it. Brief invulnerability.
-    // Welcome Swag Bag (Merger Day): a teal tote with the new logo. Sanity and a speed boost.
-    swag_bag: one(['...kkkkkk...', '..kk....kk..', '..k......k..', 'kkkkkkkkkkkk', 'kaaaaaaaaaak', 'kaaAAAAaaaak', 'kaawwaayyaak', 'kaawwaayyaak', 'kaaAAAAaaaak', 'kaaaaaaaaaak', 'kkkkkkkkkkkk']),
+    // Welcome Swag Bag (Merger Day): a navy tote with the new logo. Sanity and a speed boost.
+    swag_bag: one(['...kkkkkk...', '..kk....kk..', '..k......k..', 'kkkkkkkkkkkk', 'kaaaaaaaaaak', 'kaayyyyyaaak', 'kaawwaayyaak', 'kaawwaayyaak', 'kaayyyyyaaak', 'kaaaaaaaaaak', 'kkkkkkkkkkkk']),
     pto: one(['kkkkkkkkkkkk', 'krrrrrrrrrrk', 'kkkkkkkkkkkk', 'kwwwwwwwwwwk', 'kwwwyywwwwwk', 'kwwyyyywwwwk', 'kwwwyywwwwwk', 'kwwwwwwBBBBk', 'kBBBBBBBBBBk', 'kkkkkkkkkkkk']),
   },
 };
