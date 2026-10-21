@@ -117,13 +117,16 @@ export function profileSave(share, mapsWon) {
   };
 }
 
+const CAP = 30 * 60; // seconds of game time before a shift is called off
+
 // Plays `runs` shifts; returns one summary per shift.
 export function playShifts({ map = 'office', tech = 'tier1', runs = 1, vet = false, save = null } = {}) {
   const game = headlessGame(manifest, { pick: botPick, autopilot: botPilot, save: save ?? (vet ? veteranSave() : null) });
   const out = [];
   for (let i = 0; i < runs; i++) {
     game.startShift(map, tech);
-    out.push(game.playShift());
+    // Strong builds can last in overtime for a very long time: stop at CAP, counted as a loss.
+    out.push(game.playShift(CAP) ?? { won: false, time: game.time, level: game.player.level, kills: game.score.kills });
   }
   return out;
 }

@@ -443,3 +443,24 @@ unlocked, the easiest. Changes:
 - The Executive 80,000 to 60,000 HP: shifts that reached 20:00 mostly couldn't finish it.
 - Merger Day users x1.2 HP and x1.06 speed (was x1.1 / x1.05); Hostile Takeover 13,000 HP
   (was 13,500), heals 15 per user absorbed (was 25).
+
+## Boss second phases (idea 14, 2026-10-21)
+
+Balance bot, `node tests/tools/bot.mjs --profiles --runs 8` (Tier 1 Tech, the progression
+profiles above; shifts are called off at 30:00 so overtime survivors don't run forever),
+before and after the second phases:
+
+| Map | Shop | Before | After |
+| --- | --- | --- | --- |
+| Open Office | none | 10:17, 0 / 8 won | 8:01, 0 / 8 |
+| Open Office | 40% | 21:20, 2 / 8 | 18:58, 0 / 8 |
+| Server Room | 50% | 26:33, 1 / 8 | 22:41, 0 / 8 |
+| Call Center | 70% | 19:23, 0 / 8 | 16:12, 1 / 8 |
+| Parking Garage | 85% | 28:17, 0 / 8 | 22:40, 1 / 8 |
+| Merger Day | all | 16:04, 1 / 8 | 16:43, 2 / 8 |
+
+Wins overall: 5 of 48 before, 4 of 48 after, within the bot's run-to-run noise (the
+no-upgrades Open Office row moved by two minutes although its bosses were never reached).
+Shifts end a bit sooner on average, mostly in overtime, and every map still sits in the
+0-2 of 8 range, so no numbers were changed. The "before" lengths for Office (none), Server
+Room, Call Center and Merger Day were measured without the 30:00 cut-off.
