@@ -3,11 +3,17 @@
 #   preview  -> the test copy at /preview/ (if the branch exists)
 # A push to either branch rebuilds both, so neither overwrites the other. The tests must
 # pass first, so a broken build never goes live. The built files are not committed.
+# GitHub only lets main deploy to Pages, so a push to preview is picked up here after the
+# Tests workflow passes on it (workflow_run runs as main).
 name: Deploy
 
 on:
   push:
-    branches: [main, preview]
+    branches: [main]
+  workflow_run:
+    workflows: [Tests]
+    types: [completed]
+    branches: [preview]
   workflow_dispatch:
 
 permissions:
@@ -21,6 +27,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -42,8 +49,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Test the pushed branch
-        working-directory: ${{ github.ref_name == 'preview' && 'pre' || 'live' }}
+      - name: Test main
+        if: github.event_name != 'workflow_run'
+        working-directory: live
         run: |
           npm ci
           npx playwright install --with-deps chromium
