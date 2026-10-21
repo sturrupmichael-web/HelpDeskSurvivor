@@ -14,11 +14,12 @@ const BACKFILL = {
   boss_ratsnest: ['ratsnest'],
   boss_caller: ['caller'],
   boss_janitor: ['janitor'],
+  boss_takeover: ['takeover'],
   steve: ['steve'],
 };
 
 const SPRITE_TO_ENEMY = {};
-for (const [id, d] of Object.entries(ENEMIES)) SPRITE_TO_ENEMY[d.sprite] ??= id;
+for (const [id, d] of Object.entries(ENEMIES)) SPRITE_TO_ENEMY[d.sprite] ??= d.wikiAs ?? id; // wikiAs: shares another user's entry
 
 // The save's wiki record, created (and filled from older progress) on first use.
 export function wikiData(meta) {

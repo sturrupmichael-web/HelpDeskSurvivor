@@ -13,10 +13,12 @@ export const TICKETS = {
 };
 
 // Other floor pickups. `chance` is per enemy closed (bosses/elites use `drops` in
-// data/enemies.js instead). Touch them to collect.
+// data/enemies.js instead); `maps` limits random drops to those maps. Touch them to collect.
 export const ITEMS = {
   pizza: { sprite: 'pizza', chance: 0.004, heal: 30, label: '+30 SANITY' },
   bulk_close: { sprite: 'bulk_close', chance: 0.0012, label: 'BULK CLOSE!' },
+  // Merger Day only (`maps`): sanity plus a short speed boost.
+  swag_bag: { sprite: 'swag_bag', chance: 0.0025, maps: ['merger'], heal: 20, speed: 1.3, time: 6, label: 'WELCOME SWAG!' },
   pto: { sprite: 'pto', chance: 0.0006, invulnerable: 6, label: 'OUT OF OFFICE' },
   chest: { sprite: 'chest', chance: 0, label: 'CHANGE APPROVED' },
 };

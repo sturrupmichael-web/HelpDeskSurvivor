@@ -25,7 +25,8 @@ export class Zones {
   // Ages zones and sets the player's slow multiplier and slip flag for this tick.
   update(game, dt) {
     const p = game.player;
-    p.slow = 1;
+    p.slow = p.tailgate; // Badge Brenda (set this tick in resolveEnemies) is a slow too
+    p.tailgate = 1;
     p.slip = false;
     const pool = this.pool;
     for (let i = pool.count - 1; i >= 0; i--) {

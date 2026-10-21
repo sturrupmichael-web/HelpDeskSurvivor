@@ -39,6 +39,9 @@ export function createPlayer(def, sprite, meta) {
     flash: 0,
     hurtCooldown: 0,
     slow: 1, // set each tick by floor hazards (zones.js)
+    tailgate: 1, // speed multiplier from Badge Brenda following you, for the next tick
+    boost: 1, // Welcome Swag Bag speed multiplier while boostT > 0
+    boostT: 0,
     slip: false, // standing on a wet floor (zones.js): movement keeps its momentum
     vx: 0, // velocity (only lags behind your input while slipping)
     vy: 0,
@@ -88,7 +91,8 @@ export function updatePlayer(game, dt) {
   const p = game.player;
   moveAxis(axis);
   if (game.autopilot) game.autopilot(game, axis); // headless balance bot (see BALANCE.md)
-  const speed = p.def.speed * p.stats.moveSpeed * p.slow;
+  const speed = p.def.speed * p.stats.moveSpeed * p.slow * (p.boostT > 0 ? p.boost : 1);
+  if (p.boostT > 0) p.boostT -= dt;
   if (p.slip) {
     // Wet floor: you only slowly change direction.
     const k = Math.min(1, SLIP_GRIP * dt);

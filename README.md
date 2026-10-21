@@ -57,12 +57,15 @@ button sits at the top left. The view zooms in on narrow portrait screens.
 **Settings** (title or pause menu, saved between visits): music volume and sound
 effects volume separately, screen shake, damage numbers, and the touch joystick.
 
-**Office maps** (`data/maps.js`): Open Office, Server Room, Call Center and Night Shift:
-Parking Garage. Each one unlocks when you win a shift on the one before it, and has its
-own floor art, music remix, Overtime Pay bonus, best times and a twist (hot aisles,
-ringing desk phones, darkness).
+**Office maps** (`data/maps.js`): Open Office, Server Room, Call Center, Night Shift:
+Parking Garage and Merger Day. Each one unlocks when you win a shift on the one before
+it, and has its own floor art, music remix, Overtime Pay bonus, best times and a twist
+(hot aisles, ringing desk phones, darkness, the parent company's spreading floor).
+Merger Day also has its own users (`newUsers`) and pickups (Unclaimed Moving Boxes, the
+Welcome Swag Bag). New maps need their id added to the leaderboard's map check in
+Supabase (`supabase/merger.sql` shows how).
 
-**Achievements:** 24 of them in `data/achievements.js`; each is a name, icon, text and a
+**Achievements:** 26 of them in `data/achievements.js`; each is a name, icon, text and a
 `check(run, meta)` test. Unlocks pop a toast and are listed under Achievements on the
 title screen.
 
@@ -222,6 +225,7 @@ current `manifest.json` for the full list):
    and the Standing Desk passive.
 8. **Map bosses:** The Rat's Nest (Server Room), The Angry Caller (Call Center) and The
    Night Janitor (Parking Garage) replace the Major Incident at 10:00 on their maps.
+   Merger Day added The Hostile Takeover (and its Subsidiary).
 9. **Online leaderboard:** top CSAT per map (Supabase), posted from the end-of-shift screen.
 10. **Installable app:** add to the home screen, runs full screen and offline.
 11. **Help Desk Wiki:** a codex of users, bosses, tools and passives that fills in as you play.

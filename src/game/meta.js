@@ -5,6 +5,8 @@
 import { SHOP, PAYOUT } from '../../data/meta.js';
 import { CHARACTERS } from '../../data/player.js';
 import { MAPS } from '../../data/maps.js';
+import { PREVIEW } from '../version.js';
+import { UNLOCKS } from '../../data/unlocks.js';
 
 const KEY = 'helpdesk-survivors.save.v1';
 
@@ -86,7 +88,7 @@ export class Meta {
 
   unlock(charId) {
     const cost = CHARACTERS[charId].cost;
-    if (this.isUnlocked(charId) || this.data.pay < cost) return false;
+    if (this.isUnlocked(charId) || this.data.pay < cost || !this.itemUnlocked('characters', charId)) return false;
     this.data.pay -= cost;
     this.data.unlocked.push(charId);
     this.data.selected = charId;
@@ -101,9 +103,33 @@ export class Meta {
     return true;
   }
 
+  // The map whose win unlocks an item (data/unlocks.js), or null if it's always there.
+  // kind: 'tools', 'passives', 'evolutions' or 'characters'.
+  unlockedBy(kind, id) {
+    for (const [map, u] of Object.entries(UNLOCKS)) if (u[kind]?.includes(id)) return map;
+    return null;
+  }
+
+  // Can this tool / passive / evolution / character turn up (or be hired)? Preview builds
+  // open everything; players keep what their wiki shows they've already used or hired.
+  // `real` ignores the preview's open-everything rule.
+  itemUnlocked(kind, id, real = false) {
+    const map = this.unlockedBy(kind, id);
+    if (!map || (PREVIEW && !real) || this.data.mapsWon.includes(map)) return true;
+    if (kind === 'characters') return this.data.unlocked.includes(id);
+    const w = this.data.wiki;
+    return !!w && (kind === 'passives' ? w.passives : w.tools).includes(id);
+  }
+
+  // Everything a map win adds, as { kind, id } (for the end-of-shift screen).
+  unlocksFor(map) {
+    return Object.entries(UNLOCKS[map] ?? {}).flatMap(([kind, ids]) => ids.map((id) => ({ kind, id })));
+  }
+
+  // Preview builds open every map, so a new one can be tried before it's earned.
   mapUnlocked(id) {
     const m = MAPS[id];
-    return !!m && (!m.unlockAfter || this.data.mapsWon.includes(m.unlockAfter));
+    return !!m && (PREVIEW || !m.unlockAfter || this.data.mapsWon.includes(m.unlockAfter));
   }
 
   selectMap(id) {
@@ -114,7 +140,8 @@ export class Meta {
   }
 
   // Ends a shift on map `s.map`: pays out (with the map's pay bonus), updates records
-  // and unlocks. Returns { pay, records: [names of new records], newMap: id or null }.
+  // and unlocks. Returns { pay, records: [names of new records], newMap: id or null,
+  // newUnlocks: [{ kind, id }] added by this map's first win }.
   finishShift(s) {
     const map = MAPS[s.map] ?? MAPS.office;
     const pay = Math.floor(
@@ -125,9 +152,11 @@ export class Meta {
     mb.time = Math.max(mb.time, s.time);
     mb.tickets = Math.max(mb.tickets, s.kills);
     let newMap = null;
+    let newUnlocks = [];
     if (s.won) {
       mb.wins++;
       if (!d.mapsWon.includes(s.map)) {
+        newUnlocks = this.unlocksFor(s.map).filter((u) => !this.itemUnlocked(u.kind, u.id, true));
         d.mapsWon.push(s.map);
         newMap = Object.keys(MAPS).find((id) => MAPS[id].unlockAfter === s.map) ?? null;
       }
@@ -141,7 +170,7 @@ export class Meta {
     if (s.kills > d.best.tickets) (d.best.tickets = s.kills), records.push('tickets');
     if (s.csat > d.best.csat) (d.best.csat = s.csat), records.push('csat');
     this.save();
-    return { pay, records, newMap };
+    return { pay, records, newMap, newUnlocks };
   }
 
   // Debug: wipe the save.

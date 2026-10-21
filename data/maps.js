@@ -14,6 +14,13 @@
 //               phones     every `every` s a desk phone rings near you and goes off after
 //                          `delay` s for `damage` (+`damagePerMin` per minute) in `radius`
 //               dark       you only see `radius` px around you (`flicker` = light wobble)
+//               integration the parent company's (navy) floor spreads: it owns `start` of
+//                          the floor at 0:00, `+step` every `every` s, up to `max`. Users who spawn
+//                          on it get x`hpMult` HP and drop x`xpMult` tickets when closed
+//                          there. Every `boxEvery` s an Unclaimed Moving Box appears nearby
+//                          (at most `boxMax` at once).
+//   newUsers   map-only users added to the spawn mix from `from` seconds on, each at
+//              `share` of the timeline mix's total weight (list them in `from` order)
 
 export const MAPS = {
   office: {
@@ -23,7 +30,7 @@ export const MAPS = {
     blurb: 'Cubicles, a water cooler and 847 unread tickets. Where every career starts.',
     twistText: 'No surprises. Just users.',
     pay: 1,
-    hpMult: 1,
+    hpMult: 0.9,
     speedMult: 1,
     mixBoost: {},
     music: { transpose: 0, tempo: 1, lead: 'square', cutoff: 1400 },
@@ -53,7 +60,7 @@ export const MAPS = {
     speedMult: 1,
     mixBoost: { randy: 2, walkup: 1.4 },
     music: { transpose: 2, tempo: 1.1, lead: 'square', cutoff: 2000 },
-    twist: { type: 'phones', every: 3.5, delay: 1.4, radius: 50, damage: 12, damagePerMin: 1.5 },
+    twist: { type: 'phones', every: 4.5, delay: 1.4, radius: 50, damage: 8, damagePerMin: 1.2 },
     boss: { boss: 'caller', title: 'THE ANGRY CALLER', text: 'Line 1 has been on hold for forty minutes. Line 1 is coming to you.' },
   },
   garage: {
@@ -70,6 +77,25 @@ export const MAPS = {
     twist: { type: 'dark', radius: 190, flicker: 0.06 },
     boss: { boss: 'janitor', title: 'THE NIGHT JANITOR', text: "You're walking on his clean floor." },
   },
+  merger: {
+    name: 'Merger Day',
+    floor: 'merger',
+    unlockAfter: 'garage',
+    blurb: "Congratulations, you've been acquired! Two logos, two badge systems, two ticketing systems.",
+    twistText: 'The new parent company takes more of the floor every minute. On their navy floor users are tougher but drop double tickets.',
+    pay: 1.5,
+    hpMult: 1.2,
+    speedMult: 1.06,
+    mixBoost: { vip: 1.4 },
+    newUsers: {
+      dave: { from: 45, share: 0.1 },
+      consultant: { from: 150, share: 0.05 },
+      brenda: { from: 240, share: 0.06 },
+    },
+    music: { transpose: 5, tempo: 1.04, lead: 'sine', cutoff: 2200 },
+    twist: { type: 'integration', start: 0.3, step: 0.035, every: 60, max: 0.92, hpMult: 1.2, xpMult: 2, boxEvery: 20, boxMax: 3 },
+    boss: { boss: 'takeover', title: 'THE HOSTILE TAKEOVER', text: "The new CEO is touring the floor. Everything he touches becomes his." },
+  },
 };
 
-export const MAP_ORDER = ['office', 'server', 'callcenter', 'garage'];
+export const MAP_ORDER = ['office', 'server', 'callcenter', 'garage', 'merger'];
