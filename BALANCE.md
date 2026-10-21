@@ -357,3 +357,26 @@ Changes from that pass:
   far across the map, so levelling stalled late in a shift. Now the farthest ticket moves
   to the new drop and takes its XP.
 The wave curve (`data/waves.js`) is unchanged.
+
+## Ideas 32-46 (5 tools, 4 passives, 6 evolutions)
+
+Max-level crowd DPS (same headless test as above, standing still in a crowd of 60):
+Reply-All Storm ~800, Zip Ties ~700, Password Expired ~250 (it's mostly crowd control),
+Screen Share ~1,600, Rubber Duck ~1,650 before the bonus damage its flags give your other
+tools. Evolutions: Confluence Space ~3,900 (was ~9,300 at 40 damage / 1.4 s, cut to
+30 / 2.2 s), SIEM ~2,300 (damage 40 to 26), Domain Lockdown ~2,500 (15 to 11), Remote
+Wipe ~1,600 (raised: 60 damage, 8 cursors, pierce 2), Passwordless ~1,400 (30 to 45 damage,
+plus long stuns), Sabbatical ~2,300.
+
+With 20 tools and 13 passives each owned item turned up about a quarter less often on
+level-up cards, so upgrades to things you already own now get `OWNED_WEIGHT` (x1.35,
+`src/game/upgrades.js`). The bot also showed Zip Ties, Password Expired and Rubber Duck
+were weak early, so Zip Ties drop one more tie at every level, Password Expired has one more
+jump and a 0.3 s shorter cooldown, and Rubber Duck does 20% more damage.
+
+Bot check (every shop upgrade maxed, Tier 1 Tech, kiting bot; average survival time):
+
+| Map | Before (20 shifts) | After (24 shifts) |
+| --- | --- | --- |
+| Open Office | 20:26, 9 reached 20:00 | 22:05, 17 reached 20:00 |
+| Call Center | 9:06 | 9:32 |

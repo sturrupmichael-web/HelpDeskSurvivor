@@ -13,6 +13,9 @@ import { CHEST_REWARDS } from '../../data/pickups.js';
 // Lucky Lanyard: the rarer cards (weight below RARE_WEIGHT) turn up more often.
 const RARE_WEIGHT = 8;
 const lucky = (weight, luck) => (weight < RARE_WEIGHT ? weight * luck : weight);
+// Level-ups for things you already own are offered a bit more often than new items, so
+// with 20 tools and 13 passives your build still comes together.
+const OWNED_WEIGHT = 1.35;
 
 export function rollChoices(game, count = LEVEL_UP_CHOICES) {
   const p = game.player;
@@ -20,7 +23,7 @@ export function rollChoices(game, count = LEVEL_UP_CHOICES) {
   const pool = [];
   const owned = new Set(p.weapons.map((w) => w.id));
   for (const w of p.weapons) {
-    if (w.level < w.def.levels.length) pool.push({ kind: 'weapon', id: w.id, level: w.level + 1, weight: w.def.weight });
+    if (w.level < w.def.levels.length) pool.push({ kind: 'weapon', id: w.id, level: w.level + 1, weight: w.def.weight * OWNED_WEIGHT });
   }
   if (p.weapons.length < MAX_WEAPONS) {
     for (const [id, d] of Object.entries(WEAPONS)) {
@@ -33,7 +36,7 @@ export function rollChoices(game, count = LEVEL_UP_CHOICES) {
     const lvl = p.passives[id] ?? 0;
     if (lvl >= d.maxLevel) continue;
     if (lvl === 0 && passiveCount >= MAX_PASSIVES) continue;
-    pool.push({ kind: 'passive', id, level: lvl + 1, weight: lucky(d.weight, luck) });
+    pool.push({ kind: 'passive', id, level: lvl + 1, weight: lucky(d.weight, luck) * (lvl ? OWNED_WEIGHT : 1) });
   }
 
   const picks = [];
