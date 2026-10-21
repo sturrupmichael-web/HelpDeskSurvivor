@@ -6,7 +6,6 @@ import { sfx } from '../../engine/audio.js';
 import { CHARACTERS } from '../../../data/player.js';
 import { ACHIEVEMENTS } from '../../../data/achievements.js';
 import { DEBUG_ALLOWED } from '../debug.js';
-import { MAPS } from '../../../data/maps.js';
 import { accountScreen } from '../account.js';
 import { newsScreen, newsPending } from '../news.js';
 import { bugScreen } from '../bugreport.js';
@@ -15,6 +14,7 @@ import { account } from '../../game/account.js';
 import { wikiScreen, wikiProgress } from '../wiki.js';
 import { TITLE_TAGLINES } from '../../../data/flavor.js';
 import { pickLine, PAY } from './common.js';
+import { icon } from '../icons.js';
 
 export function title(scr) {
   if (scr.pendingConflict) return scr.pendingConflict();
@@ -45,38 +45,47 @@ export function title(scr) {
       scr.title();
     }
   };
+  // Clock In, then four tiles for the places players go between shifts, then a small row
+  // for the rest. Map and Characters live in the Clock In picker now; L and C still open
+  // their screens from a keyboard.
+  const tile = (act, ic, label, extra, key) =>
+    `<button class="tile" data-act="${act}">${icon(ic, 28)}<span>${label}</span>${extra ? `<small>${extra}</small>` : ''}<kbd>${key}</kbd></button>`;
+  const best = m.best;
   scr.show(
     `<div class="panel title">
       ${PREVIEW ? '<p class="preview-banner">PREVIEW BUILD · not the live game yet</p>' : ''}
-      <h1>HELPDESK<br>SURVIVORS</h1>
-      <p class="sub">${pickLine(TITLE_TAGLINES)}</p>
-      <div class="title-char"><canvas data-spr="${ch.sprite}" width="64" height="64"></canvas>
-        <div><div class="card-name">${ch.name}</div><div class="card-flavor">${ch.perk}</div></div></div>
-      <button class="primary" data-act="start">Clock In <kbd>Enter</kbd></button>
-      <button data-act="training">Training Shift <kbd>T</kbd></button>
-      <button data-act="maps">Map: ${MAPS[m.map].name} <kbd>L</kbd></button>
-      <button data-act="chars">Characters <kbd>C</kbd></button>
-      <button data-act="shop">Overtime Shop ${PAY(m.pay)} <kbd>S</kbd></button>
-      <button data-act="board">Leaderboard <kbd>B</kbd></button>
-      <button data-act="wiki">Help Desk Wiki ${wiki.found}/${wiki.total} <kbd>K</kbd></button>
-      <button data-act="account">${!account.user ? 'Account: not signed in' : account.user.guest ? 'Account: Guest' : 'Account: Google'} <kbd>U</kbd></button>
-      ${window.installPrompt ? '<button data-act="install">Install App</button>' : ''}
-      <div class="row-buttons">
-        <button data-act="ach">Achievements ${Object.keys(m.achievements ?? {}).length}/${ACHIEVEMENTS.length} <kbd>A</kbd></button>
-        <button data-act="settings">Settings <kbd>O</kbd></button>
+      <div class="title-head">
+        <h1>HELPDESK<br>SURVIVORS</h1>
+        <p class="sub">${pickLine(TITLE_TAGLINES)}</p>
+        <div class="title-char"><canvas data-spr="${ch.sprite}" width="64" height="64"></canvas>
+          <div><div class="card-name">${ch.name}</div><div class="card-flavor">${ch.perk}</div></div></div>
+        <button class="primary clock-in" data-act="start">Clock In <kbd>Enter</kbd></button>
       </div>
-      <button data-act="bug">Report a Bug</button>
-      <table class="stats records">
-        <tr><td>Longest shift</td><td>${fmtTime(m.best.time)}</td></tr>
-        <tr><td>Most tickets closed</td><td>${m.best.tickets.toLocaleString()}</td></tr>
-        <tr><td>Best CSAT</td><td>${m.best.csat.toLocaleString()}</td></tr>
-        <tr><td>Shifts worked / survived</td><td>${m.shifts} / ${m.wins}</td></tr>
-      </table>
-      <div class="controls keys-only">
-        <div><kbd>WASD</kbd>/<kbd>Arrows</kbd> move · your tools fire automatically</div>
-        <div><kbd>Esc</kbd> pause · <kbd>M</kbd> mute${DEBUG_ALLOWED ? ' · <kbd>`</kbd> debug' : ''}</div>
+      <div class="title-menu">
+        <div class="tiles">
+          ${tile('shop', 'laptop', 'Overtime Shop', PAY(m.pay), 'S')}
+          ${tile('board', 'escalate', 'Leaderboard', 'Top 10 per map', 'B')}
+          ${tile('wiki', 'book', 'Wiki', `${wiki.found}/${wiki.total}`, 'K')}
+          ${tile('ach', 'cert', 'Achievements', `${Object.keys(m.achievements ?? {}).length}/${ACHIEVEMENTS.length}`, 'A')}
+        </div>
+        <div class="title-small">
+          <button data-act="training">Training <kbd>T</kbd></button>
+          <button data-act="account">${!account.user ? 'Account' : account.user.guest ? 'Account: Guest' : 'Account: Google'} <kbd>U</kbd></button>
+          <button data-act="settings">Settings <kbd>O</kbd></button>
+          <button data-act="bug">Report a Bug</button>
+          ${window.installPrompt ? '<button data-act="install">Install App</button>' : ''}
+        </div>
+        <p class="title-records">${
+          m.shifts
+            ? `Best shift ${fmtTime(best.time)} · ${best.tickets.toLocaleString()} tickets · CSAT ${best.csat.toLocaleString()} · ${m.wins} of ${m.shifts} shifts survived`
+            : 'No shifts worked yet. Your records show up here.'
+        }</p>
+        <div class="controls keys-only">
+          <div><kbd>WASD</kbd>/<kbd>Arrows</kbd> move · your tools fire automatically</div>
+          <div><kbd>Esc</kbd> pause · <kbd>M</kbd> mute · <kbd>L</kbd> maps · <kbd>C</kbd> characters${DEBUG_ALLOWED ? ' · <kbd>`</kbd> debug' : ''}</div>
+        </div>
+        <p class="version">Version ${VERSION} · <button class="name-link" data-act="news">What's new</button></p>
       </div>
-      <p class="version">Version ${VERSION} · <button class="name-link" data-act="news">What's new</button></p>
     </div>`,
     (code) => {
       if (code === 'Enter' || code === 'Space') go('start');

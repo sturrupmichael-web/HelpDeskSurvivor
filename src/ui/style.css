@@ -485,3 +485,59 @@ html.touch .board-table tr[data-name] td { padding-top: 10px; padding-bottom: 10
   .slot svg { width: 18px; height: 18px; }
   #hud .hud-pause { top: 10px; }
 }
+
+/* Title screen: Clock In, four tiles, a small row (UX review 13) */
+.panel.title { max-width: 480px; }
+.title-head .title-char { margin-bottom: 10px; }
+.panel button.clock-in { padding: 14px; font-size: 18px; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 8px; }
+.panel button.tile { margin: 0; display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; align-items: center; column-gap: 8px; text-align: left; padding: 8px 10px; min-height: 56px; }
+.panel button.tile .icon { grid-row: 1 / 3; }
+.panel button.tile span { font-size: 14px; }
+.panel button.tile small { grid-column: 2; font-size: 12px; font-weight: normal; color: var(--yellow); }
+.panel button.tile kbd { grid-row: 1 / 3; grid-column: 3; }
+.title-small { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+@media (max-width: 600px) { .title-small { grid-template-columns: 1fr 1fr; } }
+.panel .title-small button { margin: 0; padding: 8px 6px; font-size: 13px; min-height: 44px; }
+.title-records { font-size: 12px; color: var(--gray); margin: 12px 0 0; line-height: 1.5; }
+.panel.title .controls { margin-top: 8px; line-height: 1.8; }
+@media (max-width: 380px) { .panel button.tile kbd { display: none; } }
+
+/* Long menus: a fade at the bottom edge while there's more below (UX review 19). Panels with
+   a sticky button bar put the fade just above the bar. */
+.panel.scrolls:not(.setup):not(.summary)::after { content: ''; position: sticky; bottom: -24px; display: block; height: 40px; margin: -40px -28px -24px; background: linear-gradient(rgba(51, 60, 87, 0), var(--slate) 80%); pointer-events: none; }
+.panel.scrolls .setup-bar::before, .panel.scrolls .summary-buttons::before { content: ''; position: absolute; left: 0; right: 0; top: -26px; height: 24px; background: linear-gradient(rgba(51, 60, 87, 0), var(--slate)); pointer-events: none; }
+@media (max-width: 600px) { .panel.scrolls:not(.setup):not(.summary)::after { bottom: -16px; margin: -40px -12px -16px; } }
+
+/* Sideways phones and other short screens: tighter menus that use the width (UX review 14) */
+@media (max-height: 500px) {
+  #overlay { padding: 8px; }
+  .panel { padding: 12px 18px; }
+  .panel h1 { font-size: 26px; margin-bottom: 6px; }
+  .panel h2 { font-size: 20px; margin-bottom: 4px; }
+  .sub { font-size: 12px; margin-bottom: 8px; }
+  .setup-step { margin-bottom: 2px; }
+  .panel button { padding: 8px; margin: 6px 0; }
+  .panel.wide, .panel.chars { max-width: none; }
+  .panel.scrolls:not(.setup):not(.summary)::after { bottom: -12px; margin: -40px -18px -12px; }
+  /* Title: two columns, Clock In on the left, everything else on the right. */
+  .panel.title { max-width: 860px; display: grid; grid-template-columns: 1fr 1.2fr; gap: 0 20px; align-items: center; }
+  .panel.title .preview-banner { grid-column: 1 / -1; }
+  .title-head .title-char canvas { width: 48px; height: 48px; }
+  .tiles { margin-top: 0; }
+  /* Clock In picker: one sideways-scrolling row of compact cards. */
+  .panel.setup { padding-bottom: 0; }
+  .panel.setup .cards:not(.policies) { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding-bottom: 6px; }
+  .panel.setup button.card.char, .panel.setup button.card.map { flex: 0 0 200px; width: 200px; padding: 8px; gap: 4px; }
+  .panel.setup .card-head canvas { width: 40px; height: 40px; }
+  .panel.setup .card-text, .panel.setup .card-level { font-size: 11px; }
+  .panel button.setup-tech { margin-bottom: 6px; padding: 4px 10px 4px 4px; }
+  .setup-bar { padding: 6px 0 8px; }
+  .setup-bar button { min-height: 40px; }
+  .setup-bar kbd { display: none; }
+  /* End of shift: smaller headline, stats and chart side by side. */
+  .summary h1 { font-size: 28px; }
+  .summary .stats { font-size: 12px; }
+  .summary .stats td { padding: 1px 8px; }
+  .summary .review { margin-top: 10px; padding: 8px 12px; }
+}

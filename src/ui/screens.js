@@ -24,6 +24,20 @@ export class Screens {
     this.root = root;
     this.game = game;
     this.keys = null; // key handler for the current screen
+    // Long menus get a fade along the bottom while there's more to scroll to (style.css,
+    // .panel.scrolls). Content can change after show() (leaderboard rows, policy taps), so
+    // re-check on any change, scroll or resize.
+    const check = () => this.checkScroll();
+    root.addEventListener('scroll', check, true);
+    addEventListener('resize', check);
+    if (typeof MutationObserver !== 'undefined') new MutationObserver(check).observe(root, { childList: true, subtree: true });
+  }
+
+  checkScroll() {
+    const p = this.root.querySelector('.panel');
+    if (!p) return;
+    const more = p.scrollHeight - p.clientHeight - p.scrollTop > 8;
+    p.classList.toggle('scrolls', more);
   }
 
   show(html, keys) {
@@ -31,6 +45,7 @@ export class Screens {
     this.root.style.display = 'flex';
     document.body.classList.add('menu-open'); // achievement toasts move out of the way
     this.keys = keys;
+    this.checkScroll();
     // With a controller, start with the first button focused so it's obvious where you are.
     if (gamepadConnected()) this.focusables()[0]?.focus();
   }

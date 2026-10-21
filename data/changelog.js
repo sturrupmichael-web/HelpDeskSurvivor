@@ -4,6 +4,17 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-ux4',
+    date: 'Oct 21, 2026',
+    title: 'Tidier menus',
+    items: [
+      'New title screen: a big Clock In button, four tiles for the Shop, Leaderboard, Wiki and Achievements, and a small row for everything else. Your best shift is summed up in one line.',
+      'Map and Characters have left the title screen, since Clock In lets you pick both. On a keyboard, L and C still open them.',
+      'Holding your phone sideways? Menus are tighter and use the full width, the title splits into two columns, and the Clock In cards scroll sideways.',
+      'Long menus fade out at the bottom while there is more to scroll to.',
+    ],
+  },
+  {
     id: '2026-10-21-ux3',
     date: 'Oct 21, 2026',
     title: 'Better on phones',
