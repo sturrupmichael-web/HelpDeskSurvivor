@@ -107,8 +107,8 @@ export class Spawner {
     return this.pt;
   }
 
-  // Monday Morning (policy): the queue (how many users, how fast they come, who they are)
-  // starts as it is at `headStart`; their HP still follows the real clock.
+  // Monday Morning (policy): the queue (how many users, how fast they come, who they are
+  // and how tough) starts as it is at `headStart`.
   busyTime(game) {
     return Math.max(game.time, game.policy?.headStart ?? 0);
   }
@@ -117,7 +117,7 @@ export class Spawner {
     const t = game.time;
     const pt = this.ringPoint(game, angle);
     id ??= pick(policyMix(mapMix(mixAt(this.busyTime(game)), game.map, t), game.policy));
-    return spawnEnemy(game, id, pt.x, pt.y, this.sample(t, 'hpMult'), this.sample(t, 'speedMult'));
+    return spawnEnemy(game, id, pt.x, pt.y, this.sample(this.busyTime(game), 'hpMult'), this.sample(t, 'speedMult'));
   }
 
   update(game, dt) {
