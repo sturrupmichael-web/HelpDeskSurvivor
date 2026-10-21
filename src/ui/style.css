@@ -242,7 +242,6 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
 @media (max-width: 600px) {
   .board-table { font-size: 12px; }
   .board-table td { padding: 3px 4px; }
-  .board-table td:nth-child(3) { display: none; }
 }
 
 /* Level-up: 4 cards in one row on wide screens. */
@@ -445,7 +444,6 @@ html.touch .board-table tr[data-name] td { padding-top: 10px; padding-bottom: 10
 .board-table tr[data-name]:hover td { background: rgba(255, 205, 117, 0.08); }
 .board-table .mods { cursor: help; }
 .board-table .mods.named { display: block; max-width: 9em; white-space: normal; font-size: 11px; line-height: 1.3; color: var(--gray); }
-.board-table td:nth-child(2) { min-width: 6em; }
 /* Pause button: 44 px, beside the clock so it never covers the timer or the HUD blocks (UX review 10, 11). */
 #hud .hud-pause { top: 14px; left: calc(50% + 64px); transform: none; width: 44px; height: 44px; }
 .pol-note { font-size: 12px; color: var(--gray); text-align: left; margin: 2px 0 4px; }
@@ -541,3 +539,26 @@ html.touch .board-table tr[data-name] td { padding-top: 10px; padding-bottom: 10
   .summary .stats td { padding: 1px 8px; }
   .summary .review { margin-top: 10px; padding: 8px 12px; }
 }
+
+/* Leaderboard (UX review 15): one swipeable row of maps, one toggle, and three columns
+   (rank, player with tech/time/policies underneath, score) so it fits a phone. */
+.board-maps { display: flex; gap: 6px; overflow-x: auto; margin: 0 0 8px; padding-bottom: 4px; scrollbar-width: thin; }
+.panel .board-maps button.tab { flex: 0 0 auto; width: auto; margin: 0; padding: 8px 12px; font-size: 13px; white-space: nowrap; min-height: 40px; }
+.panel button.board-clean { display: inline-flex; align-items: center; gap: 8px; width: auto; margin: 0 auto 10px; padding: 6px 12px; font-size: 13px; font-weight: normal; background: transparent; border: none; color: var(--gray); min-height: 40px; }
+.panel button.board-clean:hover { background: transparent; color: var(--paper); }
+.board-clean .switch { width: 30px; height: 16px; border: 2px solid var(--gray); background: var(--ink); position: relative; flex: none; }
+.board-clean .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 8px; height: 8px; background: var(--gray); }
+.board-clean.on { color: var(--yellow); }
+.board-clean.on .switch { border-color: var(--yellow); }
+.board-clean.on .switch::after { left: auto; right: 2px; background: var(--yellow); }
+.board-table { margin: 0 auto; }
+.board-table td.rank { width: 2.5em; }
+.board-table td.player { white-space: normal; word-break: break-word; }
+.board-table td.player small, .board-table td.score small { display: block; font-size: 11px; color: var(--gray); margin-top: 2px; }
+.board-table td.score { font-variant-numeric: tabular-nums; }
+.board-table td.score small { text-align: right; }
+.board-table .you { font-size: 10px; letter-spacing: 1px; color: var(--ink); background: var(--yellow); padding: 0 4px; margin-left: 4px; }
+.board-table tr.me td { background: rgba(255, 205, 117, 0.12); color: var(--paper); }
+.board-table tr.me td:first-child { box-shadow: inset 3px 0 0 var(--yellow); }
+.board-table tr.gap td { text-align: center !important; color: var(--gray) !important; padding: 0; line-height: 1; }
+@media (min-width: 900px) and (min-height: 501px) { .board-maps { flex-wrap: wrap; justify-content: center; overflow: visible; } }

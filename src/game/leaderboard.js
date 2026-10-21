@@ -45,6 +45,19 @@ export async function topScores(map, clean = false) {
   return { ok: true, rows: await r.res.json() };
 }
 
+// A player's best score on one map and its place on the board, for when they're outside
+// the top rows: { ok, best: { score, seconds, won, character, mods, mult } | null, rank }.
+export async function myRank(map, name, clean = false) {
+  const m = `map=eq.${encodeURIComponent(map)}${clean ? '&mods=eq.' : ''}`;
+  const r = await call(`?select=character,seconds,csat,won,mods,mult,score&${m}&name=eq.${encodeURIComponent(name)}&order=score.desc,seconds.desc&limit=1`);
+  if (!r.ok) return r;
+  const best = (await r.res.json())[0] ?? null;
+  if (!best) return { ok: true, best: null, rank: null };
+  const c = await call(`?select=id&${m}&score=gt.${Number(best.score) || 0}`, { method: 'HEAD', headers: { Prefer: 'count=exact' } });
+  const above = c.ok ? Number(c.res.headers.get('content-range')?.split('/')[1]) : NaN;
+  return { ok: true, best, rank: Number.isFinite(above) ? above + 1 : null };
+}
+
 // Posts a shift for the signed-in player and returns its rank on that map's board
 // (1 = top). The database fills in the player's name from their account.
 export async function postScore(row) {

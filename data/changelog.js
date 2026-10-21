@@ -4,6 +4,16 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-ux5',
+    date: 'Oct 21, 2026',
+    title: 'Leaderboard on phones',
+    items: [
+      'The maps are now one row you can swipe, and "No policies only" is a single switch, so the scores start much higher up the screen.',
+      'Each row shows the player, with their tech, time and policies underneath, so phones see everything again.',
+      'Your own row is highlighted. If you are not in the top 10, your best shift on that map and your rank show at the bottom.',
+    ],
+  },
+  {
     id: '2026-10-21-ux4',
     date: 'Oct 21, 2026',
     title: 'Tidier menus',
