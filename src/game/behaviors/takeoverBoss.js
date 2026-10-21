@@ -204,7 +204,7 @@ export default {
         ctx.globalAlpha = 0.18 + 0.25 * k;
         ctx.fillStyle = '#b13e53';
         ctx.fillRect(x, y, w, h);
-        ctx.globalAlpha = (game.time * 10) & 1 ? 0.9 : 0.5;
+        ctx.globalAlpha = game.fx.calm || (game.time * 10) & 1 ? 0.9 : 0.5;
         ctx.strokeStyle = '#b13e53';
         ctx.lineWidth = 2;
         ctx.strokeRect(x, y, w, h);

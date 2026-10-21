@@ -180,9 +180,10 @@ export function damageEnemy(game, e, amount, weapon, dx, dy, knockback) {
   if (weapon?.def.bossDamage && e.def.boss) amount *= weapon.def.bossDamage;
   if (e.mark > 0) amount *= 1 + e.markAmp;
   e.hp -= amount;
-  // Bosses take hits constantly; flash them in short blinks so their art stays readable.
+  // Bosses take hits constantly; flash them in short blinks so their art stays readable
+  // (not at all with Reduce flashing, where a big sprite blinking white is the problem).
   if (!e.heavy) e.flash = 0.12;
-  else if (e.flash < -0.2) e.flash = 0.06;
+  else if (e.flash < -0.2 && !game.fx.calm) e.flash = 0.06;
   if (weapon) weapon.damageDone += Math.min(amount, e.hp + amount);
   game.fx.number(e.x, e.y - 14, amount);
   sfx(e.def.boss ? 'bosshit' : 'hit', e.x);

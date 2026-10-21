@@ -69,7 +69,7 @@ export const TWISTS = {
   dark: {
     drawOverlay(twist, game, ctx, px, py) {
       const tw = game.map.twist;
-      const wobble = 1 - tw.flicker * (Math.sin(performance.now() / 70) * 0.5 + 0.5) * (Math.random() < 0.03 ? 3 : 1);
+      const wobble = game.fx.calm ? 1 : 1 - tw.flicker * (Math.sin(performance.now() / 70) * 0.5 + 0.5) * (Math.random() < 0.03 ? 3 : 1);
       // Lights out: ease down to dimScale, then back up over the last second.
       const dim = twist.dimT > 0 ? 1 - (1 - twist.dimScale) * Math.min(1, twist.dimT) : 1;
       const r = tw.radius * wobble * dim;

@@ -46,8 +46,28 @@ export class Screens {
     document.body.classList.add('menu-open'); // achievement toasts move out of the way
     this.keys = keys;
     this.checkScroll();
+    this.describe();
     // With a controller, start with the first button focused so it's obvious where you are.
+    // Otherwise focus the menu itself, so a screen reader reads its heading (a focused
+    // button would also catch the Enter that the screen's own key handler uses).
     if (gamepadConnected()) this.focusables()[0]?.focus();
+    else this.root.querySelector('.panel')?.focus({ preventScroll: true });
+  }
+
+  // Screen readers: the overlay is a dialog named by the menu's heading, and key badges
+  // aren't read out as part of every button's name.
+  describe() {
+    const r = this.root;
+    const panel = r.querySelector('.panel');
+    r.setAttribute('role', 'dialog');
+    r.setAttribute('aria-modal', 'true');
+    const h = r.querySelector('h1, h2');
+    if (h) {
+      h.id ||= 'menu-title';
+      r.setAttribute('aria-labelledby', h.id);
+    } else r.removeAttribute('aria-labelledby');
+    panel?.setAttribute('tabindex', '-1');
+    r.querySelectorAll('kbd').forEach((k) => k.setAttribute('aria-hidden', 'true'));
   }
 
   focusables() {

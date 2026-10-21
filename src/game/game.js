@@ -105,6 +105,11 @@ export class Game {
     setVolumes(s.sfx, s.music);
     this.camera.enabled = s.shake;
     this.fx.showNumbers = s.numbers;
+    this.fx.calm = s.calm;
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.toggle('calm', s.calm);
+      document.documentElement.classList.toggle('big-text', s.bigText);
+    }
     saveSettings(s);
   }
 
@@ -463,6 +468,7 @@ export class Game {
       if (toggle) {
         toggle.textContent = isMuted() ? 'OFF' : 'ON';
         toggle.classList.toggle('on', !isMuted());
+        toggle.setAttribute('aria-pressed', !isMuted());
       }
       return;
     }

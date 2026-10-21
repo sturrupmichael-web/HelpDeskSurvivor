@@ -56,6 +56,7 @@ export class Hud {
     // Achievement toasts live outside the HUD so they also show on menus.
     this.toasts = document.createElement('div');
     this.toasts.className = 'toasts';
+    this.toasts.setAttribute('role', 'status'); // screen readers announce new achievements
     document.body.appendChild(this.toasts);
     this.cache = {};
   }
@@ -169,8 +170,8 @@ export class Hud {
     const p = game.player;
     const slot = (ic, lvl, max, evolved) =>
       evolved
-        ? `<div class="slot evolved">${icon(ic, 24)}<span class="pips">EVO</span></div>`
-        : `<div class="slot">${icon(ic, 24)}<span class="pips">${'▮'.repeat(lvl)}${'▯'.repeat(max - lvl)}</span></div>`;
+        ? `<div class="slot evolved">${icon(ic, 24)}<span class="lvl"><i></i></span></div>`
+        : `<div class="slot">${icon(ic, 24)}<span class="lvl"><i style="width:${Math.round((lvl / max) * 100)}%"></i></span></div>`;
     const empty = '<div class="slot empty"></div>';
     this.el.weapons.innerHTML =
       p.weapons.map((w) => slot(w.def.icon, w.level, w.def.levels.length, w.def.evolved)).join('') + empty.repeat(Math.max(0, p.maxWeapons - p.weapons.length));

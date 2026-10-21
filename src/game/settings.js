@@ -9,15 +9,20 @@ export const DEFAULT_SETTINGS = {
   shake: true, // screen shake
   numbers: true, // floating damage numbers
   stick: true, // on-screen touch joystick
+  calm: false, // reduce flashing (starts on when the device asks for reduced motion)
+  bigText: false, // larger menu and HUD text
 };
 
 export function loadSettings() {
   const s = { ...DEFAULT_SETTINGS };
+  let saved = {};
   try {
-    Object.assign(s, JSON.parse(localStorage.getItem(KEY) || '{}'));
+    saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {};
   } catch {
     // Storage blocked or corrupt: defaults.
   }
+  Object.assign(s, saved);
+  if (!('calm' in saved) && typeof matchMedia === 'function') s.calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   return s;
 }
 

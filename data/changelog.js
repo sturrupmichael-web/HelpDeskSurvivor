@@ -4,6 +4,17 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-ux6',
+    date: 'Oct 21, 2026',
+    title: 'Easier to read',
+    items: [
+      'New in Settings: Reduce flashing (calmer boss hits, explosions and banners; already on if your device asks for less motion) and Larger text.',
+      'Brighter reds and greens on dark menus, no more tiny text, and bad and perk policies are marked with ▼ and ▲ as well as colour.',
+      'Locked cards stay readable, and tool levels in the HUD are now a bar instead of tiny dots.',
+      'Screen readers: menus are read out as they open, and Settings switches say whether they are on.',
+    ],
+  },
+  {
     id: '2026-10-21-ux5',
     date: 'Oct 21, 2026',
     title: 'Leaderboard on phones',

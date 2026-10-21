@@ -160,7 +160,7 @@ export default {
     ctx.translate(x, y);
     if (e.ai.state === LASH_TELL) {
       const k = 1 - e.ai.stateT / p.lashTelegraph;
-      const blink = (game.time * 10) & 1;
+      const blink = game.fx.calm || (game.time * 10) & 1;
       for (const a of e.ai.lashAngles) {
         ctx.save();
         ctx.rotate(a);

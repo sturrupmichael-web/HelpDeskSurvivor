@@ -26,7 +26,7 @@ export function shop(scr) {
     const max = d.costs.length;
     return `<button class="shop-row" data-i="${i}" ${cost === null || meta.data.pay < cost ? 'disabled' : ''}>
       ${icon(d.icon, 32)}
-      <div class="shop-info"><div class="card-name">${d.name} <span class="pips">${'▮'.repeat(lvl)}${'▯'.repeat(max - lvl)}</span></div>
+      <div class="shop-info"><div class="card-name">${d.name} <span class="pips">Lv ${lvl}/${max}</span></div>
         <div class="card-text">${d.desc}</div><div class="card-flavor">${d.flavor}</div></div>
       <div class="shop-cost">${cost === null ? '<b class="ok">MAXED</b>' : PAY(cost)}</div>
       <kbd>${i + 1}</kbd>

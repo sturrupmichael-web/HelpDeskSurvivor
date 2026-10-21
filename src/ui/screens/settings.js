@@ -11,19 +11,21 @@ export function settings(scr, back) {
   const slider = (key, label) => `<div class="setting"><label for="set-${key}">${label}</label>
     <input type="range" id="set-${key}" data-key="${key}" min="0" max="100" step="5" value="${Math.round(st[key] * 100)}">
     <span class="val">${Math.round(st[key] * 100)}</span></div>`;
-  const toggle = (key, label) => `<div class="setting"><label>${label}</label>
-    <button class="toggle ${st[key] ? 'on' : ''}" data-key="${key}">${st[key] ? 'ON' : 'OFF'}</button></div>`;
+  const toggle = (key, label) => `<div class="setting"><label id="lbl-${key}">${label}</label>
+    <button class="toggle ${st[key] ? 'on' : ''}" data-key="${key}" aria-labelledby="lbl-${key}" aria-pressed="${!!st[key]}">${st[key] ? 'ON' : 'OFF'}</button></div>`;
   scr.show(
     `<div class="panel">
       <h2>SETTINGS</h2>
       <div class="settings">
-        <div class="setting"><label>Sound</label>
-          <button class="toggle ${isMuted() ? '' : 'on'}" data-mute>${isMuted() ? 'OFF' : 'ON'}</button></div>
+        <div class="setting"><label id="lbl-mute">Sound</label>
+          <button class="toggle ${isMuted() ? '' : 'on'}" data-mute aria-labelledby="lbl-mute" aria-pressed="${!isMuted()}">${isMuted() ? 'OFF' : 'ON'}</button></div>
         ${slider('music', 'Music volume')}
         ${slider('sfx', 'Sound effects volume')}
         ${toggle('shake', 'Screen shake')}
         ${toggle('numbers', 'Damage numbers')}
         ${toggle('stick', 'Touch joystick')}
+        ${toggle('calm', 'Reduce flashing')}
+        ${toggle('bigText', 'Larger text')}
       </div>
       <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
       <p class="tiny keys-only"><kbd>M</kbd> mutes everything at any time.</p>
@@ -48,6 +50,7 @@ export function settings(scr, back) {
     g.hud.setMuted(toggleMute());
     el.classList.toggle('on', !isMuted());
     el.textContent = isMuted() ? 'OFF' : 'ON';
+    el.setAttribute('aria-pressed', !isMuted());
     sfx('click');
   });
   scr.root.querySelectorAll('button.toggle[data-key]').forEach((el) =>
@@ -56,6 +59,7 @@ export function settings(scr, back) {
       st[k] = !st[k];
       el.classList.toggle('on', st[k]);
       el.textContent = st[k] ? 'ON' : 'OFF';
+      el.setAttribute('aria-pressed', st[k]);
       g.applySettings();
       sfx('click');
     }),

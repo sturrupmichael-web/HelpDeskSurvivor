@@ -11,6 +11,7 @@ export class Fx {
     this.particles = new Pool(1500, () => ({ x: 0, y: 0, vx: 0, vy: 0, t: 0, life: 0, color: '#fff' }));
     this.numbers = new Pool(140, () => ({ x: 0, y: 0, t: 0, text: '', color: '#fff', big: false }));
     this.showNumbers = true; // damage numbers on/off (settings)
+    this.calm = false; // Reduce flashing (settings): softer filled flashes, no blinking telegraphs
     this.rings = new Pool(64, () => ({ x: 0, y: 0, r: 0, t: 0, life: 0, color: '#fff', fill: false }));
   }
 
@@ -106,7 +107,7 @@ export class Fx {
       ctx.beginPath();
       ctx.arc(g.x, g.y, g.r * (0.3 + 0.7 * k), 0, Math.PI * 2);
       if (g.fill) {
-        ctx.globalAlpha = 0.6 * (1 - k);
+        ctx.globalAlpha = (this.calm ? 0.2 : 0.6) * (1 - k);
         ctx.fillStyle = g.color;
         ctx.fill();
       } else {

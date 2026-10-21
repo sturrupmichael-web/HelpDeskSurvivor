@@ -25,6 +25,8 @@ export function attachUi(game) {
   addEventListener('keydown', (e) => {
     if (!(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) touchUi(false);
   }, true);
+  // The canvas is pictures only; menus and the HUD carry the words.
+  document.getElementById('game')?.setAttribute('aria-hidden', 'true');
   game.hud.onPause(() => {
     if (game.state === 'run') game.pause();
   });
