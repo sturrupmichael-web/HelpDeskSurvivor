@@ -9,6 +9,7 @@ import { WEAPONS } from '../../data/weapons.js';
 import { PASSIVES } from '../../data/passives.js';
 import { EVOLUTIONS } from '../../data/evolutions.js';
 import { MAPS, MAP_ORDER } from '../../data/maps.js';
+import { MAP_BOSS_EVENT } from '../../data/waves.js';
 import { wikiData, isKnown } from '../game/wiki.js';
 
 export const WIKI_TABS = [
@@ -55,7 +56,7 @@ function userNotes(d) {
 
 function bossWhere(id) {
   if (ENEMIES[id].final) return 'Every map at 20:00';
-  const maps = MAP_ORDER.filter((m) => (MAPS[m].boss?.boss ?? 'incident') === id).map((m) => MAPS[m].name);
+  const maps = MAP_ORDER.filter((m) => (MAPS[m].boss?.boss ?? MAP_BOSS_EVENT.boss) === id).map((m) => MAPS[m].name);
   return `${maps.join(', ')} at 10:00`;
 }
 

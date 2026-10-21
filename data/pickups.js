@@ -14,13 +14,26 @@ export const TICKETS = {
 
 // Other floor pickups. `chance` is per enemy closed (bosses/elites use `drops` in
 // data/enemies.js instead); `maps` limits random drops to those maps. Touch them to collect.
+// What a pickup does is its list of `effects` (src/game/pickups.js ITEM_EFFECTS):
+//   heal         + `heal` sanity
+//   boost        move speed x`speed` for `time` seconds
+//   invulnerable no damage for `invulnerable` seconds
+//   bulkClose    every ticket on the floor flies to you
+//   chest        opens the Change Approved screen
+// plus how it looks and sounds: `sound`, `burst` [colors, count] of particles at you,
+// `ring` [radius, color, seconds, filled], and `tally` (an achievement counter to bump).
+// On the floor: `glow` pulses a circle of that color under it, and `edgeArrow` points to it
+// from the screen edge while it is off screen.
 export const ITEMS = {
-  pizza: { sprite: 'pizza', chance: 0.004, heal: 30, label: '+30 SANITY' },
-  bulk_close: { sprite: 'bulk_close', chance: 0.0012, label: 'BULK CLOSE!' },
+  pizza: { sprite: 'pizza', chance: 0.004, heal: 30, label: '+30 SANITY', effects: ['heal'], sound: 'heal', burst: [['#38b764', '#f4f4f4'], 10], tally: 'pizzas' },
+  bulk_close: { sprite: 'bulk_close', chance: 0.0012, label: 'BULK CLOSE!', effects: ['bulkClose'], sound: 'bulk', ring: [120, '#41a6f6', 0.5, false] },
   // Merger Day only (`maps`): sanity plus a short speed boost.
-  swag_bag: { sprite: 'swag_bag', chance: 0.0025, maps: ['merger'], heal: 20, speed: 1.3, time: 6, label: 'WELCOME SWAG!' },
-  pto: { sprite: 'pto', chance: 0.0006, invulnerable: 6, label: 'OUT OF OFFICE' },
-  chest: { sprite: 'chest', chance: 0, label: 'CHANGE APPROVED' },
+  swag_bag: {
+    sprite: 'swag_bag', chance: 0.0025, maps: ['merger'], heal: 20, speed: 1.3, time: 6, label: 'WELCOME SWAG!',
+    effects: ['heal', 'boost'], sound: 'heal', burst: [['#34488f', '#ffcd75', '#f4f4f4'], 12],
+  },
+  pto: { sprite: 'pto', chance: 0.0006, invulnerable: 6, label: 'OUT OF OFFICE', glow: '#41a6f6', effects: ['invulnerable'], sound: 'pto', ring: [40, '#41a6f6', 0.5, true] },
+  chest: { sprite: 'chest', chance: 0, label: 'CHANGE APPROVED', glow: '#ffcd75', edgeArrow: true, effects: ['chest'] },
 };
 
 // Change Approved chest without an evolution available: how many upgrades it grants.

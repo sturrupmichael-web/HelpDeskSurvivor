@@ -3,6 +3,7 @@
 
 import { RATINGS, MANAGERS, COMMENTS, GOALS, BOSS_NAMES } from '../../data/review.js';
 import { MAPS } from '../../data/maps.js';
+import { MAP_BOSS_EVENT } from '../../data/waves.js';
 import { fmtTime } from '../ui/hud.js';
 
 const pick = (list, rnd) => list[Math.floor(rnd() * list.length)];
@@ -13,7 +14,7 @@ export function performanceReview(s, run, rnd = Math.random) {
   const rating = RATINGS.find((r) => r.when(s, run));
   const totalDamage = s.tools.reduce((n, t) => n + t.damage, 0);
   const top = s.tools[0];
-  const mapBoss = MAPS[s.map]?.boss?.boss ?? 'incident';
+  const mapBoss = MAPS[s.map]?.boss?.boss ?? MAP_BOSS_EVENT.boss;
   const beaten = run.bosses.filter((id) => BOSS_NAMES[id] && id !== 'executive');
   const dodged = run.bossesMet.filter((id) => BOSS_NAMES[id] && id !== 'executive' && !run.bosses.includes(id));
   const k = run.killsById;

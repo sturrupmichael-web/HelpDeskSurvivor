@@ -17,8 +17,8 @@ function fireRing(e, game, p, offset) {
   const step = (Math.PI * 2) / p.ringBullets;
   const half = (p.ringGap * step) / 2;
   for (let i = 0; i < p.ringBullets; i++) {
-    const a = e.ax + half + step * (i + 0.5 + offset);
-    let rel = a - e.ax;
+    const a = e.ai.gapAngle + half + step * (i + 0.5 + offset);
+    let rel = a - e.ai.gapAngle;
     rel -= Math.round(rel / (Math.PI * 2)) * Math.PI * 2;
     if (Math.abs(rel) < half) continue; // the way out
     game.hazards.bullet(e.x, e.y + MOUTH_Y, a, p.bulletSpeed, p.bulletDamage, 'hazard_phone', 6);
@@ -29,38 +29,45 @@ function fireRing(e, game, p, offset) {
 
 export default {
   init(e) {
-    e.t0 = 2.5; // until the first ring
-    e.t1 = 1.5; // until the first minions
+    // This boss's own state (pool objects are reused, so it's made fresh each fight).
+    e.ai = {
+      state: WALK,
+      stateT: 0, // seconds left in the current state
+      ringIn: 2.5, // seconds until the next ring of phones
+      minionsIn: 1.5, // seconds until the next Status Update Requests
+      gapAngle: 0, // direction of the safe gap in the ring
+      ringsLeft: 0, // rings still to fire in this attack (2 when enraged)
+    };
   },
 
   update(e, game, dt) {
     const p = e.params;
     const pl = game.player;
     const enraged = e.hp < e.maxHp * p.enrageAt;
-    if (e.state === WALK) {
+    if (e.ai.state === WALK) {
       e.anim = 'walk';
       stepToward(e, pl.x, pl.y, e.speed * e.slow * e.buff, dt);
-      if ((e.t0 -= dt) <= 0) {
-        e.state = RINGING;
-        e.stateT = p.ringTelegraph;
-        e.ax = Math.random() * Math.PI * 2; // gap direction
-        e.n = enraged ? 2 : 1;
+      if ((e.ai.ringIn -= dt) <= 0) {
+        e.ai.state = RINGING;
+        e.ai.stateT = p.ringTelegraph;
+        e.ai.gapAngle = Math.random() * Math.PI * 2; // gap direction
+        e.ai.ringsLeft = enraged ? 2 : 1;
         e.anim = 'attack';
         sfx('ring');
       }
     } else {
       e.flip = pl.x < e.x;
-      if ((e.stateT -= dt) <= 0) {
-        fireRing(e, game, p, e.n === 1 ? 0 : 0.5);
-        if (--e.n > 0) e.stateT = DOUBLE_GAP;
+      if ((e.ai.stateT -= dt) <= 0) {
+        fireRing(e, game, p, e.ai.ringsLeft === 1 ? 0 : 0.5);
+        if (--e.ai.ringsLeft > 0) e.ai.stateT = DOUBLE_GAP;
         else {
-          e.state = WALK;
-          e.t0 = p.ringEvery * (enraged ? 0.75 : 1);
+          e.ai.state = WALK;
+          e.ai.ringIn = p.ringEvery * (enraged ? 0.75 : 1);
         }
       }
     }
-    if ((e.t1 -= dt) <= 0) {
-      e.t1 = p.minionEvery;
+    if ((e.ai.minionsIn -= dt) <= 0) {
+      e.ai.minionsIn = p.minionEvery;
       const hp = game.spawner.sample(game.time, 'hpMult');
       for (let i = 0; i < p.minionCount; i++) {
         const a = (i / p.minionCount) * Math.PI * 2;
@@ -72,7 +79,7 @@ export default {
 
   // Telegraph: a red ring around the boss with the safe lane in green.
   drawUnder(e, game, ctx) {
-    if (e.state !== RINGING) return;
+    if (e.ai.state !== RINGING) return;
     const p = e.params;
     const half = (p.ringGap * Math.PI) / p.ringBullets;
     const x = e.x;
@@ -82,18 +89,18 @@ export default {
     ctx.fillStyle = '#38b764';
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.arc(x, y, 160, e.ax - half, e.ax + half);
+    ctx.arc(x, y, 160, e.ai.gapAngle - half, e.ai.gapAngle + half);
     ctx.closePath();
     ctx.fill();
     ctx.globalAlpha = pulse ? 0.9 : 0.6;
     ctx.lineWidth = 3;
     ctx.strokeStyle = '#b13e53';
     ctx.beginPath();
-    ctx.arc(x, y, 44, e.ax + half, e.ax - half + Math.PI * 2);
+    ctx.arc(x, y, 44, e.ai.gapAngle + half, e.ai.gapAngle - half + Math.PI * 2);
     ctx.stroke();
     ctx.strokeStyle = '#38b764';
     ctx.beginPath();
-    ctx.arc(x, y, 44, e.ax - half, e.ax + half);
+    ctx.arc(x, y, 44, e.ai.gapAngle - half, e.ai.gapAngle + half);
     ctx.stroke();
     ctx.globalAlpha = 1;
   },

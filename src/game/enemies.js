@@ -27,8 +27,9 @@ export function makeEnemy() {
     confuse: 0, // seconds left walking the wrong way (Password Expired)
     mark: 0, markAmp: 0, // seconds left flagged, and the extra damage it takes meanwhile (Rubber Duck, SIEM)
     flash: 0, animT: 0, flip: false, dead: false, noSep: false,
-    t0: 0, t1: 0, // scratch timers for behaviors
-    anim: 'walk', pose: -1, state: 0, stateT: 0, phase: 0, ax: 0, ay: 0, n: 0, // boss attack state
+    t0: 0, t1: 0, n: 0, // scratch for regular users' behaviors (timers, a flag)
+    ai: null, // a boss's own named state, made by its behavior's init() each fight
+    anim: 'walk', pose: -1, // drawing: animation name, and a fixed frame (-1 = animate)
     heavy: false, // bosses (and anchored boxes): the horde can't shove them around
     scale: 1, // drawn size (the Hostile Takeover grows as it absorbs users)
     hitAt: new Float64Array(HIT_SLOTS),
@@ -67,7 +68,8 @@ export function spawnEnemy(game, id, x, y, hpMult = 1, speedMult = 1, behaviorId
   e.t0 = e.t1 = 0;
   e.anim = 'walk';
   e.pose = -1;
-  e.state = e.stateT = e.phase = e.ax = e.ay = e.n = 0;
+  e.n = 0;
+  e.ai = null;
   e.heavy = !!def.boss || !!def.anchored;
   e.scale = 1;
   e.hitAt.fill(-1e9);

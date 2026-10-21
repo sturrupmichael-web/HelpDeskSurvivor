@@ -46,11 +46,11 @@ function pick(mix) {
   return Object.keys(mix)[0];
 }
 
-// Each office map can swap the 10:00 boss for its own (`boss` in data/maps.js). Cached,
-// so the merged event isn't rebuilt every tick.
+// Each office map can swap the event marked `mapBoss` (the 10:00 boss) for its own
+// (`boss` in data/maps.js). Cached, so the merged event isn't rebuilt every tick.
 const mapEvents = new WeakMap();
 export function mapEvent(ev, map) {
-  if (ev?.type !== 'boss' || ev.boss !== 'incident' || !map.boss) return ev;
+  if (!ev?.mapBoss || !map.boss) return ev;
   let byMap = mapEvents.get(ev);
   if (!byMap) mapEvents.set(ev, (byMap = new Map()));
   if (!byMap.has(map)) byMap.set(map, { ...ev, ...map.boss });

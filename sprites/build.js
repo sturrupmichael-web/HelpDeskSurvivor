@@ -9,6 +9,7 @@
 // replace them as long as it provides the same sprite ids (see README "Swapping art").
 
 import { deflateSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -130,7 +131,10 @@ for (const file of readdirSync(defsDir).filter((f) => f.endsWith('.js')).sort())
     y0 += r.h;
   }
   writeFileSync(join(outDir, `${def.sheet}.png`), encodePNG(sheetW, sheetH, rgba));
-  manifest.sheets[def.sheet] = `${def.sheet}.png`;
+  // The ?v= tag changes whenever the pixels do, so the installed app (sw.js) can keep
+  // sheets cached and still fetch a new one the moment the art changes.
+  const tag = createHash('sha1').update(rgba).update(`${sheetW}x${sheetH}`).digest('hex').slice(0, 10);
+  manifest.sheets[def.sheet] = `${def.sheet}.png?v=${tag}`;
   if (previewDir) writeFileSync(join(previewDir, `${def.sheet}.png`), encodePNG(sheetW * 6, sheetH * 6, scaleUp(sheetW, sheetH, rgba, 6)));
   console.log(`${def.sheet}.png  ${sheetW}x${sheetH}  ${rows.length} sprites`);
 }

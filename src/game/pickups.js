@@ -125,23 +125,21 @@ export function rollItemDrops(game, e) {
   }
 }
 
-function collect(game, it) {
-  const p = game.player;
-  const d = it.def;
-  game.fx.text(p.x, p.y - 30, d.label, '#ffcd75');
-  if (it.id === 'pizza') {
-    game.achievements.run.pizzas++;
+// What pickups do, by the names in their `effects` (data/pickups.js). (game, def) => void.
+export const ITEM_EFFECTS = {
+  heal(game, d) {
+    const p = game.player;
     p.hp = Math.min(p.maxHp, p.hp + d.heal);
-    game.fx.burst(p.x, p.y - 8, ['#38b764', '#f4f4f4'], 10);
-    sfx('heal');
-  } else if (it.id === 'swag_bag') {
-    p.hp = Math.min(p.maxHp, p.hp + d.heal);
-    p.boost = d.speed;
-    p.boostT = d.time;
-    game.fx.burst(p.x, p.y - 8, ['#34488f', '#ffcd75', '#f4f4f4'], 12);
-    sfx('heal');
-  } else if (it.id === 'bulk_close') {
-    // Every ticket on the floor flies to you.
+  },
+  boost(game, d) {
+    game.player.boost = d.speed;
+    game.player.boostT = d.time;
+  },
+  invulnerable(game, d) {
+    game.player.invuln = d.invulnerable;
+  },
+  // Every ticket on the floor flies to you.
+  bulkClose(game) {
     const tk = game.tickets;
     for (let i = 0; i < tk.count; i++) {
       const t = tk.items[i];
@@ -150,15 +148,21 @@ function collect(game, it) {
         t.speed = TICKETS.magnetSpeed * 3;
       }
     }
-    game.fx.ring(p.x, p.y, 120, '#41a6f6', 0.5);
-    sfx('bulk');
-  } else if (it.id === 'pto') {
-    p.invuln = d.invulnerable;
-    game.fx.ring(p.x, p.y, 40, '#41a6f6', 0.5, true);
-    sfx('pto');
-  } else if (it.id === 'chest') {
+  },
+  chest(game) {
     game.openChest();
-  }
+  },
+};
+
+function collect(game, it) {
+  const p = game.player;
+  const d = it.def;
+  game.fx.text(p.x, p.y - 30, d.label, '#ffcd75');
+  if (d.tally) game.achievements.run[d.tally]++;
+  if (d.burst) game.fx.burst(p.x, p.y - 8, d.burst[0], d.burst[1]);
+  if (d.ring) game.fx.ring(p.x, p.y, ...d.ring);
+  if (d.sound) sfx(d.sound);
+  for (const name of d.effects) ITEM_EFFECTS[name](game, d); // last: a chest pauses the game
 }
 
 export function updateItems(game, dt) {
@@ -196,14 +200,14 @@ export function drawItems(game, ctx, left, top, right, bottom) {
     const s = it.spr;
     if (it.x < left - 8 || it.x > right + 8 || it.y < top - 8 || it.y > bottom + 8) {
       // Off-screen chests get an arrow at the screen edge pointing to them.
-      if (it.id === 'chest') drawEdgeArrow(ctx, cx, cy, it.x, it.y, left, top, right, bottom, it.t);
+      if (it.def.edgeArrow) drawEdgeArrow(ctx, cx, cy, it.x, it.y, left, top, right, bottom, it.t);
       continue;
     }
     const f = s.anims.idle.frames[0];
     const bob = Math.round(Math.sin(it.t * 3) * 2);
-    if (it.id === 'chest' || it.id === 'pto') {
+    if (it.def.glow) {
       ctx.globalAlpha = 0.35 + 0.2 * Math.sin(it.t * 5);
-      ctx.fillStyle = it.id === 'chest' ? '#ffcd75' : '#41a6f6';
+      ctx.fillStyle = it.def.glow;
       ctx.beginPath();
       ctx.arc(it.x, it.y, 11, 0, Math.PI * 2);
       ctx.fill();

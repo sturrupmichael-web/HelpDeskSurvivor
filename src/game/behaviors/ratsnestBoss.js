@@ -19,14 +19,14 @@ const COLORS = ['#41a6f6', '#ffcd75', '#38b764', '#ef7d57', '#b13e53'];
 
 function startLash(e, game) {
   const p = e.params;
-  const small = e.phase > 0;
+  const small = e.ai.small;
   const pl = game.player;
   const n = small ? 2 + ((Math.random() * 2) | 0) : 3 + ((Math.random() * 3) | 0);
   const base = Math.atan2(pl.y - (e.y + BODY_Y), pl.x - e.x);
-  e.lines.length = 0;
-  for (let i = 0; i < n; i++) e.lines.push(base + (i / n) * Math.PI * 2 + (i ? (Math.random() - 0.5) * 0.5 : 0));
-  e.state = LASH_TELL;
-  e.stateT = p.lashTelegraph;
+  e.ai.lashAngles.length = 0;
+  for (let i = 0; i < n; i++) e.ai.lashAngles.push(base + (i / n) * Math.PI * 2 + (i ? (Math.random() - 0.5) * 0.5 : 0));
+  e.ai.state = LASH_TELL;
+  e.ai.stateT = p.lashTelegraph;
   sfx('warn', e.x);
   e.anim = 'attack';
 }
@@ -34,10 +34,10 @@ function startLash(e, game) {
 function lashHits(e, game) {
   const p = e.params;
   const pl = game.player;
-  const len = p.lashLength * (e.phase > 0 ? 0.75 : 1);
+  const len = p.lashLength * (e.ai.small ? 0.75 : 1);
   const dx = pl.x - e.x;
   const dy = pl.y - (e.y + BODY_Y);
-  for (const a of e.lines) {
+  for (const a of e.ai.lashAngles) {
     const ux = Math.cos(a);
     const uy = Math.sin(a);
     const along = dx * ux + dy * uy;
@@ -50,7 +50,7 @@ function lashHits(e, game) {
 function snag(e, game) {
   const p = e.params;
   const pl = game.player;
-  const n = e.phase > 0 ? 1 : p.snagCount;
+  const n = e.ai.small ? 1 : p.snagCount;
   for (let i = 0; i < n; i++) {
     const r = i === 0 ? 10 : p.snagScatter * (0.5 + Math.random() * 0.5);
     const a = Math.random() * Math.PI * 2;
@@ -64,7 +64,7 @@ function snag(e, game) {
 function split(e, game) {
   const p = e.params;
   const def = game.assets.sprite(p.small);
-  e.phase = 1;
+  e.ai.small = true;
   const share = e.hp / 3;
   e.hp = share;
   e.spr = def;
@@ -75,8 +75,8 @@ function split(e, game) {
     if (!c) continue;
     c.hp = share;
     c.kx = side * 160;
-    c.t0 = 1 + Math.random();
-    c.t1 = 3 + Math.random() * 2;
+    c.ai.lashIn = 1 + Math.random();
+    c.ai.snagIn = 3 + Math.random() * 2;
     game.addBossPart(c);
   }
   game.hud.banner('UNPLUGGED', 'It split into three. Close all of them.', 2.5);
@@ -84,60 +84,64 @@ function split(e, game) {
   game.fx.burst(e.x, e.y + BODY_Y, ['#41a6f6', '#ffcd75', '#38b764', '#ef7d57'], 30);
   game.camera.shake(6);
   sfx('siren');
-  e.state = WALK;
+  e.ai.state = WALK;
   e.anim = 'walk';
-  e.t0 = 2;
+  e.ai.lashIn = 2;
 }
 
 export default {
   init(e) {
-    e.lines = e.lines ?? [];
-    e.lines.length = 0;
-    e.t0 = 2; // until the first lash
-    e.t1 = 4; // until the first snag
-    if (e.def.params.isSmall) e.phase = 1;
+    // This boss's own state (pool objects are reused, so it's made fresh each fight).
+    e.ai = {
+      state: WALK,
+      stateT: 0, // seconds left in the current state
+      lashIn: 2, // seconds until the next lash
+      snagIn: 4, // seconds until the next cable snag
+      small: !!e.def.params.isSmall, // one of the three nests after the split
+      lashAngles: [], // directions of the cables in the current lash
+    };
   },
 
   update(e, game, dt) {
     const p = e.params;
     const pl = game.player;
-    if (e.phase === 0 && p.splitAt && e.hp < e.maxHp * p.splitAt) split(e, game);
-    const small = e.phase > 0;
-    if (e.state === WALK) {
+    if (!e.ai.small && p.splitAt && e.hp < e.maxHp * p.splitAt) split(e, game);
+    const small = e.ai.small;
+    if (e.ai.state === WALK) {
       e.anim = 'walk';
       stepToward(e, pl.x, pl.y, e.speed * (small ? 1.5 : 1) * e.slow * e.buff, dt);
-      if ((e.t0 -= dt) <= 0) startLash(e, game);
-    } else if (e.state === LASH_TELL) {
-      if ((e.stateT -= dt) <= 0) {
-        e.state = LASH;
-        e.stateT = LASH_SHOW;
+      if ((e.ai.lashIn -= dt) <= 0) startLash(e, game);
+    } else if (e.ai.state === LASH_TELL) {
+      if ((e.ai.stateT -= dt) <= 0) {
+        e.ai.state = LASH;
+        e.ai.stateT = LASH_SHOW;
         if (lashHits(e, game) && hurtPlayer(game, p.lashDamage)) game.onPlayerHurt();
         game.camera.shake(small ? 2 : 4);
         sfx('snap', e.x);
       }
-    } else if ((e.stateT -= dt) <= 0) {
-      e.state = WALK;
-      e.t0 = p.lashEvery * (small ? 1.4 : 1);
+    } else if ((e.ai.stateT -= dt) <= 0) {
+      e.ai.state = WALK;
+      e.ai.lashIn = p.lashEvery * (small ? 1.4 : 1);
     }
-    if ((e.t1 -= dt) <= 0) {
-      e.t1 = p.snagEvery * (small ? 1.5 : 1);
+    if ((e.ai.snagIn -= dt) <= 0) {
+      e.ai.snagIn = p.snagEvery * (small ? 1.5 : 1);
       snag(e, game);
     }
   },
 
   // Telegraph: thin red strips where the cables will land; then the cables themselves.
   drawUnder(e, game, ctx) {
-    if (e.state === WALK) return;
+    if (e.ai.state === WALK) return;
     const p = e.params;
-    const len = p.lashLength * (e.phase > 0 ? 0.75 : 1);
+    const len = p.lashLength * (e.ai.small ? 0.75 : 1);
     const x = e.x;
     const y = e.y + BODY_Y;
     ctx.save();
     ctx.translate(x, y);
-    if (e.state === LASH_TELL) {
-      const k = 1 - e.stateT / p.lashTelegraph;
+    if (e.ai.state === LASH_TELL) {
+      const k = 1 - e.ai.stateT / p.lashTelegraph;
       const blink = (game.time * 10) & 1;
-      for (const a of e.lines) {
+      for (const a of e.ai.lashAngles) {
         ctx.save();
         ctx.rotate(a);
         ctx.globalAlpha = 0.2 + 0.25 * k;
@@ -150,10 +154,10 @@ export default {
         ctx.restore();
       }
     } else {
-      const t = 1 - e.stateT / LASH_SHOW;
-      ctx.globalAlpha = Math.min(1, (e.stateT / LASH_SHOW) * 2);
+      const t = 1 - e.ai.stateT / LASH_SHOW;
+      ctx.globalAlpha = Math.min(1, (e.ai.stateT / LASH_SHOW) * 2);
       ctx.lineCap = 'round';
-      e.lines.forEach((a, i) => {
+      e.ai.lashAngles.forEach((a, i) => {
         ctx.save();
         ctx.rotate(a);
         const reach = len * Math.min(1, t * 3);
