@@ -36,6 +36,8 @@ export class Hud {
         <div class="muted" hidden>MUTED <kbd>M</kbd></div>
       </div>
       <button class="hud-pause" aria-label="Pause">II</button>
+      <div class="hud-coach" hidden><small class="coach-step"></small><b class="coach-title"></b><span class="coach-text"></span>
+        <svg viewBox="0 0 100 4" preserveAspectRatio="none"><rect width="100" height="4" fill="#1a1c2c"/><rect class="coach-fill" width="0" height="4" fill="#38b764"/></svg></div>
       <div class="hud-boss" hidden>
         <div class="boss-name"></div>
         <svg viewBox="0 0 100 6" preserveAspectRatio="none"><rect width="100" height="6" fill="#1a1c2c"/><rect class="boss-fill" width="100" height="6" fill="#b13e53"/></svg>
@@ -46,6 +48,7 @@ export class Hud {
       kills: q('.kills'), csat: q('.csat'), mult: q('.mult'), weapons: q('.weapons'), passives: q('.passives'),
       banner: q('.hud-banner'), shift: q('.shift'), muted: q('.muted'),
       boss: q('.hud-boss'), bossName: q('.boss-name'), bossFill: q('.boss-fill'),
+      coach: q('.hud-coach'), coachStep: q('.coach-step'), coachTitle: q('.coach-title'), coachText: q('.coach-text'), coachFill: q('.coach-fill'),
     };
     this.setMuted(isMuted());
     // Achievement toasts live outside the HUD so they also show on menus.
@@ -92,9 +95,30 @@ export class Hud {
     this.bannerTimer = setTimeout(() => (b.hidden = true), seconds * 1000);
   }
 
+  // Training shift coach card: { title, text (may hold <kbd>), step, steps, progress }, or null to hide.
+  coach(c) {
+    const e = this.el;
+    e.coach.hidden = !c;
+    if (!c) return;
+    e.coachStep.textContent = `TRAINING ${c.step}/${c.steps}`;
+    e.coachTitle.textContent = c.title;
+    e.coachText.innerHTML = c.text;
+    e.coach.classList.remove('show');
+    void e.coach.offsetWidth; // restart the CSS animation
+    e.coach.classList.add('show');
+    this.coachProgress(c.progress);
+  }
+
+  coachProgress(v) {
+    const e = this.el;
+    e.coachFill.parentNode.style.display = v === null ? 'none' : '';
+    if (v !== null) e.coachFill.setAttribute('width', Math.round(v * 100));
+  }
+
   reset(game) {
     this.cache = {};
     this.el.banner.hidden = true;
+    this.coach(null);
     this.refreshSlots(game);
   }
 
@@ -111,9 +135,9 @@ export class Hud {
     this.set('xp', Math.floor((p.xp / p.xpNeed) * 1000), (v) => e.xp.setAttribute('width', v));
     this.set('level', p.level, (v) => (e.level.textContent = 'LV ' + v));
     this.set('time', Math.floor(game.time), (v) => (e.timer.textContent = fmtTime(v)));
-    this.set('overtime', game.time >= SHIFT_LENGTH, (v) => {
-      e.shift.textContent = v ? 'OVERTIME' : 'SHIFT ENDS ' + fmtTime(SHIFT_LENGTH);
-      e.shift.classList.toggle('over', v);
+    this.set('overtime', game.tutorial ? 'training' : game.time >= SHIFT_LENGTH, (v) => {
+      e.shift.textContent = v === 'training' ? 'TRAINING SHIFT' : v ? 'OVERTIME' : 'SHIFT ENDS ' + fmtTime(SHIFT_LENGTH);
+      e.shift.classList.toggle('over', v === true);
     });
     const boss = game.bossAlive() ? game.boss : null;
     this.set('bossOn', boss ? boss.uid : 0, () => {
