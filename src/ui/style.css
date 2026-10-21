@@ -343,3 +343,28 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
 .levelup-tip { max-width: 560px; margin: 0 auto 12px; padding: 8px 12px; font-size: 13px; border: 2px solid var(--green); background: rgba(26, 28, 44, 0.6); }
 .levelup-tip b { color: var(--green); }
 .panel.training .training-list { text-align: left; margin: 8px 0 12px; padding-left: 20px; font-size: 14px; line-height: 1.5; }
+
+/* Clock In picker: tech, then map, then confirm. The bar stays on screen while the cards scroll. */
+.setup-step { color: var(--yellow); font-size: 11px; letter-spacing: 2px; margin: 0 0 4px; }
+.panel.setup { padding-bottom: 0; }
+.panel.setup .cards { margin-bottom: 14px; }
+.panel button.setup-tech { display: inline-flex; width: auto; align-items: center; gap: 10px; margin: 0 auto 14px; padding: 6px 14px 6px 6px; text-align: left; background: var(--ink); border-color: var(--green); }
+.setup-tech canvas { image-rendering: pixelated; width: 40px; height: 40px; }
+.setup-tech b { display: block; font-size: 14px; }
+.setup-tech small { color: var(--yellow); font-size: 11px; font-weight: normal; }
+.setup-bar { position: sticky; bottom: 0; display: flex; gap: 10px; padding: 10px 0 14px; margin: 0 -4px; background: var(--slate); border-top: 2px solid var(--ink); }
+.setup-bar button { margin: 0; flex: 1; min-height: 48px; }
+.setup-bar button.primary { flex: 2; }
+@media (max-width: 600px) {
+  /* Two compact tech cards per row so the whole roster fits on a phone. */
+  .panel.setup .cards { gap: 8px; }
+  .panel.setup button.card.char { width: calc(50% - 4px); padding: 8px; gap: 4px; }
+  .panel.setup button.char .card-head { flex-direction: column; gap: 4px; text-align: center; }
+  .panel.setup button.char .card-head kbd { display: none; }
+  .panel.setup button.char .card-name { font-size: 13px; }
+  .panel.setup button.char .card-level { font-size: 11px; text-align: center; }
+  .panel.setup button.char .card-text { font-size: 11px; }
+  .panel.setup button.card.map { padding: 8px; gap: 4px; }
+  .panel.setup .card-text { font-size: 12px; }
+  .setup-bar kbd { display: none; }
+}

@@ -40,8 +40,9 @@ npm run build
 | 1 / 2 / 3 or click | Pick a level-up card |
 | Enter | Close the Change Approved (chest) screen |
 | R | Reroll the level-up cards (needs the Escalation Path upgrade) |
+| Enter (title screen) | Clock In: pick a tech, then a map (arrows or 1-9 to choose, Enter for next / confirm, Esc to go back). Starts on your last picks |
 | T / L / C / S / B / K / A / O | Training Shift / Office Maps / Characters / Overtime Shop / Leaderboard / Help Desk Wiki / Achievements / Settings (title screen) |
-| P | Post the shift to the online leaderboard (end-of-shift screen) |
+| P / C | Post the shift to the online leaderboard / Change tech or map (end-of-shift screen) |
 | T / O | Shift Stats / Settings (pause menu) |
 | A | When everything is maxed, always take the pizza from then on (no more level-up screens) |
 | M | Mute / unmute (remembered between visits) |

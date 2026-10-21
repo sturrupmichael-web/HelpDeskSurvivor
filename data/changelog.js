@@ -4,6 +4,17 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-clockin',
+    date: 'Oct 21, 2026',
+    title: 'Pick your tech and map when you Clock In',
+    items: [
+      'Clock In now walks you through it: pick your technician, then your map, then confirm. No more backing out of menus to switch.',
+      'Your last tech and map are picked for you, so a repeat shift is still just two taps (or Enter, Enter, Enter).',
+      'Locked techs and maps show what unlocks them, and you can hire a tech right from the picker.',
+      'The end-of-shift screen has a new Change Tech or Map button.',
+    ],
+  },
+  {
     id: '2026-10-21-merger',
     date: 'Oct 21, 2026',
     title: 'New map: Merger Day, unlocks and a rebalance',
