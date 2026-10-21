@@ -145,15 +145,30 @@ iPhone, use Share, then Add to Home Screen in Safari.
 ## Previews
 
 Changes are tried out at https://game.michaelsturrup.com/preview/ before they go live.
-The preview is the whole game built from the `next` branch: its version ends in `-pre`,
+The preview is the whole game built from the `preview` branch: its version ends in `-pre`,
 the title screen says PREVIEW BUILD, and search engines are told to skip it. It shares
 saves, accounts and the leaderboard with the live game (scores show the `-pre` version).
 
-- **Make a preview:** commit the change to `next`, run `node build.mjs --preview` there,
-  then copy the `preview/` folder onto `main`, commit and push. Only `preview/` changes,
-  so the live game stays as it was.
-- **Publish:** merge `next` into `main`, run `node build.mjs`, commit and push.
+GitHub builds and publishes the site itself (`.github/workflows/deploy.yml`, with
+Settings > Pages > Source set to "GitHub Actions"). A push to `main` or `preview` runs the
+tests, builds the live game from `main` and the preview from `preview`, and publishes both.
+If a test fails nothing is published. Nothing built needs committing.
+
+- **Make a preview:** push the change to the `preview` branch.
+- **Publish:** merge it into `main` and push.
 - Add a "What's new" entry (data/changelog.js) with each change that will be published.
+- `node site.mjs` copies the files the live site serves into `_site/` (what gets published).
+
+## Tests
+
+`npm test` plays the real game in a headless browser, much faster than real time: every
+menu opens, every map runs early and late in a shift, every boss attacks and can be
+closed (and drops its chest), The Executive ends the shift as a win, the training shift
+runs, a phone-sized screen draws at world size, 900 users stay inside a frame budget, old
+saves upgrade, and the built page starts offline. `npm test -- quick` skips the built
+page. Every push runs them on GitHub (`.github/workflows/test.yml`); a red X on a commit
+means a test failed. First time: `npm install` and `npx playwright install chromium`.
+Tests live in `tests/`; `tests/harness.mjs` has helpers (`T.start(map)`, `T.step(seconds)`).
 
 ## Project layout
 
@@ -165,8 +180,19 @@ sprites/build.js  renders defs -> PNG sheets
 src/engine/    loop, input (keyboard, gamepad, touch), camera, object pools, spatial hash, asset loading, audio synth
 src/game/      gameplay: player, enemies + behaviors/ (incl. bosses), weapons/, hazards
                (boss bullets and bombs), pickups, upgrades + evolutions, spawner, floor
-src/ui/        SVG HUD, icons, menus, debug overlay
+src/ui/        SVG HUD, icons, debug overlay; menus in screens.js + screens/ (one file per screen)
+tests/         automated tests (npm test)
 ```
+
+Adding content without touching the engine:
+- Pickups (`data/pickups.js`) list their `effects`, from `ITEM_EFFECTS` in `src/game/pickups.js`.
+- Map twists (`data/maps.js` `twist.type`) are entries in `TWISTS` in `src/game/maps.js`.
+- The 10:00 event marked `mapBoss: true` in `data/waves.js` becomes the map's own boss;
+  a boss's `downBanner` (data/enemies.js) is shown when it's closed (The Executive's ends the shift).
+- Each boss behavior keeps its own state in `e.ai`, made fresh in its `init(e)`.
+
+Offline app: `sw.js` serves sprite sheets (tagged `?v=<content hash>` by sprites/build.js)
+and icons from its cache first, and everything else from the network first.
 
 Drawing: the canvas is exactly the size of the world view (one canvas pixel per world
 pixel) and the browser scales it up by a whole number (`Game.resize`). Draw everything in
