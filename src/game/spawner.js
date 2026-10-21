@@ -3,6 +3,7 @@
 
 import { TIMELINE, EVENTS, SPAWNER } from '../../data/waves.js';
 import { spawnEnemy } from './enemies.js';
+import { ENEMIES } from '../../data/enemies.js';
 import { sfx } from '../engine/audio.js';
 
 function mixAt(t) {
@@ -163,6 +164,7 @@ export class Spawner {
 
   // Bosses always spawn at full base HP and speed (no timeline scaling).
   bossEvent(game, ev) {
+    game.timeline?.mark(game, 'boss', ENEMIES[ev.boss]?.name ?? ev.title);
     const pool = game.enemies;
     if (pool.count >= pool.capacity) {
       // Make room: a boss must never fail to show up because the floor is full.

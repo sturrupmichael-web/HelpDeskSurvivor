@@ -4,6 +4,15 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-timeline',
+    date: 'Oct 21, 2026',
+    title: 'Shift timeline and vibration',
+    items: [
+      'The end-of-shift screen has a timeline: your sanity, tickets closed and damage over the whole shift, with each boss arrival marked. Tap or hover it to see any moment.',
+      'Android phones now buzz when you get hit, level up, open a chest, or a boss arrives or winds up an attack. Turn it off in Settings under Vibration.',
+    ],
+  },
+  {
     id: '2026-10-21-ux6',
     date: 'Oct 21, 2026',
     title: 'Easier to read',

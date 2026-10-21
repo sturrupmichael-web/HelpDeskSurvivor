@@ -34,6 +34,27 @@ export function simTests() {
     assert(r && r.won === false && r.map === 'office', 'no summary after burnout: ' + JSON.stringify(r));
   });
 
+  test('node: the shift timeline adds up and marks the boss', async () => {
+    const game = headlessGame(manifest, { pick: botPick, autopilot: botPilot, save: veteranSave() });
+    game.startShift('office');
+    game.player.god = true;
+    game.playShift(120);
+    game.time = 595;
+    game.timeline.next = 600;
+    game.playShift(615);
+    game.player.god = false;
+    game.player.hp = -1e9; // past any regen
+    game.player.revives = game.player.warranty = game.player.longWeekend = 0;
+    const r = game.playShift(620);
+    const tl = r.timeline;
+    const kills = tl.points.reduce((n, p) => n + p.kills, 0);
+    assert(kills === r.kills, `timeline has ${kills} tickets, the shift ${r.kills}`);
+    assert(tl.points.length >= 25, `only ${tl.points.length} samples`);
+    assert(tl.points.some((p) => p.dmg > 0), 'no damage recorded');
+    assert(tl.points.every((p) => p.hp >= 0 && p.hp <= 100), 'sanity out of range');
+    assert(tl.marks.some((m) => m.kind === 'boss' && m.t >= 595), 'boss arrival not marked: ' + JSON.stringify(tl.marks));
+  });
+
   test('node: the 10:00 boss turns up on every map', async () => {
     const game = headlessGame(manifest, { pick: botPick, autopilot: botPilot, save: veteranSave() });
     for (const map of Object.keys(MAPS)) {

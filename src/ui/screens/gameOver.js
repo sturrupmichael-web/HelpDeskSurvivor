@@ -10,6 +10,7 @@ import { BURNOUT_QUIPS, VICTORY_QUIPS } from '../../../data/flavor.js';
 import { pickLine, reviewCard, unlockName, PAY } from './common.js';
 import { POLICIES } from '../../../data/policies.js';
 import { fmtMult } from '../../game/policies.js';
+import { timelineChart, wireTimeline } from './timeline.js';
 
 // s: run stats from Game.endRun (plus pay, records, balance from Meta.finishShift).
 export function gameOver(scr, s) {
@@ -63,6 +64,7 @@ export function gameOver(scr, s) {
         </table>
         <div class="tools"><div class="tools-head">Damage by tool</div>${tools}</div>
       </div>
+      ${timelineChart(s.timeline)}
       ${s.review ? reviewCard(s) : ''}
       ${
         s.cheated
@@ -93,4 +95,5 @@ export function gameOver(scr, s) {
   );
   const post = s.cheated ? () => {} : boardPost(scr, s);
   scr.bind('.summary-buttons button', (i, el) => go(el.dataset.act));
+  wireTimeline(scr.root, s.timeline);
 }

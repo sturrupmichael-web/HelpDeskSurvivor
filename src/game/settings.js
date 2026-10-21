@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS = {
   stick: true, // on-screen touch joystick
   calm: false, // reduce flashing (starts on when the device asks for reduced motion)
   bigText: false, // larger menu and HUD text
+  vibrate: true, // phone vibration (where the browser supports it)
 };
 
 export function loadSettings() {

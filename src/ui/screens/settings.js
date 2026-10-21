@@ -7,6 +7,7 @@ import { VERSION } from '../../version.js';
 // Settings: volumes and comfort toggles. `back` returns to the screen that opened it.
 export function settings(scr, back) {
   const g = scr.game;
+  const canVibrate = typeof navigator.vibrate === 'function';
   const st = g.settings;
   const slider = (key, label) => `<div class="setting"><label for="set-${key}">${label}</label>
     <input type="range" id="set-${key}" data-key="${key}" min="0" max="100" step="5" value="${Math.round(st[key] * 100)}">
@@ -26,6 +27,7 @@ export function settings(scr, back) {
         ${toggle('stick', 'Touch joystick')}
         ${toggle('calm', 'Reduce flashing')}
         ${toggle('bigText', 'Larger text')}
+        ${canVibrate ? toggle('vibrate', 'Vibration') : ''}
       </div>
       <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
       <p class="tiny keys-only"><kbd>M</kbd> mutes everything at any time.</p>

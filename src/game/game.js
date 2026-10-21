@@ -14,6 +14,8 @@ import { EVOLUTIONS } from '../../data/evolutions.js';
 import { sfx, toggleMute, isMuted, startMusic, stopMusic, duckMusic, setVolumes, setMusicStyle, setListener } from '../engine/audio.js';
 import { drawTouchStick } from '../engine/input.js';
 import { loadSettings, saveSettings } from './settings.js';
+import { Timeline } from './timeline.js';
+import { setHaptics } from '../engine/haptics.js';
 import { Achievements } from './achievements.js';
 import { Floor } from './floor.js';
 import { createPlayer, updatePlayer, addXp } from './player.js';
@@ -106,6 +108,7 @@ export class Game {
     this.camera.enabled = s.shake;
     this.fx.showNumbers = s.numbers;
     this.fx.calm = s.calm;
+    setHaptics(s.vibrate);
     if (typeof document !== 'undefined') {
       document.documentElement.classList.toggle('calm', s.calm);
       document.documentElement.classList.toggle('big-text', s.bigText);
@@ -190,6 +193,7 @@ export class Game {
     this.achievements.startRun();
     this.cheated = this.debug.on;
     this.time = 0;
+    this.timeline = new Timeline();
     this.boss = null;
     this.bossParts.length = 0;
     this.bossPhase2 = false;
@@ -267,6 +271,7 @@ export class Game {
       tools: p.weapons
         .map((w) => ({ name: w.def.name, icon: w.def.icon, evolved: !!w.def.evolved, damage: Math.round(w.damageDone) }))
         .sort((a, b) => b.damage - a.damage),
+      timeline: this.timeline.result(this),
     };
     const wikiNew = recordWiki(this);
     const { pay, records, newMap, newUnlocks, newPolicies, policiesOpened } = this.meta.finishShift(stats);
@@ -290,6 +295,7 @@ export class Game {
     else if (weekend) p.longWeekend--;
     else p.revives--;
     this.achievements.run.revived = true;
+    this.timeline.mark(this, 'revive', 'Back from burnout');
     p.hp = p.maxHp * 0.5;
     p.invuln = 3;
     const pool = this.enemies;
@@ -503,6 +509,7 @@ export class Game {
     updateItems(this, dt); // may open the chest screen
     this.fx.update(dt);
     this.score.update(dt);
+    this.timeline.update(this);
     if (this.tutorial) this.tutorial.update(dt);
     else this.achievements.update(dt);
     this.camera.follow(p.x, p.y, dt);

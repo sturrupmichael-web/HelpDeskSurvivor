@@ -9,6 +9,7 @@
 // pushing the music around; the limiter is a ceiling so nothing ever clips.
 
 import { AUDIO } from '../../data/audio.js';
+import { buzz } from './haptics.js';
 
 const MUTE_KEY = 'helpdesk-survivors.muted';
 
@@ -363,6 +364,7 @@ const RECIPES = {
 // Plays a named sound if audio is running and the sound isn't throttled. Pass a world
 // `x` to place it left or right of the player.
 export function sfx(name, x) {
+  buzz(name);
   if (!ctx || muted || sfxLevel <= 0 || ctx.state !== 'running') return;
   const now = ctx.currentTime;
   const gap = THROTTLE[name];
