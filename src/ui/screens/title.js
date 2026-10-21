@@ -27,7 +27,7 @@ export function title(scr) {
     if (act === 'start') {
       // Brand-new players get offered the training shift once.
       if (!m.trained && !m.shifts && !m.offeredTraining) scr.trainingOffer();
-      else scr.shiftSetup();
+      else scr.clockIn();
     } else if (act === 'training') scr.game.startTutorial();
     else if (act === 'chars') scr.characters();
     else if (act === 'shop') scr.shop();

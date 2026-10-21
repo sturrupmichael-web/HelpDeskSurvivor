@@ -172,9 +172,9 @@ export class Meta {
   // Why a policy is locked, for its card.
   policyLockText(id) {
     const u = POLICIES[id].unlock;
-    if (MAPS[u]) return `Win a shift in the ${MAPS[u].name}`;
-    if (u === 'noEvolveWin') return 'Win a shift without evolving a tool';
-    return 'Locked';
+    if (MAPS[u]) return `win a shift in the ${MAPS[u].name}`;
+    if (u === 'noEvolveWin') return 'win a shift without evolving a tool';
+    return 'not available yet';
   }
 
   setPolicies(ids, reorg = false) {

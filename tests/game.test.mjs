@@ -163,6 +163,31 @@ export function gameTests(base, page) {
     await close();
   });
 
+  test(`${page}: Clock In skips steps with nothing to choose`, async () => {
+    const { page: p, errors, close } = await open();
+    const r = await p.evaluate(() => {
+      const g = window.game;
+      const s = g.screens;
+      const d = g.meta.data;
+      const step = () => s.root.querySelector('.setup-step')?.textContent ?? g.state;
+      g.setState('title');
+      s.clockIn(); // brand-new: one tech, one map, no policies yet
+      const fresh = g.state;
+      g.newRun();
+      g.setState('title');
+      d.shifts = 1;
+      s.clockIn(); // policies open: straight to them
+      const policies = step();
+      d.pay = 100000;
+      s.clockIn(); // can hire someone: the tech step is back
+      const hire = step();
+      return { fresh, policies, hire };
+    });
+    assert(r.fresh === 'run' && r.policies === 'STEP 1 OF 1' && r.hire === 'STEP 1 OF 2', 'steps not skipped right: ' + JSON.stringify(r));
+    noErrors(errors);
+    await close();
+  });
+
   test(`${page}: training shift runs`, async () => {
     const { page: p, errors, close } = await open();
     await p.evaluate(() => {

@@ -13,13 +13,34 @@ import { policiesStep } from './policies.js';
 // Clock In: pick a tech, then a map, then (once you've finished a shift) Shift Policies,
 // then confirm, all in one flow. Everything starts on the last shift's picks, which are
 // saved when the shift starts. Locked ones show why.
+// Clock In from the title or training: skips a step that has nothing to choose (one tech
+// and nothing affordable to hire, or one open map), so a brand-new player goes straight
+// to work. "Change Tech or Map" on the end-of-shift screen still shows every step.
+export function clockIn(scr) {
+  const meta = scr.game.meta;
+  const pick = { char: meta.data.selected, map: meta.data.map, policies: [...meta.data.policies], reorg: meta.data.reorg, skipped: {} };
+  const chars = Object.keys(CHARACTERS);
+  const hireable = (id) => !meta.isUnlocked(id) && meta.itemUnlocked('characters', id) && meta.data.pay >= CHARACTERS[id].cost;
+  pick.skipped.char = chars.filter((id) => meta.isUnlocked(id)).length === 1 && !chars.some(hireable);
+  pick.skipped.map = MAP_ORDER.filter((id) => meta.mapUnlocked(id)).length === 1;
+  if (!pick.skipped.char) return shiftSetup(scr, 'char', pick);
+  if (!pick.skipped.map) return shiftSetup(scr, 'map', pick);
+  if (meta.policiesOpen()) return shiftSetup(scr, 'policies', pick);
+  sfx('click');
+  meta.select(pick.char);
+  meta.selectMap(pick.map);
+  scr.game.newRun();
+}
+
 export function shiftSetup(scr, step = 'char', pick) {
   const g = scr.game;
   const meta = g.meta;
   pick ??= { char: meta.data.selected, map: meta.data.map, policies: [...meta.data.policies], reorg: meta.data.reorg };
   if (step === 'policies') return policiesStep(scr, pick);
   const withPolicies = meta.policiesOpen();
-  const steps = withPolicies ? 3 : 2;
+  const skipped = pick.skipped ?? {};
+  const steps = (withPolicies ? 3 : 2) - (skipped.char ? 1 : 0) - (skipped.map ? 1 : 0);
+  const stepNo = isCharStep(step) ? 1 : skipped.char ? 1 : 2;
   const chars = Object.keys(CHARACTERS);
   const isChar = step === 'char';
   const ids = isChar ? chars : MAP_ORDER;
@@ -27,7 +48,7 @@ export function shiftSetup(scr, step = 'char', pick) {
   const again = () => scr.shiftSetup(step, pick);
   const next = () => {
     sfx('click');
-    if (isChar) return scr.shiftSetup('map', pick);
+    if (isChar && !skipped.map) return scr.shiftSetup('map', pick);
     if (withPolicies) return scr.shiftSetup('policies', pick);
     meta.select(pick.char);
     meta.selectMap(pick.map);
@@ -35,7 +56,7 @@ export function shiftSetup(scr, step = 'char', pick) {
   };
   const back = () => {
     sfx('click');
-    if (isChar) scr.title();
+    if (isChar || skipped.char) scr.title();
     else scr.shiftSetup('char', pick);
   };
   // Tapping the highlighted card again moves on, so a double tap (or A twice) is enough.
@@ -72,7 +93,7 @@ export function shiftSetup(scr, step = 'char', pick) {
           ? `Locked: win a shift in the ${MAPS[meta.unlockedBy('characters', id)].name}`
           : afford
             ? `Hire for ${PAY(c.cost)}`
-            : `Locked: ${PAY(c.cost)}`;
+            : `Need ${PAY(c.cost)}`;
     return `<button class="card char ${pick.char === id ? 'selected' : ''} ${unlocked ? '' : 'locked'}" data-i="${i}" ${!unlocked && !afford ? 'disabled' : ''}>
       <div class="card-head"><canvas data-spr="${c.sprite}" width="64" height="64"></canvas>
         <div class="card-name">${c.name}</div><kbd>${i + 1}</kbd></div>
@@ -98,18 +119,20 @@ export function shiftSetup(scr, step = 'char', pick) {
   const tech = CHARACTERS[pick.char];
   scr.show(
     `<div class="panel wide chars setup">
-      <p class="setup-step">STEP ${isChar ? 1 : 2} OF ${steps}</p>
+      <p class="setup-step">STEP ${stepNo} OF ${steps}</p>
       <h2>${isChar ? 'PICK YOUR TECH' : 'PICK YOUR MAP'}</h2>
       ${
         isChar
           ? `<p class="sub">Overtime Pay: ${PAY(meta.data.pay)}</p>`
-          : `<button class="setup-tech" data-act="back"><canvas data-spr="${tech.sprite}" width="64" height="64"></canvas>
+          : skipped.char
+            ? ''
+            : `<button class="setup-tech" data-act="back"><canvas data-spr="${tech.sprite}" width="64" height="64"></canvas>
               <span><b>${tech.name}</b><small>Change tech</small></span></button>`
       }
       <div class="cards">${ids.map(isChar ? charCard : mapCard).join('')}</div>
       <div class="setup-bar">
-        <button data-act="back">${isChar ? 'Cancel' : 'Back'} <kbd>Esc</kbd></button>
-        <button class="primary" data-act="next">${isChar ? 'Next: Map' : withPolicies ? 'Next: Policies' : `Clock In: ${MAPS[pick.map].name}`} <kbd>Enter</kbd></button>
+        <button data-act="back">${isChar || skipped.char ? 'Cancel' : 'Back'} <kbd>Esc</kbd></button>
+        <button class="primary" data-act="next">${isChar && !skipped.map ? 'Next: Map' : withPolicies ? 'Next: Policies' : `Clock In: ${MAPS[pick.map].name}`} <kbd>Enter</kbd></button>
       </div>
     </div>`,
     (code) => {
@@ -130,3 +153,5 @@ export function shiftSetup(scr, step = 'char', pick) {
   picked?.scrollIntoView({ block: 'nearest' });
   if (gamepadConnected()) picked?.focus();
 }
+
+const isCharStep = (step) => step === 'char';

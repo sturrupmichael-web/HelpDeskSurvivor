@@ -10,7 +10,7 @@ import { title } from './screens/title.js';
 import { trainingOffer, trainingDone } from './screens/training.js';
 import { settings } from './screens/settings.js';
 import { achievementsScreen, stats } from './screens/achievements.js';
-import { shiftSetup } from './screens/shiftSetup.js';
+import { shiftSetup, clockIn } from './screens/shiftSetup.js';
 import { leaderboard } from './screens/leaderboard.js';
 import { maps } from './screens/maps.js';
 import { characters } from './screens/characters.js';
@@ -115,6 +115,10 @@ export class Screens {
 
   stats() {
     return stats(this);
+  }
+
+  clockIn() {
+    return clockIn(this);
   }
 
   shiftSetup(step = 'char', pick) {

@@ -55,10 +55,15 @@ export function policiesStep(scr, pick) {
     meta.setPolicies(pick.policies, pick.reorg);
     g.newRun();
   };
+  // Steps that Clock In skipped (nothing to choose) are skipped on the way back too.
+  const skipped = pick.skipped ?? {};
   const back = () => {
     sfx('click');
-    scr.shiftSetup('map', pick);
+    if (!skipped.map) scr.shiftSetup('map', pick);
+    else if (!skipped.char) scr.shiftSetup('char', pick);
+    else scr.title();
   };
+  const stepNo = 3 - (skipped.char ? 1 : 0) - (skipped.map ? 1 : 0);
 
   const card = (id) => {
     const p = POLICIES[id];
@@ -92,7 +97,7 @@ export function policiesStep(scr, pick) {
     : 'No policies: a normal shift.';
   scr.show(
     `<div class="panel wide chars setup">
-      <p class="setup-step">STEP 3 OF 3</p>
+      <p class="setup-step">STEP ${stepNo} OF ${stepNo}</p>
       <h2>SHIFT POLICIES</h2>
       <p class="sub">Optional. Up to ${POLICY_RULES.maxPicked}. Bad policies raise your Overtime Pay and leaderboard score, perks lower them.</p>
       <div class="pol-summary"><span>${summary}</span><b class="pol-total ${mult > 1 ? 'up' : mult < 1 ? 'down' : ''}">Pay and score ${fmtMult(mult)}</b></div>
@@ -102,7 +107,7 @@ export function policiesStep(scr, pick) {
       </div>
       ${groups}
       <div class="setup-bar">
-        <button data-act="back">Back <kbd>Esc</kbd></button>
+        <button data-act="back">${stepNo === 1 ? 'Cancel' : 'Back'} <kbd>Esc</kbd></button>
         <button class="primary" data-act="next">Clock In: ${MAPS[pick.map].name} <kbd>Enter</kbd></button>
       </div>
     </div>`,

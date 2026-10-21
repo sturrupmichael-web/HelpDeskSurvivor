@@ -33,7 +33,7 @@ export function characters(scr) {
           ? `Locked: win a shift in the ${MAPS[meta.unlockedBy('characters', id)].name}`
           : afford
             ? `Hire for ${PAY(c.cost)}`
-            : `Locked: ${PAY(c.cost)}`;
+            : `Need ${PAY(c.cost)}`;
     return `<button class="card char ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}" data-i="${i}" ${!unlocked && !afford ? 'disabled' : ''}>
       <div class="card-head"><canvas data-spr="${c.sprite}" width="64" height="64"></canvas>
         <div class="card-name">${c.name}</div><kbd>${i + 1}</kbd></div>

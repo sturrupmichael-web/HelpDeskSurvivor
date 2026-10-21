@@ -11,7 +11,7 @@ export function trainingOffer(scr) {
   const go = (act) => {
     sfx('click');
     if (act === 'training') scr.game.startTutorial();
-    else scr.shiftSetup();
+    else scr.clockIn();
   };
   scr.show(
     `<div class="panel training">
@@ -40,7 +40,7 @@ export function trainingDone(scr) {
     // Reset the floor behind the menu (training ran on the Office).
     scr.game.newRun();
     scr.game.setState('title');
-    if (act === 'start') scr.shiftSetup();
+    if (act === 'start') scr.clockIn();
     else scr.title();
   };
   scr.show(

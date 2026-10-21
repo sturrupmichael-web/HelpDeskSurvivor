@@ -4,6 +4,16 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-ux2',
+    date: 'Oct 21, 2026',
+    title: 'Quicker Clock In',
+    items: [
+      'Clock In now skips any step with nothing to pick. Until you can hire a second tech or open a second map, it takes you straight to work (or straight to Shift Policies).',
+      'Techs you can\'t afford yet say "Need $300" instead of "Locked", and lock notes are worded the same way everywhere.',
+      'Fixed two messages that said "scr" instead of "this".',
+    ],
+  },
+  {
     id: '2026-10-21-ux1',
     date: 'Oct 21, 2026',
     title: 'Fewer lost shifts',

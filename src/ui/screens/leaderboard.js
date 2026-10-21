@@ -66,7 +66,7 @@ export function leaderboard(scr, mapId = this.game.meta.data.map) {
   topScores(mapId, cleanOnly).then((r) => {
     if (scr.root.querySelector('.board-body') !== body) return; // screen changed meanwhile
     if (!r.ok) body.innerHTML = '<p class="board-msg">Couldn\'t reach the leaderboard. Check your connection and try again.</p>';
-    else if (!r.rows.length) body.innerHTML = '<p class="board-msg">No scores on scr map yet. Be the first.</p>';
+    else if (!r.rows.length) body.innerHTML = '<p class="board-msg">No scores on this map yet. Be the first.</p>';
     else
       body.innerHTML = `<table class="stats board-table">
         <tr class="head"><td>#</td><td>Name</td><td>Technician</td><td>Time</td><td>Policies</td><td>Score</td></tr>

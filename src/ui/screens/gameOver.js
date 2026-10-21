@@ -66,7 +66,7 @@ export function gameOver(scr, s) {
       ${s.review ? reviewCard(s) : ''}
       ${
         s.cheated
-          ? '<p class="board-note">Debug mode was on scr shift, so it can\'t go on the leaderboard.</p>'
+          ? '<p class="board-note">Debug mode was on this shift, so it can\'t go on the leaderboard.</p>'
           : '<div class="board-post"></div>'
       }
       <div class="summary-buttons">
