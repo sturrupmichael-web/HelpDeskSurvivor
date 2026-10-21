@@ -226,3 +226,7 @@ current `manifest.json` for the full list):
 10. **Installable app:** add to the home screen, runs full screen and offline.
 11. **Help Desk Wiki:** a codex of users, bosses, tools and passives that fills in as you play.
 12. **Performance review:** a funny HR review of every shift on the end-of-shift screen.
+13. **More tools (ideas 32-46):** Reply-All Storm, Zip Ties, Password Expired, Screen Share
+    and Rubber Duck; the Spare Charger, Extended Warranty, Snack Drawer and Lucky Lanyard
+    passives; and six more evolutions (Confluence Space, Passwordless, Domain Lockdown,
+    Remote Wipe, Sabbatical, SIEM).

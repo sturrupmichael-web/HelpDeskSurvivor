@@ -17,13 +17,13 @@ export function createProjectilePool() {
     x: 0, y: 0, vx: 0, vy: 0, speed: 0, r: 5,
     damage: 0, knockback: 0, pierce: 0, life: 0, age: 0,
     target: null, targetUid: 0, turn: 0, decel: 0, returning: false,
-    rot: 0, spin: 0,
+    rot: 0, spin: 0, curl: 0,
     hits: new Int32Array(MAX_HITS), hitCount: 0, dead: false,
   }));
 }
 
 // Spawns a projectile. `o` holds: kind, spr, speed, damage, knockback, pierce, life,
-// r, turn, decel, spin, target. Returns it (or null if the pool is full).
+// r, turn, decel, spin, curl (outbound boomerangs bend by this many rad/s), target. Returns it (or null if the pool is full).
 export function fireProjectile(game, weapon, x, y, dirX, dirY, o) {
   const p = game.projectiles.spawn();
   if (!p) return null;
@@ -49,6 +49,7 @@ export function fireProjectile(game, weapon, x, y, dirX, dirY, o) {
   p.returning = false;
   p.rot = 0;
   p.spin = o.spin ?? 0;
+  p.curl = o.curl ?? 0;
   p.hitCount = 0;
   p.dead = false;
   return p;
@@ -95,8 +96,17 @@ export function updateProjectiles(game, dt) {
           p.returning = true;
           p.hitCount = 0;
         } else {
-          p.vx *= ns / s;
-          p.vy *= ns / s;
+          const f = ns / s;
+          if (p.curl) {
+            // Bend the throw: rotate the velocity a little each tick.
+            const c = Math.cos(p.curl * dt);
+            const sn = Math.sin(p.curl * dt);
+            const vx = p.vx * c - p.vy * sn;
+            p.vy = p.vx * sn + p.vy * c;
+            p.vx = vx;
+          }
+          p.vx *= f;
+          p.vy *= f;
         }
       }
       if (p.returning) {

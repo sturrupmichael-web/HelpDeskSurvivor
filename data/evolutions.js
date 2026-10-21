@@ -10,4 +10,10 @@ export const EVOLUTIONS = {
   patchCable: { passive: 'secondMonitor', into: 'fiberBackbone' },
   delegate: { passive: 'itil', into: 'outsourcedTeam' },
   coffeeRun: { passive: 'coldBrew', into: 'espresso' },
+  kbArticle: { passive: 'mechKeyboard', into: 'confluence' },
+  mfa: { passive: 'spareCharger', into: 'passwordless' },
+  groupPolicy: { passive: 'standingDesk', into: 'domainLockdown' },
+  rdp: { passive: 'queueFilter', into: 'remoteWipe' },
+  outOfOffice: { passive: 'warranty', into: 'sabbatical' },
+  pingSweep: { passive: 'runbook', into: 'siem' },
 };

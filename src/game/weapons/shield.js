@@ -1,9 +1,11 @@
 // "Shield" behavior: every `cooldown` seconds a bubble pops up around you for
 // `duration` seconds. Users touching it take damage and get shoved out; boss bullets
-// that reach it bounce off and vanish. Used by: Out-of-Office Reply.
-// stats: cooldown, duration, radius, damage, knockback
+// that reach it bounce off and vanish. Used by: Out-of-Office Reply, Sabbatical
+// (evolved: boss bullets are sent back as homing replies for `reflect` damage each).
+// stats: cooldown, duration, radius, damage, knockback, reflect
 
-import { damageEnemy } from '../enemies.js';
+import { damageEnemy, nearestEnemy } from '../enemies.js';
+import { fireProjectile } from '../projectiles.js';
 import { sfx } from '../../engine/audio.js';
 
 const HIT_EVERY = 0.25;
@@ -43,6 +45,14 @@ export default {
       const b = bl.items[i];
       if ((b.x - p.x) ** 2 + (b.y - p.y) ** 2 > radius * radius) continue;
       game.fx.burst(b.x, b.y, ['#73eff7', '#f4f4f4'], 4);
+      if (s.reflect) {
+        // Return to sender: an auto-reply that homes in on the boss (or whoever's nearest).
+        const t = game.bossAlive() ? game.boss : nearestEnemy(game, b.x, b.y, 300);
+        fireProjectile(game, w, b.x, b.y, t ? t.x - b.x : b.x - p.x, t ? t.y - b.y : b.y - p.y, {
+          kind: 'homing', spr: w.def.sprite, speed: 260, damage: s.reflect * p.stats.damage,
+          pierce: 0, life: 3, turn: 8, target: t, r: 6, knockback: 60,
+        });
+      }
       bl.removeAt(i);
     }
   },

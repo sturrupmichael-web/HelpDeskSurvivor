@@ -33,9 +33,10 @@ const THROTTLE = {
   hit: 0.05, bosshit: 0.07, pop: 0.035, ticket: 0.04, hurt: 0.3, pulse: 0.1, boom: 0.08, ring: 0.3, whoosh: 0.15,
   shoot: 0.06, zap: 0.08, launch: 0.1, throw: 0.1, blip: 0.06, snap: 0.1, warn: 0.15, hum: 0.5, bubble: 0.3,
   ping: 0.3, deploy: 0.15, charge: 0.3, slosh: 0.3, scream: 0.5, heartbeat: 0.4,
+  mail: 0.2, ziptie: 0.2, error: 0.2, projector: 0.5, quack: 0.3,
 };
 // Random pitch spread (cents) so repeated sounds don't machine-gun.
-const VARY = { hit: 120, bosshit: 80, pop: 150, ticket: 60, shoot: 100, zap: 150, throw: 120, blip: 80, snap: 100, boom: 80, whoosh: 100 };
+const VARY = { quack: 120, mail: 80, ziptie: 120, hit: 120, bosshit: 80, pop: 150, ticket: 60, shoot: 100, zap: 150, throw: 120, blip: 80, snap: 100, boom: 80, whoosh: 100 };
 // Never dropped by the voice limiter.
 const PRIORITY = new Set(['levelup', 'chest', 'evolve', 'hurt', 'alarm', 'siren', 'victory', 'burnout', 'click', 'warn', 'heartbeat', 'heal', 'pto', 'bulk', 'wipe']);
 const MAX_PER_WINDOW = 7;
@@ -301,6 +302,30 @@ const RECIPES = {
   snap: (t, o) => {
     hiss('highpass', 2500, 6500, t, 0.05, 0.45, o);
     tone('square', 1800, 380, t, 0.045, 0.08, o);
+  },
+  // Reply-All Storm: the new-mail chime, times everyone.
+  mail: (t, o) => {
+    arp('sine', [1175, 1568], 0.07, 0.12, 0.16, o, t);
+    hiss('bandpass', 1500, 4000, t, 0.12, 0.1, o);
+  },
+  // Zip Ties: the ratchet zipping shut.
+  ziptie: (t, o) => {
+    for (let i = 0; i < 6; i++) tone('square', 2400 - i * 120, 2000 - i * 120, t + i * 0.018, 0.012, 0.06, o);
+  },
+  // Password Expired: the "that didn't work" dud.
+  error: (t, o) => {
+    tone('square', 330, 330, t, 0.09, 0.1, o);
+    tone('square', 247, 240, t + 0.1, 0.16, 0.1, o);
+  },
+  // Screen Share: the projector fan whirs up.
+  projector: (t, o) => {
+    tone('sawtooth', 90, 150, t, 0.4, 0.05, o);
+    hiss('bandpass', 600, 1600, t, 0.35, 0.12, o);
+  },
+  // Rubber Duck: a squeaky quack.
+  quack: (t, o) => {
+    tone('sawtooth', 620, 420, t, 0.09, 0.12, o);
+    tone('square', 900, 560, t + 0.01, 0.07, 0.05, o);
   },
 
   // --- Bosses ---

@@ -1,5 +1,7 @@
 // "Boomerang" behavior: throws spinning projectiles that pierce everything, slow
-// down, and fly back to the player. Used by: KB Article.
+// down, and fly back to the player. Used by: KB Article, Confluence Space (evolved: the
+// def's `ring: true` throws them evenly all the way round, and `curl` bends each
+// throw into a spiral, in rad/s).
 // stats: damage, cooldown, count, speed, range, knockback
 
 import { fireProjectile } from '../projectiles.js';
@@ -19,10 +21,10 @@ export default {
     const range = s.range * p.stats.area;
     const count = s.count + (p.extraCount ?? 0);
     for (let i = 0; i < count; i++) {
-      const a = base + (i - (count - 1) / 2) * 0.55;
+      const a = w.def.ring ? base + (i / count) * Math.PI * 2 : base + (i - (count - 1) / 2) * 0.55;
       fireProjectile(game, w, p.x, p.y - 4, Math.cos(a), Math.sin(a), {
         kind: 'boomerang', spr: w.def.sprite, speed, damage: s.damage * p.stats.damage,
-        pierce: 999, life: 6, knockback: s.knockback, r: 7, spin: 10,
+        pierce: 999, life: 6, knockback: s.knockback, r: 7, spin: 10, curl: w.def.curl,
         decel: (speed * speed) / (2 * range), // stops after `range` px, then returns
       });
     }

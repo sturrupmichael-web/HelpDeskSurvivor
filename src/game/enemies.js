@@ -24,6 +24,8 @@ export function makeEnemy() {
     slow: 1, // speed multiplier from slows; reset every tick, set by weapons
     buff: 1, // speed multiplier from VIP auras; reset every tick
     stun: 0, life: -1,
+    confuse: 0, // seconds left walking the wrong way (Password Expired)
+    mark: 0, markAmp: 0, // seconds left flagged, and the extra damage it takes meanwhile (Rubber Duck, SIEM)
     flash: 0, animT: 0, flip: false, dead: false, noSep: false,
     t0: 0, t1: 0, // scratch timers for behaviors
     anim: 'walk', pose: -1, state: 0, stateT: 0, phase: 0, ax: 0, ay: 0, n: 0, // boss attack state
@@ -55,6 +57,7 @@ export function spawnEnemy(game, id, x, y, hpMult = 1, speedMult = 1, behaviorId
   e.kbMul = def.knockback;
   e.slow = e.buff = 1;
   e.stun = 0;
+  e.confuse = e.mark = e.markAmp = 0;
   e.life = -1;
   e.flash = 0;
   e.animT = Math.random();
@@ -80,8 +83,17 @@ export function updateEnemies(game, dt) {
       e.dead = true;
       continue;
     }
+    if (e.mark > 0) e.mark -= dt;
     if (e.stun > 0) e.stun -= dt;
-    else e.behavior.update(e, game, dt);
+    else if (e.confuse > 0) {
+      // Confused: whatever step the behavior takes, take it backwards instead.
+      e.confuse -= dt;
+      const x0 = e.x;
+      const y0 = e.y;
+      e.behavior.update(e, game, dt);
+      e.x = x0 - (e.x - x0);
+      e.y = y0 - (e.y - y0);
+    } else e.behavior.update(e, game, dt);
     e.x += e.kx * dt;
     e.y += e.ky * dt;
     e.kx *= damp;
@@ -155,6 +167,7 @@ export function damageEnemy(game, e, amount, weapon, dx, dy, knockback) {
   if (e.dead) return;
   if (weapon && e.def.resist) for (const tag of weapon.def.tags) amount *= e.def.resist[tag] ?? 1;
   if (weapon?.def.bossDamage && e.def.boss) amount *= weapon.def.bossDamage;
+  if (e.mark > 0) amount *= 1 + e.markAmp;
   e.hp -= amount;
   // Bosses take hits constantly; flash them in short blinks so their art stays readable.
   if (!e.heavy) e.flash = 0.12;
@@ -167,7 +180,7 @@ export function damageEnemy(game, e, amount, weapon, dx, dy, knockback) {
     e.kx += (dx / d) * knockback * e.kbMul;
     e.ky += (dy / d) * knockback * e.kbMul;
   }
-  if (e.hp <= 0) killEnemy(game, e);
+  if (e.hp <= 0) killEnemy(game, e, weapon);
 }
 
 // Stuns an enemy for `seconds`, scaled down by its stunResist (bosses barely flinch).
@@ -176,9 +189,25 @@ export function stunEnemy(e, seconds) {
   if (t > e.stun) e.stun = t;
 }
 
-export function killEnemy(game, e) {
+// Confuses an enemy: it walks the wrong way for `seconds` (bosses shake it off like a stun).
+export function confuseEnemy(e, seconds) {
+  const t = seconds * (e.def.stunResist ?? 1);
+  if (t > e.confuse) e.confuse = t;
+}
+
+// Flags an enemy: for `seconds` it takes `amp` extra damage (0.25 = +25%) from everything.
+export function markEnemy(e, seconds, amp) {
+  if (e.mark <= 0 || amp > e.markAmp) e.markAmp = amp;
+  if (seconds > e.mark) e.mark = seconds;
+}
+
+// `weapon` is the tool that closed it, if any (Remote Wipe pulls the ticket straight to you).
+export function killEnemy(game, e, weapon) {
   e.dead = true;
-  if (e.xp > 0) dropTicket(game, e.x, e.y, e.xp);
+  if (e.xp > 0) {
+    const t = dropTicket(game, e.x, e.y, e.xp);
+    if (weapon?.def.vacuum) t.magnet = true;
+  }
   game.fx.burst(e.x, e.y - 6, e.def.particle, 6);
   game.score.onKill();
   game.achievements.onKill(e.def.sprite);
@@ -262,6 +291,22 @@ export function drawEnemies(game, ctx, shadowImg, left, top, right, bottom) {
       ctx.fillStyle = (e.animT * 8) & 1 ? '#ffcd75' : '#f4f4f4';
       ctx.fillRect(Math.round(e.x - 3), Math.round(fy - spr.h - 2), 2, 2);
       ctx.fillRect(Math.round(e.x + 2), Math.round(fy - spr.h - 4), 2, 2);
+    }
+    if (e.confuse > 0 && e.stun <= 0) {
+      // A "?" bobbing over a user who forgot their new password.
+      const qx = Math.round(e.x + 4);
+      const qy = Math.round(fy - spr.h - 6 + Math.sin(e.animT * 6));
+      ctx.fillStyle = '#7a4ea0';
+      ctx.fillRect(qx, qy, 3, 1);
+      ctx.fillRect(qx + 2, qy + 1, 1, 1);
+      ctx.fillRect(qx + 1, qy + 2, 1, 1);
+      ctx.fillRect(qx + 1, qy + 4, 1, 1);
+    }
+    if (e.mark > 0) {
+      // Flagged by the duck or the SIEM: a little orange tag.
+      ctx.fillStyle = '#ef7d57';
+      ctx.fillRect(Math.round(e.x - 6), Math.round(fy - spr.h - 3), 1, 4);
+      ctx.fillRect(Math.round(e.x - 5), Math.round(fy - spr.h - 3), 3, 2);
     }
     if (e.def.elite) {
       const w = 24;

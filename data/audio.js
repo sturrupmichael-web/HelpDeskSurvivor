@@ -11,6 +11,6 @@ export const AUDIO = {
     hit: 0.5, pop: 0.6, ticket: 0.5, levelup: 1, chest: 1, evolve: 1, hurt: 0.8, alarm: 0.9, siren: 1,
     boom: 0.5, heal: 0.8, pto: 0.8, bulk: 0.8, pulse: 0.2, ring: 0.7, whoosh: 0.7, victory: 1, burnout: 1, click: 0.5,
     bosshit: 0.6, shoot: 0.35, zap: 1.1, launch: 0.4, throw: 1, wipe: 0.35, deploy: 0.5, blip: 1, hum: 0.5,
-    ping: 0.5, bubble: 0.5, snap: 0.45, warn: 1, charge: 0.8, slosh: 0.7, scream: 0.7, heartbeat: 0.28,
+    ping: 0.5, bubble: 0.5, snap: 0.45, mail: 0.5, ziptie: 0.6, error: 0.6, projector: 0.6, quack: 0.6, warn: 1, charge: 0.8, slosh: 0.7, scream: 0.7, heartbeat: 0.28,
   },
 };

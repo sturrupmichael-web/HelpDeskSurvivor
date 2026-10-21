@@ -4,6 +4,16 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-tools',
+    date: 'Oct 21, 2026',
+    title: '5 new tools, 4 passives, 6 evolutions',
+    items: [
+      'New tools: Reply-All Storm (a ring of emails), Zip Ties (traps that tie users down), Password Expired (users wander off confused), Screen Share (a projector beam the way you face) and Rubber Duck (users it quacks at take extra damage).',
+      'New passives: Spare Charger (+1 projectile on your tools), Extended Warranty (survive one burnout), Snack Drawer (sanity regen) and Lucky Lanyard (more drops, rarer cards, bigger chests).',
+      'Six tools can now evolve: KB Article into Confluence Space, MFA Prompt into Passwordless, Group Policy Push into Domain Lockdown, Remote Desktop into Remote Wipe, Out-of-Office Reply into Sabbatical and Ping Sweep into SIEM. The Help Desk Wiki says which passive each one needs.',
+    ],
+  },
+  {
     id: '2026-10-20-training',
     date: 'Oct 20, 2026',
     title: 'Training Shift',

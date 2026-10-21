@@ -235,10 +235,13 @@ export class Game {
     this.screens.gameOver({ ...stats, pay, records, newMap, wikiNew, review, balance: this.meta.data.pay });
   }
 
-  // Union Rep (shop): come back from burnout once per revive, clearing some space.
+  // Extended Warranty (passive) or Union Rep (shop): come back from burnout, clearing
+  // some space. The warranty is claimed first.
   revive() {
     const p = this.player;
-    p.revives--;
+    const warranty = p.warranty > 0;
+    if (warranty) p.warranty--;
+    else p.revives--;
     this.achievements.run.revived = true;
     p.hp = p.maxHp * 0.5;
     p.invuln = 3;
@@ -255,7 +258,8 @@ export class Game {
     }
     this.fx.ring(p.x, p.y, 160, '#ffcd75', 0.6, true);
     this.camera.shake(6);
-    this.hud.banner('UNION REP INTERVENED', 'Mandatory 15-minute break. You are back, at half sanity.', 3);
+    if (warranty) this.hud.banner('WARRANTY CLAIM APPROVED', 'Covered under your Extended Warranty. Back at half sanity.', 3);
+    else this.hud.banner('UNION REP INTERVENED', 'Mandatory 15-minute break. You are back, at half sanity.', 3);
     sfx('pto');
   }
 
@@ -452,7 +456,7 @@ export class Game {
       sfx('heartbeat');
     }
 
-    if (p.hp <= 0 && p.revives > 0) this.revive();
+    if (p.hp <= 0 && (p.warranty > 0 || p.revives > 0)) this.revive();
     else if (p.hp <= 0) this.endRun(false);
     else if (this.victoryT > 0 && (this.victoryT -= dt) <= 0) this.endRun(true);
     else if (this.state === 'run' && p.pendingLevels > 0) this.openLevelUp();

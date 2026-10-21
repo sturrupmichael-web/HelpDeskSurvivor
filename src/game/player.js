@@ -24,11 +24,14 @@ export function createPlayer(def, sprite, meta) {
     hp: maxHp,
     maxHp,
     baseMaxHp: maxHp, // before the Standing Desk passive
-    extraCount: def.extraCount ?? 0, // extra projectiles / shields / helpers on every tool
+    extraCount: def.extraCount ?? 0, // extra projectiles / shields / helpers on every tool (+ Spare Charger)
+    baseExtraCount: def.extraCount ?? 0,
     summonDamage: 1 + (def.summonBonus ?? 0), // damage multiplier for turrets and helpers
-    regen: def.regen + (meta ? meta.bonus('regen') : 0), // sanity per second
+    regen: def.regen + (meta ? meta.bonus('regen') : 0), // sanity per second (+ Snack Drawer)
+    baseRegen: def.regen + (meta ? meta.bonus('regen') : 0),
     rerolls: meta ? meta.bonus('rerolls') : 0, // level-up rerolls left this shift
     revives: meta ? meta.bonus('revives') : 0, // Union Rep comebacks left this shift
+    warranty: 0, // Extended Warranty comebacks left this shift
     bonus,
     flip: false,
     moving: false,
@@ -50,7 +53,7 @@ export function createPlayer(def, sprite, meta) {
     weapons: [], // weapon instances (see weapons/index.js)
     passives: {}, // passive id -> level
     // Stat multipliers, recomputed whenever passives change.
-    stats: { moveSpeed: 1, attackSpeed: 1, area: 1, damage: 1, growth: 1, damageTaken: 1, cooldown: 1, pickupRadius: 1, maxHp: 1 },
+    stats: { moveSpeed: 1, attackSpeed: 1, area: 1, damage: 1, growth: 1, damageTaken: 1, cooldown: 1, pickupRadius: 1, maxHp: 1, luck: 1 },
   };
   recomputeStats(p);
   return p;
@@ -63,9 +66,12 @@ export function xpForLevel(level) {
 
 export function recomputeStats(p) {
   for (const k in p.stats) p.stats[k] = 1 + (p.bonus[k] ?? 0);
+  p.extraCount = p.baseExtraCount;
+  p.regen = p.baseRegen;
   for (const [id, lvl] of Object.entries(p.passives)) {
     const d = PASSIVES[id];
-    p.stats[d.stat] += d.perLevel * lvl;
+    if (d.stat) p.stats[d.stat] += d.perLevel * lvl;
+    if (d.add) p[d.add] += d.perLevel * lvl; // flat: extraCount (Spare Charger), regen (Snack Drawer)
   }
   p.stats.cooldown = Math.max(0.2, p.stats.cooldown);
   // Max sanity scales with the Standing Desk passive; the extra sanity arrives filled.
