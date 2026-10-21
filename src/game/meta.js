@@ -7,6 +7,8 @@ import { CHARACTERS } from '../../data/player.js';
 import { MAPS } from '../../data/maps.js';
 import { PREVIEW } from '../version.js';
 import { UNLOCKS } from '../../data/unlocks.js';
+import { POLICIES, POLICY_ORDER } from '../../data/policies.js';
+import { cleanPolicies } from './policies.js';
 
 const KEY = 'helpdesk-survivors.save.v1';
 
@@ -33,6 +35,10 @@ function fresh() {
     map: 'office', // selected map
     mapsWon: [], // maps with at least one won shift (each unlocks the next)
     mapBest: {}, // map id -> { time, tickets, wins }
+    policies: [], // Shift Policies picked for the next shift (data/policies.js)
+    reorg: false, // those picks came from the dice button (and keep its bonus)
+    policiesWon: [], // policies you've won a shift with (stamps in the wiki)
+    policyUnlocks: [], // policies unlocked by a feat rather than a map win (Change Freeze)
   };
 }
 
@@ -148,13 +154,43 @@ export class Meta {
     return true;
   }
 
-  // Ends a shift on map `s.map`: pays out (with the map's pay bonus), updates records
-  // and unlocks. Returns { pay, records: [names of new records], newMap: id or null,
-  // newUnlocks: [{ kind, id }] added by this map's first win }.
+  // --- Shift Policies (data/policies.js) ---
+  // The Policies step shows up once you've finished a shift (and always in preview builds).
+  policiesOpen() {
+    return PREVIEW || this.data.shifts > 0;
+  }
+
+  // Can this policy be picked? `real` ignores the preview's open-everything rule.
+  policyUnlocked(id, real = false) {
+    const u = POLICIES[id]?.unlock;
+    if (!POLICIES[id]) return false;
+    if (!u || (PREVIEW && !real)) return true;
+    if (MAPS[u]) return this.data.mapsWon.includes(u);
+    return this.data.policyUnlocks.includes(id);
+  }
+
+  // Why a policy is locked, for its card.
+  policyLockText(id) {
+    const u = POLICIES[id].unlock;
+    if (MAPS[u]) return `Win a shift in the ${MAPS[u].name}`;
+    if (u === 'noEvolveWin') return 'Win a shift without evolving a tool';
+    return 'Locked';
+  }
+
+  setPolicies(ids, reorg = false) {
+    this.data.policies = cleanPolicies(ids).filter((id) => this.policyUnlocked(id));
+    this.data.reorg = reorg && this.data.policies.length > 0;
+    this.save();
+  }
+
+  // Ends a shift on map `s.map`: pays out (with the map's pay bonus and the policies'
+  // multiplier), updates records and unlocks. Returns { pay, records: [names of new
+  // records], newMap: id or null, newUnlocks: [{ kind, id }] added by this map's first
+  // win, newPolicies: [policy ids unlocked], policiesOpened: first shift done }.
   finishShift(s) {
     const map = MAPS[s.map] ?? MAPS.office;
     const pay = Math.floor(
-      ((s.time / 60) * PAYOUT.perMinute + s.kills * PAYOUT.perKill + s.csat * PAYOUT.perCsat + (s.won ? PAYOUT.winBonus : 0)) * map.pay,
+      ((s.time / 60) * PAYOUT.perMinute + s.kills * PAYOUT.perKill + s.csat * PAYOUT.perCsat + (s.won ? PAYOUT.winBonus : 0)) * map.pay * (s.policyMult ?? 1),
     );
     const d = this.data;
     const mb = (d.mapBest[s.map] ??= { time: 0, tickets: 0, wins: 0 });
@@ -162,8 +198,11 @@ export class Meta {
     mb.tickets = Math.max(mb.tickets, s.kills);
     let newMap = null;
     let newUnlocks = [];
+    const lockedBefore = POLICY_ORDER.filter((id) => !this.policyUnlocked(id, true));
     if (s.won) {
       mb.wins++;
+      for (const id of s.policies ?? []) if (!d.policiesWon.includes(id)) d.policiesWon.push(id);
+      if (!s.evolutions) for (const id of POLICY_ORDER) if (POLICIES[id].unlock === 'noEvolveWin' && !d.policyUnlocks.includes(id)) d.policyUnlocks.push(id);
       if (!d.mapsWon.includes(s.map)) {
         newUnlocks = this.unlocksFor(s.map).filter((u) => !this.itemUnlocked(u.kind, u.id, true));
         d.mapsWon.push(s.map);
@@ -178,8 +217,10 @@ export class Meta {
     if (s.time > d.best.time) (d.best.time = s.time), records.push('time');
     if (s.kills > d.best.tickets) (d.best.tickets = s.kills), records.push('tickets');
     if (s.csat > d.best.csat) (d.best.csat = s.csat), records.push('csat');
+    const newPolicies = lockedBefore.filter((id) => this.policyUnlocked(id, true));
+    const policiesOpened = d.shifts === 1 && !PREVIEW; // the Policies step opens after the first shift
     this.save();
-    return { pay, records, newMap, newUnlocks };
+    return { pay, records, newMap, newUnlocks, newPolicies, policiesOpened };
   }
 
   // Debug: wipe the save.
@@ -206,6 +247,9 @@ export function upgradeSave(saved) {
   if (!isObj(d.mapBest)) d.mapBest = {};
   if (!Array.isArray(d.unlocked)) d.unlocked = [];
   if (!Array.isArray(d.mapsWon)) d.mapsWon = [];
+  for (const k of ['policiesWon', 'policyUnlocks']) if (!Array.isArray(d[k])) d[k] = [];
+  d.policies = cleanPolicies(d.policies);
+  d.reorg = !!d.reorg && d.policies.length > 0;
   if (from <= SAVE_VERSION) {
     d.unlocked = [...new Set(d.unlocked.filter((id) => CHARACTERS[id]))];
     d.mapsWon = [...new Set(d.mapsWon.filter((id) => MAPS[id]))];
@@ -214,6 +258,8 @@ export function upgradeSave(saved) {
       else d.shop[id] = Math.min(Math.floor(d.shop[id]), SHOP[id].costs.length);
     }
     for (const id of Object.keys(d.mapBest)) if (!MAPS[id]) delete d.mapBest[id];
+    d.policiesWon = [...new Set(d.policiesWon.filter((id) => POLICIES[id]))];
+    d.policyUnlocks = [...new Set(d.policyUnlocks.filter((id) => POLICIES[id]))];
   }
   if (!d.unlocked.includes('tier1')) d.unlocked.unshift('tier1');
   for (const id of Object.keys(d.mapBest)) d.mapBest[id] = { time: 0, tickets: 0, wins: 0, ...(isObj(d.mapBest[id]) ? d.mapBest[id] : {}) };

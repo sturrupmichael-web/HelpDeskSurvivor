@@ -16,6 +16,7 @@ export class Achievements {
     this.run = {
       time: 0, kills: 0, killsById: {}, maxMult: 1, evolutions: 0, pizzas: 0,
       bosses: [], bossesMet: [], won: false, ended: false, revived: false, minHpFrac: 1,
+      policies: [...(this.game.policy?.ids ?? [])], // this shift's Shift Policies
     };
   }
 

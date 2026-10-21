@@ -8,6 +8,8 @@ import { MAPS } from '../../../data/maps.js';
 import { boardPost } from '../account.js';
 import { BURNOUT_QUIPS, VICTORY_QUIPS } from '../../../data/flavor.js';
 import { pickLine, reviewCard, unlockName, PAY } from './common.js';
+import { POLICIES } from '../../../data/policies.js';
+import { fmtMult } from '../../game/policies.js';
 
 // s: run stats from Game.endRun (plus pay, records, balance from Meta.finishShift).
 export function gameOver(scr, s) {
@@ -39,6 +41,8 @@ export function gameOver(scr, s) {
       ${s.wikiNew?.length ? `<p class="wiki-new">NEW IN THE WIKI: ${s.wikiNew.slice(0, 6).map((n) => `<b>${n}</b>`).join(', ')}${s.wikiNew.length > 6 ? ` and ${s.wikiNew.length - 6} more` : ''}</p>` : ''}
       ${s.newMap ? `<p class="unlock">NEW MAP UNLOCKED: <b>${MAPS[s.newMap].name}</b> (pick it under Map on the title screen)</p>` : ''}
       ${s.newUnlocks?.length ? `<p class="unlock">NOW AVAILABLE: ${s.newUnlocks.map((u) => `<b>${unlockName(u)}</b>`).join(', ')}</p>` : ''}
+      ${s.policiesOpened ? '<p class="unlock">SHIFT POLICIES UNLOCKED: optional twists for more pay and score. Pick them when you Clock In, after the map.</p>' : ''}
+      ${s.newPolicies?.length && !s.policiesOpened ? `<p class="unlock">NEW POLICIES: ${s.newPolicies.map((id) => `<b>${POLICIES[id].name}</b>`).join(', ')}</p>` : ''}
       <div class="summary-cols">
         <table class="stats">
           <tr><td>Technician</td><td>${s.character}</td></tr>
@@ -46,6 +50,12 @@ export function gameOver(scr, s) {
           <tr><td>Time survived</td><td>${fmtTime(s.time)}${rec('time')}</td></tr>
           <tr><td>Tickets closed</td><td>${s.kills.toLocaleString()}${rec('tickets')}</td></tr>
           <tr><td>CSAT score</td><td>${s.csat.toLocaleString()}${rec('csat')}</td></tr>
+          ${
+            s.policies?.length
+              ? `<tr><td>Policies</td><td class="pol-line">${s.policies.map((id) => POLICIES[id].name).join(', ')}${s.reorg ? ' (Reorg)' : ''} ${fmtMult(s.policyMult)}</td></tr>
+                 <tr><td>Leaderboard score</td><td>${s.score.toLocaleString()}</td></tr>`
+              : ''
+          }
           <tr><td>Best streak</td><td>x${s.bestStreak}</td></tr>
           <tr><td>Level reached</td><td>${s.level}</td></tr>
           <tr class="paid"><td>Overtime Pay earned</td><td>+${PAY(s.pay)}</td></tr>
@@ -61,7 +71,7 @@ export function gameOver(scr, s) {
       }
       <div class="summary-buttons">
         <button class="primary" data-act="again">Next Shift <kbd>Enter</kbd></button>
-        <button data-act="switch">Change Tech or Map <kbd>C</kbd></button>
+        <button data-act="switch">${scr.game.meta.policiesOpen() ? 'Change Tech, Map or Policies' : 'Change Tech or Map'} <kbd>C</kbd></button>
         <button data-act="shop">Overtime Shop <kbd>S</kbd></button>
         <button data-act="title">Title <kbd>Esc</kbd></button>
       </div>

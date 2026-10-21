@@ -32,8 +32,8 @@ function body(p) {
     <div class="section-head">BEST SHIFTS</div>
     ${best.length
       ? `<table class="stats profile-best">
-          <tr class="head"><td>Map</td><td>Best CSAT</td><td>Longest</td></tr>
-          ${best.map((b) => `<tr><td>${MAPS[b.map].name}</td><td>${num(b.csat)}</td><td>${fmtTime(Number(b.seconds) || 0)}${b.won ? ' <b class="ok">✓</b>' : ''}</td></tr>`).join('')}
+          <tr class="head"><td>Map</td><td>Best score</td><td>Best clean</td><td>Longest</td></tr>
+          ${best.map((b) => `<tr><td>${MAPS[b.map].name}</td><td>${num(b.score ?? b.csat)}</td><td>${b.clean === undefined ? num(b.csat) : b.clean === null ? '—' : num(b.clean)}</td><td>${fmtTime(Number(b.seconds) || 0)}${b.won ? ' <b class="ok">✓</b>' : ''}</td></tr>`).join('')}
         </table>`
       : '<p class="board-msg">No scores posted yet.</p>'}
     <div class="section-head">ACHIEVEMENTS · ${ach.length} / ${ACHIEVEMENTS.length}</div>

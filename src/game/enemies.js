@@ -52,10 +52,12 @@ export function spawnEnemy(game, id, x, y, hpMult = 1, speedMult = 1, behaviorId
   e.r = def.radius;
   e.foot = def.foot ?? DEFAULT_FOOT;
   e.kx = e.ky = e.dx = e.dy = 0;
-  // The current map toughens regular users (bosses keep their tuned HP).
+  // The current map and Shift Policies toughen regular users (bosses keep their tuned HP,
+  // apart from the Escalated policy's bossHp).
   const map = def.boss ? null : game.map;
-  e.hp = e.maxHp = def.hp * hpMult * (map?.hpMult ?? 1) * (map ? game.twist.hpMult(game, x, y) : 1);
-  e.speed = def.speed * speedMult * (map?.speedMult ?? 1);
+  const pol = game.policy;
+  e.hp = e.maxHp = def.hp * hpMult * (map?.hpMult ?? 1) * (map ? game.twist.hpMult(game, x, y) : 1) * (def.boss ? pol.bossHp : pol.enemyHp);
+  e.speed = def.speed * speedMult * (map?.speedMult ?? 1) * (def.boss ? 1 : pol.enemySpeed);
   e.damage = def.damage;
   e.xp = def.xp;
   e.kbMul = def.knockback;
@@ -214,7 +216,7 @@ export function markEnemy(e, seconds, amp) {
 export function killEnemy(game, e, weapon) {
   e.dead = true;
   if (e.xp > 0) {
-    const t = dropTicket(game, e.x, e.y, e.xp * game.twist.xpMult(game, e.x, e.y));
+    const t = dropTicket(game, e.x, e.y, e.xp * game.twist.xpMult(game, e.x, e.y) * game.policy.ticketXp);
     if (weapon?.def.vacuum) t.magnet = true;
   }
   game.fx.burst(e.x, e.y - 6, e.def.particle, 6);
@@ -226,8 +228,9 @@ export function killEnemy(game, e, weapon) {
   const od = e.def.onDeath;
   if (od) {
     const hpMult = game.spawner.sample(game.time, 'hpMult');
-    for (let i = 0; i < od.count; i++) {
-      const a = (i / od.count) * Math.PI * 2 + Math.random();
+    const count = od.count + (game.policy.splits[e.def.sprite] ?? 0); // Reply-All Day
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + Math.random();
       const c = spawnEnemy(game, od.spawn, e.x + Math.cos(a) * 10, e.y + Math.sin(a) * 10, hpMult);
       if (c) {
         c.kx = Math.cos(a) * 120;

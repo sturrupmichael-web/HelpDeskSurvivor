@@ -23,7 +23,6 @@ import { makeTicket, updateTickets, drawTickets, makeItem, dropItem, updateItems
 import { Hazards } from './hazards.js';
 import { createWeapon, updateWeapons, drawWeapons, drawWeaponsUnder } from './weapons/index.js';
 import { WEAPONS } from '../../data/weapons.js';
-import { MAX_WEAPONS } from '../../data/passives.js';
 import { ENEMIES } from '../../data/enemies.js';
 import { createProjectilePool, updateProjectiles, drawProjectiles } from './projectiles.js';
 import { Zones } from './zones.js';
@@ -40,6 +39,7 @@ import { recordWiki } from './wiki.js';
 import { Tutorial } from './tutorial.js';
 import { performanceReview } from './review.js';
 import { CloudSave } from './cloudsave.js';
+import { combinePolicies, NO_POLICY } from './policies.js';
 
 const TARGET_VIEW_HEIGHT = 480; // world px visible vertically, before integer rounding
 const TARGET_VIEW_WIDTH_MIN = 300; // narrow (portrait) screens zoom in to about this width
@@ -73,6 +73,7 @@ export class Game {
     this.spawner = new Spawner();
     this.score = new Score();
     ({ hud: this.hud, screens: this.screens, debug: this.debug } = ui(this));
+    this.policy = NO_POLICY; // this shift's Shift Policies, combined (src/game/policies.js)
     this.meta = new Meta();
     this.cloud = new CloudSave(this.meta);
     this.settings = loadSettings();
@@ -161,12 +162,16 @@ export class Game {
   }
 
   // --- Run lifecycle ------------------------------------------------------------------
-  newRun(charId = this.meta.data.selected) {
+  // `policy`: the shift's Shift Policies (data/policies.js), by default the saved picks.
+  newRun(charId = this.meta.data.selected, policy = combinePolicies(this.meta.data.policies, this.meta.data.reorg)) {
     const def = CHARACTERS[charId];
-    this.player = createPlayer(def, this.assets.sprite(def.sprite), this.meta);
+    this.policy = policy;
+    this.player = createPlayer(def, this.assets.sprite(def.sprite), this.meta, policy);
     this.player.weapons.push(createWeapon(def.starter, 0));
-    // Tools, passives and evolutions this save hasn't unlocked yet (data/unlocks.js).
-    this.player.locked = (kind, id) => !this.meta.itemUnlocked(kind, id);
+    // Tools, passives and evolutions this save hasn't unlocked yet (data/unlocks.js), and
+    // passives a policy keeps off the cards (No Pizza Policy: no Snack Drawer).
+    this.player.locked = (kind, id) => !this.meta.itemUnlocked(kind, id) || (kind === 'passives' && policy.lockPassives.includes(id));
+    this.startingTools(policy.startTools);
     this.enemies.clear();
     this.tickets.clear();
     this.items.clear();
@@ -195,9 +200,27 @@ export class Game {
     startMusic();
   }
 
-  // Training shift (src/game/tutorial.js): always on the Office with the selected tech.
+  // Onboarding Buddy / Vendor Lock-In: extra random tools at the start, maybe levelled up,
+  // and with Vendor Lock-In no new tools after that.
+  startingTools(st) {
+    if (!st) return;
+    const p = this.player;
+    const pool = Object.keys(WEAPONS).filter((id) => !WEAPONS[id].evolved && id !== p.weapons[0].id && !p.locked('tools', id));
+    for (let k = 0; k < st.random && pool.length && p.weapons.length < p.maxWeapons; k++) {
+      const id = pool.splice((Math.random() * pool.length) | 0, 1)[0];
+      const w = createWeapon(id, p.weapons.length);
+      setWeaponLevel(w, Math.min(st.level, w.def.levels.length));
+      p.weapons.push(w);
+    }
+    const starter = p.weapons[0];
+    setWeaponLevel(starter, Math.min(st.starterLevel, starter.def.levels.length));
+    if (st.noNewTools) p.maxWeapons = p.weapons.length;
+  }
+
+  // Training shift (src/game/tutorial.js): always on the Office with the selected tech,
+  // and never with Shift Policies.
   startTutorial() {
-    this.newRun();
+    this.newRun(undefined, NO_POLICY);
     this.setMap('office');
     this.spawner.stopped = true; // the tutorial spawns its own users
     this.tutorial = new Tutorial(this);
@@ -229,6 +252,11 @@ export class Game {
       time: this.time,
       kills: this.score.kills,
       csat: this.score.csat,
+      policies: [...this.policy.ids],
+      reorg: this.policy.reorg,
+      policyMult: this.policy.mult,
+      score: Math.round(this.score.csat * this.policy.mult), // what the leaderboard ranks
+      evolutions: this.achievements.run.evolutions,
       bestStreak: this.score.bestStreak,
       level: p.level,
       tools: p.weapons
@@ -236,7 +264,7 @@ export class Game {
         .sort((a, b) => b.damage - a.damage),
     };
     const wikiNew = recordWiki(this);
-    const { pay, records, newMap, newUnlocks } = this.meta.finishShift(stats);
+    const { pay, records, newMap, newUnlocks, newPolicies, policiesOpened } = this.meta.finishShift(stats);
     const r = this.achievements.run;
     r.ended = true;
     r.won = won;
@@ -244,15 +272,17 @@ export class Game {
     r.kills = this.score.kills;
     this.achievements.check();
     const review = performanceReview(stats, r);
-    this.screens.gameOver({ ...stats, pay, records, newMap, newUnlocks, wikiNew, review, balance: this.meta.data.pay });
+    this.screens.gameOver({ ...stats, pay, records, newMap, newUnlocks, newPolicies, policiesOpened, wikiNew, review, balance: this.meta.data.pay });
   }
 
-  // Extended Warranty (passive) or Union Rep (shop): come back from burnout, clearing
-  // some space. The warranty is claimed first.
+  // Extended Warranty (passive), Long Weekend (policy) or Union Rep (shop): come back from
+  // burnout, clearing some space. Claimed in that order.
   revive() {
     const p = this.player;
     const warranty = p.warranty > 0;
+    const weekend = !warranty && p.longWeekend > 0;
     if (warranty) p.warranty--;
+    else if (weekend) p.longWeekend--;
     else p.revives--;
     this.achievements.run.revived = true;
     p.hp = p.maxHp * 0.5;
@@ -271,6 +301,7 @@ export class Game {
     this.fx.ring(p.x, p.y, 160, '#ffcd75', 0.6, true);
     this.camera.shake(6);
     if (warranty) this.hud.banner('WARRANTY CLAIM APPROVED', 'Covered under your Extended Warranty. Back at half sanity.', 3);
+    else if (weekend) this.hud.banner('LONG WEEKEND', 'You remembered Friday is off. Back at half sanity.', 3);
     else this.hud.banner('UNION REP INTERVENED', 'Mandatory 15-minute break. You are back, at half sanity.', 3);
     sfx('pto');
   }
@@ -468,7 +499,7 @@ export class Game {
       sfx('heartbeat');
     }
 
-    if (p.hp <= 0 && (p.warranty > 0 || p.revives > 0)) this.revive();
+    if (p.hp <= 0 && (p.warranty > 0 || p.longWeekend > 0 || p.revives > 0)) this.revive();
     else if (p.hp <= 0) this.endRun(false);
     else if (this.victoryT > 0 && (this.victoryT -= dt) <= 0) this.endRun(true);
     else if (this.state === 'run' && p.pendingLevels > 0) this.openLevelUp();
@@ -489,7 +520,7 @@ export class Game {
   // Adds the next weapon the player doesn't have yet (up to the slot limit).
   debugAddWeapon() {
     const p = this.player;
-    if (p.weapons.length >= MAX_WEAPONS) return;
+    if (p.weapons.length >= p.maxWeapons) return;
     const id = Object.keys(WEAPONS).find((k) => !WEAPONS[k].evolved && !p.weapons.some((w) => w.id === k || w.def.from === k));
     if (id) p.weapons.push(createWeapon(id, p.weapons.length));
     this.hud.refreshSlots(this);
@@ -504,7 +535,7 @@ export class Game {
     for (const [id, evo] of Object.entries(EVOLUTIONS)) {
       let w = p.weapons.find((x) => x.id === id);
       if (!w && p.weapons.some((x) => x.def.from === id)) continue; // already evolved
-      if (!w && p.weapons.length < MAX_WEAPONS) p.weapons.push((w = createWeapon(id, p.weapons.length)));
+      if (!w && p.weapons.length < p.maxWeapons) p.weapons.push((w = createWeapon(id, p.weapons.length)));
       if (!w) continue;
       setWeaponLevel(w, w.def.levels.length);
       p.passives[evo.passive] = Math.max(1, p.passives[evo.passive] ?? 0);

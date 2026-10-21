@@ -8,13 +8,18 @@ import { WEAPONS } from '../../../data/weapons.js';
 import { gamepadConnected } from '../../engine/input.js';
 import { MAPS, MAP_ORDER } from '../../../data/maps.js';
 import { DIGITS, PAY } from './common.js';
+import { policiesStep } from './policies.js';
 
-// Clock In: pick a tech, then a map, then confirm, all in one flow. Both start on the
-// last shift's picks, which are saved when the shift starts. Locked ones show why.
+// Clock In: pick a tech, then a map, then (once you've finished a shift) Shift Policies,
+// then confirm, all in one flow. Everything starts on the last shift's picks, which are
+// saved when the shift starts. Locked ones show why.
 export function shiftSetup(scr, step = 'char', pick) {
   const g = scr.game;
   const meta = g.meta;
-  pick ??= { char: meta.data.selected, map: meta.data.map };
+  pick ??= { char: meta.data.selected, map: meta.data.map, policies: [...meta.data.policies], reorg: meta.data.reorg };
+  if (step === 'policies') return policiesStep(scr, pick);
+  const withPolicies = meta.policiesOpen();
+  const steps = withPolicies ? 3 : 2;
   const chars = Object.keys(CHARACTERS);
   const isChar = step === 'char';
   const ids = isChar ? chars : MAP_ORDER;
@@ -23,6 +28,7 @@ export function shiftSetup(scr, step = 'char', pick) {
   const next = () => {
     sfx('click');
     if (isChar) return scr.shiftSetup('map', pick);
+    if (withPolicies) return scr.shiftSetup('policies', pick);
     meta.select(pick.char);
     meta.selectMap(pick.map);
     g.newRun();
@@ -92,7 +98,7 @@ export function shiftSetup(scr, step = 'char', pick) {
   const tech = CHARACTERS[pick.char];
   scr.show(
     `<div class="panel wide chars setup">
-      <p class="setup-step">STEP ${isChar ? 1 : 2} OF 2</p>
+      <p class="setup-step">STEP ${isChar ? 1 : 2} OF ${steps}</p>
       <h2>${isChar ? 'PICK YOUR TECH' : 'PICK YOUR MAP'}</h2>
       ${
         isChar
@@ -103,7 +109,7 @@ export function shiftSetup(scr, step = 'char', pick) {
       <div class="cards">${ids.map(isChar ? charCard : mapCard).join('')}</div>
       <div class="setup-bar">
         <button data-act="back">${isChar ? 'Cancel' : 'Back'} <kbd>Esc</kbd></button>
-        <button class="primary" data-act="next">${isChar ? 'Next: Map' : `Clock In: ${MAPS[pick.map].name}`} <kbd>Enter</kbd></button>
+        <button class="primary" data-act="next">${isChar ? 'Next: Map' : withPolicies ? 'Next: Policies' : `Clock In: ${MAPS[pick.map].name}`} <kbd>Enter</kbd></button>
       </div>
     </div>`,
     (code) => {

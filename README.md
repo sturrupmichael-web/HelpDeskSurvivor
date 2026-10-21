@@ -66,7 +66,19 @@ Merger Day also has its own users (`newUsers`) and pickups (Unclaimed Moving Box
 Welcome Swag Bag). New maps need their id added to the leaderboard's map check in
 Supabase (`supabase/merger.sql` shows how).
 
-**Achievements:** 26 of them in `data/achievements.js`; each is a name, icon, text and a
+**Shift Policies** (`data/policies.js`, combined in `src/game/policies.js`): 23 optional
+twists picked as step 3 of Clock In (tech, map, policies), up to 3 at once. Bad ones make
+the shift harder, perks easier, mixed ones change how it plays; each has a `mult`, and the
+picked ones multiply (clamped 0.5 to 3) into the shift's Overtime Pay and leaderboard
+score. The Reorg button picks 2 random bad ones for +10%. The step only shows once a
+player has finished a shift (and never for the Training Shift); 4 policies are there from
+the start, the rest unlock by winning maps (`unlock` in the data file) or, for Change
+Freeze, by winning without evolving a tool. Effects are generic `fx` keys (enemy HP and
+speed, slots, stats, drop odds, spawn mix...), so a new policy is usually data only. The
+game reads them from `game.policy` (`NO_POLICY` when none). Balance each one with
+`node tests/tools/bot.mjs --each-policy`.
+
+**Achievements:** 28 of them in `data/achievements.js`; each is a name, icon, text and a
 `check(run, meta)` test. Unlocks pop a toast and are listed under Achievements on the
 title screen.
 
@@ -98,7 +110,8 @@ now, `]` add $1,000 Overtime Pay. The panel also shows FPS, worst frame time and
 
 ## Online leaderboard
 
-Top 10 CSAT scores per map, stored in a free Supabase project (settings in
+Top 10 scores per map (CSAT x the shift's policies; "No policies only" filters to clean
+shifts), stored in a free Supabase project (settings in
 `data/leaderboard.js`, requests in `src/game/leaderboard.js`). After a shift you can post
 it under a name; shifts where debug mode was on can't be posted. The page only holds the
 publishable key, and the table's row level security allows reading and adding rows,
@@ -122,7 +135,9 @@ create policy "anyone can add" on scores for insert with check (true);
 
 Then run `supabase/hardening.sql` the same way: visitors may only fill in the score
 columns, can't update, delete or empty the table, impossible scores are rejected, and at
-most 30 scores a minute are accepted. Scores are still not verified, so a determined
+most 30 scores a minute are accepted. `supabase/policies.sql` adds the Shift Policies
+columns (`mods`, `mult`, and `score`, which the database works out as CSAT x mult) and
+the profile's best score. Scores are still not verified, so a determined
 cheater can post a plausible fake; delete those rows in the Supabase Table Editor.
 
 ## Security

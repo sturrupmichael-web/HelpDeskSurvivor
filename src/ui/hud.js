@@ -3,7 +3,9 @@
 
 import { icon } from './icons.js';
 import { SHIFT_LENGTH } from '../../data/waves.js';
-import { PASSIVES, MAX_WEAPONS, MAX_PASSIVES } from '../../data/passives.js';
+import { PASSIVES } from '../../data/passives.js';
+import { POLICIES } from '../../data/policies.js';
+import { fmtMult } from '../game/policies.js';
 import { isMuted } from '../engine/audio.js';
 
 export const fmtTime = (t) => {
@@ -19,7 +21,7 @@ export class Hud {
         <svg viewBox="0 0 1000 10" preserveAspectRatio="none"><rect width="1000" height="10" fill="#1a1c2c"/><rect class="xp-fill" width="0" height="10" fill="#41a6f6"/></svg>
         <span class="hud-level">LV 1</span>
       </div>
-      <div class="hud-timer"><span class="t">00:00</span><small class="shift">SHIFT ENDS ${fmtTime(SHIFT_LENGTH)}</small></div>
+      <div class="hud-timer"><span class="t">00:00</span><small class="shift">SHIFT ENDS ${fmtTime(SHIFT_LENGTH)}</small><div class="hud-policies"></div></div>
       <div class="hud-left">
         <div class="hud-sanity">
           <span class="label">SANITY</span>
@@ -46,7 +48,7 @@ export class Hud {
     this.el = {
       xp: q('.xp-fill'), level: q('.hud-level'), timer: q('.hud-timer .t'), hp: q('.hp-fill'), hpText: q('.hp-text'),
       kills: q('.kills'), csat: q('.csat'), mult: q('.mult'), weapons: q('.weapons'), passives: q('.passives'),
-      banner: q('.hud-banner'), shift: q('.shift'), muted: q('.muted'),
+      banner: q('.hud-banner'), shift: q('.shift'), muted: q('.muted'), policies: q('.hud-policies'),
       boss: q('.hud-boss'), bossName: q('.boss-name'), bossFill: q('.boss-fill'),
       coach: q('.hud-coach'), coachStep: q('.coach-step'), coachTitle: q('.coach-title'), coachText: q('.coach-text'), coachFill: q('.coach-fill'),
     };
@@ -120,6 +122,13 @@ export class Hud {
     this.el.banner.hidden = true;
     this.coach(null);
     this.refreshSlots(game);
+    // The shift's policies, as small icons under the clock (names on hover/long press).
+    const pol = game.policy;
+    this.el.policies.hidden = !pol.ids.length;
+    this.el.policies.innerHTML = pol.ids.length
+      ? pol.ids.map((id) => `<span class="pol ${POLICIES[id].group}" title="${POLICIES[id].name}: ${POLICIES[id].desc}">${icon(POLICIES[id].icon, 16)}</span>`).join('') +
+        `<b class="pol-mult">${fmtMult(pol.mult)}</b>`
+      : '';
   }
 
   set(key, value, apply) {
@@ -164,9 +173,9 @@ export class Hud {
         : `<div class="slot">${icon(ic, 24)}<span class="pips">${'▮'.repeat(lvl)}${'▯'.repeat(max - lvl)}</span></div>`;
     const empty = '<div class="slot empty"></div>';
     this.el.weapons.innerHTML =
-      p.weapons.map((w) => slot(w.def.icon, w.level, w.def.levels.length, w.def.evolved)).join('') + empty.repeat(MAX_WEAPONS - p.weapons.length);
+      p.weapons.map((w) => slot(w.def.icon, w.level, w.def.levels.length, w.def.evolved)).join('') + empty.repeat(Math.max(0, p.maxWeapons - p.weapons.length));
     const passives = Object.entries(p.passives);
     this.el.passives.innerHTML =
-      passives.map(([id, lvl]) => slot(PASSIVES[id].icon, lvl, PASSIVES[id].maxLevel)).join('') + empty.repeat(MAX_PASSIVES - passives.length);
+      passives.map(([id, lvl]) => slot(PASSIVES[id].icon, lvl, PASSIVES[id].maxLevel)).join('') + empty.repeat(Math.max(0, p.maxPassives - passives.length));
   }
 }

@@ -4,6 +4,8 @@
 //
 //   node tests/tools/bot.mjs [--map office] [--tech tier1] [--runs 10] [--vet]
 //   node tests/tools/bot.mjs --profiles [--runs 8]
+//   node tests/tools/bot.mjs --map office --policies casualFriday,budgetCuts
+//   node tests/tools/bot.mjs --each-policy [--profile 1] [--runs 8]
 //
 // --map / --tech take ids from data/maps.js and data/player.js, or "all".
 // --vet starts from a save with the whole shop maxed and everything unlocked.
@@ -16,7 +18,7 @@ import { EVOLUTIONS } from '../../data/evolutions.js';
 import { MAPS } from '../../data/maps.js';
 import { CHARACTERS } from '../../data/player.js';
 import { SHOP } from '../../data/meta.js';
-import { MAX_WEAPONS } from '../../data/passives.js';
+import { POLICY_ORDER } from '../../data/policies.js';
 
 export const manifest = JSON.parse(readFileSync(new URL('../../sprites/out/manifest.json', import.meta.url)));
 
@@ -82,7 +84,7 @@ export function botPick(game, choices) {
   const score = (c) => {
     if (c.kind === 'weapon' && c.level > 1) return 50 + c.level;
     if (c.kind === 'passive' && evoPassives.has(c.id)) return 45;
-    if (c.kind === 'weapon') return p.weapons.length < MAX_WEAPONS ? 40 : 0;
+    if (c.kind === 'weapon') return p.weapons.length < p.maxWeapons ? 40 : 0;
     if (c.kind === 'passive') return 20 + (p.passives[c.id] ?? 0);
     return 1;
   };
@@ -100,6 +102,8 @@ export function veteranSave() {
 
 // Where players usually are when they reach each map: [map, share of the shop bought,
 // maps already won] (see "Map-win unlocks and the full rebalance" in BALANCE.md).
+// --policies plays with those Shift Policies (data/policies.js); --each-policy plays one
+// profile (default 1) once with no policy and then once per policy, for tuning `mult`.
 export const PROFILES = [
   ['office', 0, []],
   ['office', 0.4, []],
@@ -120,8 +124,9 @@ export function profileSave(share, mapsWon) {
 const CAP = 30 * 60; // seconds of game time before a shift is called off
 
 // Plays `runs` shifts; returns one summary per shift.
-export function playShifts({ map = 'office', tech = 'tier1', runs = 1, vet = false, save = null } = {}) {
+export function playShifts({ map = 'office', tech = 'tier1', runs = 1, vet = false, save = null, policies = [] } = {}) {
   const game = headlessGame(manifest, { pick: botPick, autopilot: botPilot, save: save ?? (vet ? veteranSave() : null) });
+  game.meta.data.policies = policies;
   const out = [];
   for (let i = 0; i < runs; i++) {
     game.startShift(map, tech);
@@ -152,10 +157,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         `closed ${avg((r) => r.kills).toFixed(0)}  past 10:00 ${past}/${runs}  (${((performance.now() - t0) / 1000).toFixed(1)} s)`,
     );
   };
-  if (process.argv.includes('--profiles')) {
+  const policies = arg('policies', '').split(',').filter(Boolean);
+  if (process.argv.includes('--each-policy')) {
+    const [map, share, won] = PROFILES[+arg('profile', 1)];
+    const save = () => profileSave(share, won);
+    report(`${map} shop ${share * 100}% ${'(none)'.padEnd(17)}`, { map, save: save() });
+    for (const id of POLICY_ORDER) report(`${map} shop ${share * 100}% ${id.padEnd(17)}`, { map, save: save(), policies: [id] });
+  } else if (process.argv.includes('--profiles')) {
     const only = arg('profile', null); // one row of the table, by index
     for (const [map, share, won] of only === null ? PROFILES : [PROFILES[+only]]) report(`${map.padEnd(11)} shop ${String(share * 100).padStart(3)}%`, { map, save: profileSave(share, won) });
   } else {
-    for (const map of maps) for (const tech of techs) report(`${map.padEnd(11)} ${tech.padEnd(14)}`, { map, tech, vet });
+    for (const map of maps) for (const tech of techs) report(`${map.padEnd(11)} ${tech.padEnd(14)}`, { map, tech, vet, policies });
   }
 }

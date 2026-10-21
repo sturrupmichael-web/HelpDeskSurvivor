@@ -4,6 +4,19 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-policies',
+    date: 'Oct 21, 2026',
+    title: 'Shift Policies',
+    items: [
+      'New step when you Clock In: after the tech and the map, sign up to up to 3 Shift Policies. Optional, and they only appear once you have finished a shift.',
+      'Bad policies make the shift harder and raise your Overtime Pay and leaderboard score. Perks make it easier and lower them. Mixed ones change how you play. 23 in all, from Casual Friday to Vendor Lock-In.',
+      'Feeling lucky? The Reorg button picks 2 random bad policies for an extra +10%.',
+      'The leaderboard now ranks by score: CSAT times your policies. Policy icons show next to each name, and "No policies only" shows the clean shifts.',
+      'You start with 4 policies. Win shifts on each map to unlock more, and win without evolving a tool to unlock Change Freeze. The Help Desk Wiki has a new Policies tab.',
+      'Two new achievements: Red Tape and Doing More With Less.',
+    ],
+  },
+  {
     id: '2026-10-21-phase2',
     date: 'Oct 21, 2026',
     title: 'Bosses fight back harder',

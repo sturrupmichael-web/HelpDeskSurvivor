@@ -5,9 +5,15 @@ import { bugScreen } from '../bugreport.js';
 import { recordWiki } from '../../game/wiki.js';
 import { PAUSE_LINES } from '../../../data/flavor.js';
 import { pickLine } from './common.js';
+import { POLICIES } from '../../../data/policies.js';
+import { fmtMult } from '../../game/policies.js';
 
 export function pause(scr) {
   const training = !!scr.game.tutorial;
+  const pol = scr.game.policy;
+  const policies = pol.ids.length
+    ? `<p class="tiny pause-policies">Policies (${fmtMult(pol.mult)}): ${pol.ids.map((id) => `<b>${POLICIES[id].name}</b>`).join(', ')}</p>`
+    : '';
   const go = (act) => {
     if (act === 'resume') scr.game.resume();
     else if (act === 'restart') {
@@ -27,6 +33,7 @@ export function pause(scr) {
     `<div class="panel">
       <h2>ON HOLD</h2>
       <p class="sub">${pickLine(PAUSE_LINES)}</p>
+      ${policies}
       <button class="primary" data-act="resume">Resume <kbd>Esc</kbd></button>
       <button data-act="stats">Shift Stats <kbd>T</kbd></button>
       <button data-act="settings">Settings <kbd>O</kbd></button>

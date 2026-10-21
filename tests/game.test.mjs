@@ -36,6 +36,7 @@ export function gameTests(base, page) {
       shown('title', () => s.title());
       shown('clock in: tech', () => s.shiftSetup('char'));
       shown('clock in: map', () => s.shiftSetup('map'));
+      shown('clock in: policies', () => s.shiftSetup('policies'));
       shown('characters', () => s.characters());
       shown('shop', () => s.shop());
       shown('maps', () => s.maps());
@@ -131,6 +132,33 @@ export function gameTests(base, page) {
     });
     assert(r.name?.startsWith('The Executive'), 'The Executive did not show up: ' + r.name);
     assert(r.ended === 'won', 'shift did not end as a win: ' + r.ended);
+    noErrors(errors);
+    await close();
+  });
+
+  test(`${page}: Clock In with Shift Policies`, async () => {
+    const { page: p, errors, close } = await open();
+    const r = await p.evaluate(() => {
+      const g = window.game;
+      const s = g.screens;
+      const q = (sel) => s.root.querySelector(sel);
+      g.meta.data.shifts = 1; // the Policies step opens after the first shift
+      g.setState('title');
+      s.shiftSetup();
+      q('[data-act=next]').click(); // tech -> map
+      const mapNext = q('[data-act=next]').textContent;
+      q('[data-act=next]').click(); // map -> policies
+      const step = q('.setup-step')?.textContent;
+      q('.card.policy[data-id=budgetCuts]').click();
+      q('.card.policy[data-id=workFromHome]').click();
+      const total = q('.pol-total').textContent;
+      const lockedOk = !!q('.card.policy[data-id=escalated][disabled]') || g.meta.policyUnlocked('escalated');
+      q('[data-act=next]').click(); // Clock In
+      return { mapNext, step, total, lockedOk, ids: [...g.policy.ids], mult: g.policy.mult, slots: g.player.maxWeapons, state: g.state, hud: document.querySelectorAll('.hud-policies .pol').length };
+    });
+    assert(/Policies/.test(r.mapNext) && r.step === 'STEP 3 OF 3', 'no Policies step: ' + JSON.stringify(r));
+    assert(r.ids.join() === 'budgetCuts,workFromHome' && r.mult === 1.08 && /x1\.08/.test(r.total), 'picks not applied: ' + JSON.stringify(r));
+    assert(r.slots === 4 && r.state === 'run' && r.hud === 2 && r.lockedOk, 'shift not set up: ' + JSON.stringify(r));
     noErrors(errors);
     await close();
   });

@@ -7,7 +7,7 @@ import { addXp } from './player.js';
 import { sfx } from '../engine/audio.js';
 
 export function makeTicket() {
-  return { x: 0, y: 0, value: 0, spr: null, magnet: false, speed: 0, t: 0, dead: false };
+  return { x: 0, y: 0, value: 0, spr: null, magnet: false, speed: 0, t: 0, age: 0, dead: false };
 }
 
 function tierSprite(game, value) {
@@ -41,6 +41,7 @@ export function dropTicket(game, x, y, value) {
   t.magnet = false;
   t.speed = TICKETS.magnetSpeed;
   t.t = Math.random() * 6;
+  t.age = 0; // seconds on the floor (Ticket Blitz makes them vanish)
   t.dead = false;
   return t;
 }
@@ -51,9 +52,14 @@ export function updateTickets(game, dt) {
   const pr = p.def.pickupRadius * p.stats.pickupRadius;
   const pr2 = pr * pr;
   const cr2 = TICKETS.collectRadius * TICKETS.collectRadius;
+  const life = game.policy.ticketLife; // Ticket Blitz: 0 = tickets stay
   for (let i = pool.count - 1; i >= 0; i--) {
     const t = pool.items[i];
     t.t += dt;
+    if (life && !t.magnet && (t.age += dt) > life) {
+      pool.removeAt(i);
+      continue;
+    }
     const dx = p.x - t.x;
     const dy = p.y - t.y;
     const d2 = dx * dx + dy * dy;
@@ -81,6 +87,7 @@ export function drawTickets(game, ctx, left, top, right, bottom) {
   for (let i = 0; i < pool.count; i++) {
     const t = pool.items[i];
     if (t.x < left - 8 || t.x > right + 8 || t.y < top - 8 || t.y > bottom + 8) continue;
+    if (t.age > game.policy.ticketLife - 2 && game.policy.ticketLife && ((t.age * 8) & 1)) continue; // about to vanish: blink
     const s = t.spr;
     const f = s.anims.idle.frames[0];
     const bob = Math.round(Math.sin(t.t * 4) * 1.5);
@@ -109,18 +116,22 @@ export function dropItem(game, id, x, y) {
 
 // Called when an enemy is closed: per-kill item chances, plus the enemy's own `drops`.
 export function rollItemDrops(game, e) {
+  const odds = game.policy.items; // Team Lunch / No Pizza Policy: per-pickup multipliers
   const loot = e.def.loot;
-  if (loot) return dropItem(game, loot[(Math.random() * loot.length) | 0], e.x, e.y);
+  if (loot) {
+    const allowed = loot.filter((id) => odds[id] !== 0);
+    return allowed.length && dropItem(game, allowed[(Math.random() * allowed.length) | 0], e.x, e.y);
+  }
   const drops = e.def.drops;
   if (drops) {
-    for (const id in drops) if (Math.random() < drops[id]) dropItem(game, id, e.x, e.y);
+    for (const id in drops) if (Math.random() < drops[id] * (odds[id] ?? 1)) dropItem(game, id, e.x, e.y);
     return;
   }
   if (game.items.count >= MAX_ITEMS) return;
   const luck = game.player.stats.luck; // Lucky Lanyard
   for (const id in ITEMS) {
     if (ITEMS[id].maps && !ITEMS[id].maps.includes(game.mapId)) continue;
-    const c = ITEMS[id].chance * luck;
+    const c = ITEMS[id].chance * luck * (odds[id] ?? 1);
     if (c && Math.random() < c) return dropItem(game, id, e.x, e.y);
   }
 }

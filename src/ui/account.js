@@ -4,6 +4,7 @@
 import { sfx } from '../engine/audio.js';
 import { account } from '../game/account.js';
 import { cleanName, postScore } from '../game/leaderboard.js';
+import { modsString } from '../game/policies.js';
 import { LEADERBOARD } from '../../data/leaderboard.js';
 import { profileScreen } from './profile.js';
 import { VERSION } from '../version.js';
@@ -167,7 +168,10 @@ export function boardPost(screens, s) {
       game.meta.save();
     }
     msg.textContent = 'Posting…';
-    const r = await postScore({ map: s.map, character: s.character, seconds: Math.round(s.time), csat: s.csat, won: s.won, version: VERSION });
+    const r = await postScore({
+      map: s.map, character: s.character, seconds: Math.round(s.time), csat: s.csat, won: s.won, version: VERSION,
+      mods: modsString({ ids: s.policies ?? [], reorg: s.reorg }), mult: s.policyMult ?? 1,
+    });
     if (r.ok) {
       posted = true;
       msg.innerHTML = r.rank ? `Posted! You're <b>#${r.rank}</b> on the ${esc(s.mapName)} board.` : 'Posted!';

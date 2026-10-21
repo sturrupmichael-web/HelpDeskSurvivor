@@ -11,15 +11,18 @@ import { EVOLUTIONS } from '../../data/evolutions.js';
 import { MAPS, MAP_ORDER } from '../../data/maps.js';
 import { MAP_BOSS_EVENT } from '../../data/waves.js';
 import { wikiData, isKnown } from '../game/wiki.js';
+import { POLICIES, POLICY_ORDER, POLICY_GROUPS } from '../../data/policies.js';
+import { fmtMult } from '../game/policies.js';
 
 export const WIKI_TABS = [
   { id: 'users', name: 'Users' },
   { id: 'bosses', name: 'Bosses' },
   { id: 'tools', name: 'Tools' },
   { id: 'passives', name: 'Passives' },
+  { id: 'policies', name: 'Policies' },
 ];
 
-const KEYS = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Numpad1: 0, Numpad2: 1, Numpad3: 2, Numpad4: 3 };
+const KEYS = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Numpad1: 0, Numpad2: 1, Numpad3: 2, Numpad4: 3, Numpad5: 4 };
 
 const USERS = Object.keys(ENEMIES).filter((id) => !ENEMIES[id].boss && !ENEMIES[id].wikiAs);
 const BOSSES = Object.keys(ENEMIES).filter((id) => ENEMIES[id].boss && !ENEMIES[id].params?.isSmall);
@@ -109,11 +112,25 @@ function passiveCard(w, id) {
     ${evolves.length ? `<span class="wiki-facts">Evolves: ${evolves.join(', ')}</span>` : ''}</div></div>`;
 }
 
+// Shift Policies: known once unlocked on this save, stamped once you've won with them.
+function policyCard(w, id) {
+  const d = POLICIES[id];
+  const group = POLICY_GROUPS.find((g) => g.id === d.group).name;
+  if (!shownMeta.policyUnlocked(id, true)) {
+    return `<div class="wiki-entry locked">${icon('policy', 32)}<div><b>???</b><span>${group}. Unlocks: ${shownMeta.policyLockText(id)}.</span></div></div>`;
+  }
+  const won = shownMeta.data.policiesWon.includes(id);
+  return `<div class="wiki-entry">${icon(d.icon, 32)}<div><b>${d.name}</b><i>${d.flavor}</i><span>${d.desc}</span>
+    <span class="wiki-facts">${group} · Pay and score ${fmtMult(d.mult)}${won ? ' · <b class="ok">WON WITH IT</b>' : ''}</span></div></div>`;
+}
+
 const SECTIONS = {
   users: { ids: USERS, kind: 'enemy', card: (w, id) => enemyCard(w, id, false) },
   bosses: { ids: BOSSES, kind: 'enemy', card: (w, id) => enemyCard(w, id, true) },
   tools: { ids: ALL_TOOLS, kind: 'tool', card: toolCard },
   passives: { ids: Object.keys(PASSIVES), kind: 'passive', card: passiveCard },
+  // Not counted in wikiProgress: policies are unlocked, not met.
+  policies: { ids: POLICY_ORDER, kind: 'policy', card: policyCard, known: (id) => shownMeta.policyUnlocked(id, true), noCount: true },
 };
 
 // Entries found / total, across every tab.
@@ -122,6 +139,7 @@ export function wikiProgress(meta) {
   let found = 0;
   let total = 0;
   for (const s of Object.values(SECTIONS)) {
+    if (s.noCount) continue;
     total += s.ids.length;
     found += s.ids.filter((id) => isKnown(w, s.kind, id)).length;
   }
@@ -150,7 +168,7 @@ export function wikiScreen(screens, tab = 'users', back = () => screens.title())
   shownMeta = game.meta;
   const w = wikiData(game.meta);
   const sec = SECTIONS[tab];
-  const found = sec.ids.filter((id) => isKnown(w, sec.kind, id)).length;
+  const found = sec.ids.filter((id) => (sec.known ? sec.known(id) : isKnown(w, sec.kind, id))).length;
   const all = wikiProgress(game.meta);
   const go = (t) => {
     sfx('click');

@@ -1,5 +1,7 @@
 // Online leaderboard: reads the top scores per map and posts a finished shift, through
-// Supabase's REST API (data/leaderboard.js). Ranked by CSAT. Every call resolves to
+// Supabase's REST API (data/leaderboard.js). Ranked by score: CSAT x the Shift Policies'
+// multiplier (`score` is worked out by the database, supabase/policies.sql; `mods` lists
+// the policies, empty for a clean shift). Every call resolves to
 // { ok, ... } instead of throwing, so the screens can just show a message when offline.
 
 import { LEADERBOARD as LB } from '../../data/leaderboard.js';
@@ -34,9 +36,10 @@ export function cleanName(name) {
     .slice(0, LB.nameMax);
 }
 
-// Top scores on one map: [{ name, character, seconds, csat, won }].
-export async function topScores(map) {
-  const q = `?select=name,character,seconds,csat,won&map=eq.${encodeURIComponent(map)}&order=csat.desc,seconds.desc&limit=${LB.top}`;
+// Top scores on one map: [{ name, character, seconds, csat, won, mods, mult, score }].
+// `clean` = only shifts without policies.
+export async function topScores(map, clean = false) {
+  const q = `?select=name,character,seconds,csat,won,mods,mult,score&map=eq.${encodeURIComponent(map)}${clean ? '&mods=eq.' : ''}&order=score.desc,seconds.desc&limit=${LB.top}`;
   const r = await call(q);
   if (!r.ok) return r;
   return { ok: true, rows: await r.res.json() };
@@ -47,7 +50,8 @@ export async function topScores(map) {
 export async function postScore(row) {
   const r = await account.rest(LB.table, { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(row) });
   if (!r.ok) return r;
-  const c = await call(`?select=id&map=eq.${encodeURIComponent(row.map)}&csat=gt.${row.csat}`, {
+  const score = Math.round(row.csat * (row.mult ?? 1));
+  const c = await call(`?select=id&map=eq.${encodeURIComponent(row.map)}&score=gt.${score}`, {
     method: 'HEAD',
     headers: { Prefer: 'count=exact' },
   });

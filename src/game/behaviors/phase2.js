@@ -8,11 +8,12 @@ import { sfx } from '../../engine/audio.js';
 const EMBERS = ['#b13e53', '#ef7d57', '#ffcd75'];
 
 // Has this boss (or, with `whole`, the whole fight across split pieces) dropped below
-// the phase 2 line? `whole` is for bosses that split before their second phase.
+// the phase 2 line? `whole` is for bosses that split before their second phase. The
+// Escalated policy moves the line up (phase2Sooner).
 export function belowPhase2(e, game, whole = false) {
   const ph = e.params.phase2;
   if (!ph) return false;
-  return (whole ? game.bossHpFrac() : e.hp / e.maxHp) < ph.at;
+  return (whole ? game.bossHpFrac() : e.hp / e.maxHp) < Math.min(0.95, ph.at + game.policy.phase2Sooner);
 }
 
 // Switches a boss into its second phase. The banner and sound play once per fight even

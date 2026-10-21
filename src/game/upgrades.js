@@ -4,7 +4,7 @@
 // its paired passive, see data/evolutions.js) and otherwise grant random upgrades.
 
 import { WEAPONS } from '../../data/weapons.js';
-import { PASSIVES, FALLBACK_REWARDS, MAX_WEAPONS, MAX_PASSIVES, LEVEL_UP_CHOICES } from '../../data/passives.js';
+import { PASSIVES, FALLBACK_REWARDS, LEVEL_UP_CHOICES } from '../../data/passives.js';
 import { createWeapon, setWeaponLevel } from './weapons/index.js';
 import { recomputeStats } from './player.js';
 import { EVOLUTIONS } from '../../data/evolutions.js';
@@ -17,15 +17,16 @@ const lucky = (weight, luck) => (weight < RARE_WEIGHT ? weight * luck : weight);
 // with 20 tools and 13 passives your build still comes together.
 const OWNED_WEIGHT = 1.35;
 
-export function rollChoices(game, count = LEVEL_UP_CHOICES) {
+// Hot Desking (policy) shows fewer cards and favours the rare ones (`rareCards`).
+export function rollChoices(game, count = game.policy?.cards || LEVEL_UP_CHOICES) {
   const p = game.player;
-  const luck = p.stats.luck;
+  const luck = p.stats.luck * (game.policy?.rareCards ?? 1);
   const pool = [];
   const owned = new Set(p.weapons.map((w) => w.id));
   for (const w of p.weapons) {
     if (w.level < w.def.levels.length) pool.push({ kind: 'weapon', id: w.id, level: w.level + 1, weight: w.def.weight * OWNED_WEIGHT });
   }
-  if (p.weapons.length < MAX_WEAPONS) {
+  if (p.weapons.length < p.maxWeapons) {
     for (const [id, d] of Object.entries(WEAPONS)) {
       if (owned.has(id) || d.evolved || p.weapons.some((w) => w.def.from === id) || p.locked?.('tools', id)) continue;
       pool.push({ kind: 'weapon', id, level: 1, weight: lucky(d.weight, luck) });
@@ -35,7 +36,7 @@ export function rollChoices(game, count = LEVEL_UP_CHOICES) {
   for (const [id, d] of Object.entries(PASSIVES)) {
     const lvl = p.passives[id] ?? 0;
     if (lvl >= d.maxLevel) continue;
-    if (lvl === 0 && (passiveCount >= MAX_PASSIVES || p.locked?.('passives', id))) continue;
+    if (lvl === 0 && (passiveCount >= p.maxPassives || p.locked?.('passives', id))) continue;
     pool.push({ kind: 'passive', id, level: lvl + 1, weight: lucky(d.weight, luck) * (lvl ? OWNED_WEIGHT : 1) });
   }
 
@@ -51,8 +52,8 @@ export function rollChoices(game, count = LEVEL_UP_CHOICES) {
   return picks.map((c) => describe(c, p));
 }
 
-// An evolution this shift can reach (unlocked on this save).
-const canEvolve = (p, evo) => evo && !p?.locked?.('evolutions', evo.into);
+// An evolution this shift can reach (unlocked on this save, and no Change Freeze).
+const canEvolve = (p, evo) => evo && !p?.noEvolve && !p?.locked?.('evolutions', evo.into);
 
 // Adds display fields (name, icon, text) to a choice.
 function describe(c, p) {

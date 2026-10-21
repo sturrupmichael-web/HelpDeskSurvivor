@@ -38,6 +38,22 @@ function mapMix(mix, map, t) {
   return m;
 }
 
+// A Shift Policy's mixBoost (Reply-All Day, Phishing Simulation) on top of the map's mix.
+// Cached per mix and policy.
+const policyMixes = new WeakMap();
+function policyMix(mix, policy) {
+  if (!Object.keys(policy.mixBoost).length) return mix;
+  let byPolicy = policyMixes.get(mix);
+  if (!byPolicy) policyMixes.set(mix, (byPolicy = new WeakMap()));
+  let m = byPolicy.get(policy);
+  if (!m) {
+    m = {};
+    for (const id in mix) m[id] = mix[id] * (policy.mixBoost[id] ?? 1);
+    byPolicy.set(policy, m);
+  }
+  return m;
+}
+
 function pick(mix) {
   let total = 0;
   for (const id in mix) total += mix[id];
@@ -91,10 +107,17 @@ export class Spawner {
     return this.pt;
   }
 
+  // Monday Morning (policy): the queue (how many users, how fast they come, who they are)
+  // starts as it is at `headStart`; their HP still follows the real clock.
+  busyTime(game) {
+    return Math.max(game.time, game.policy?.headStart ?? 0);
+  }
+
   spawn(game, id, angle) {
     const t = game.time;
     const pt = this.ringPoint(game, angle);
-    return spawnEnemy(game, id ?? pick(mapMix(mixAt(t), game.map, t)), pt.x, pt.y, this.sample(t, 'hpMult'), this.sample(t, 'speedMult'));
+    id ??= pick(policyMix(mapMix(mixAt(this.busyTime(game)), game.map, t), game.policy));
+    return spawnEnemy(game, id, pt.x, pt.y, this.sample(t, 'hpMult'), this.sample(t, 'speedMult'));
   }
 
   update(game, dt) {
@@ -102,8 +125,9 @@ export class Spawner {
     const t = game.time;
     this.events(game, dt);
     const scale = game.bossAlive() ? this.bossScale : 1;
-    this.acc += this.sample(t, 'rate') * scale * dt;
-    const min = this.sample(t, 'minAlive') * scale;
+    const busy = this.busyTime(game);
+    this.acc += this.sample(busy, 'rate') * scale * dt;
+    const min = this.sample(busy, 'minAlive') * scale;
     while (game.enemies.count < min && game.enemies.count < SPAWNER.maxEnemies) this.spawn(game);
     while (this.acc >= 1) {
       this.acc -= 1;

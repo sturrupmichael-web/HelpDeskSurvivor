@@ -373,3 +373,46 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
   .panel.setup .card-text { font-size: 12px; }
   .setup-bar kbd { display: none; }
 }
+
+/* --- Shift Policies (Clock In step 3, HUD) --- */
+.pol-summary { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin: 0 0 8px; padding: 8px 10px; background: var(--ink); border: 2px solid var(--navy); font-size: 12px; }
+.pol-summary b { color: var(--paper); }
+.pol-summary .pol-total { font-size: 15px; color: var(--yellow); }
+.pol-summary .pol-total.up { color: var(--green); }
+.pol-summary .pol-total.down { color: var(--red); }
+.pol-tools { display: flex; gap: 8px; margin-bottom: 6px; }
+.panel .pol-tools button { margin: 0; flex: 1; }
+.pol-group { margin-top: 10px; }
+.pol-group small { color: var(--gray); font-weight: normal; letter-spacing: 0; margin-left: 6px; }
+.pol-group.bad { color: var(--red); }
+.pol-group.mixed { color: var(--yellow); }
+.pol-group.perk { color: var(--green); }
+.panel.setup .cards.policies { margin-bottom: 4px; }
+.panel button.card.policy { width: 296px; padding: 8px; gap: 4px; }
+.panel button.card.policy.dim { opacity: 0.55; }
+.panel button.card.policy .card-head { gap: 6px; align-items: center; }
+.panel button.card.policy .card-name { font-size: 13px; flex: 1; }
+.panel button.card.policy .card-name small { color: var(--gray); }
+.panel button.card.policy .card-text { font-size: 11px; }
+.panel button.card.policy .pol-x { font-size: 13px; }
+.panel button.card.policy.bad { border-left: 4px solid var(--red); }
+.panel button.card.policy.mixed { border-left: 4px solid var(--yellow); }
+.panel button.card.policy.perk { border-left: 4px solid var(--green); }
+.panel button.card.policy.bad .pol-x { color: var(--green); }
+.panel button.card.policy.perk .pol-x { color: var(--red); }
+.pol-stamp { margin-left: 6px; padding: 0 4px; border: 1px solid var(--yellow); color: var(--yellow); font-size: 9px; letter-spacing: 1px; }
+.hud-policies { display: flex; justify-content: center; align-items: center; gap: 2px; margin-top: 3px; }
+.hud-policies .pol { display: inline-flex; padding: 1px; background: rgba(26, 28, 44, 0.75); border-bottom: 2px solid var(--yellow); }
+.hud-policies .pol.bad { border-color: var(--red); }
+.hud-policies .pol.perk { border-color: var(--green); }
+.hud-policies .pol-mult { font-size: 10px; margin-left: 3px; color: var(--yellow); }
+.summary .pol-line { font-size: 12px; color: var(--gray); }
+.board-table .mods { white-space: nowrap; }
+.board-table .mods .icon { vertical-align: middle; }
+@media (max-width: 760px) { .panel button.card.policy { width: calc(50% - 4px); } }
+@media (max-width: 480px) {
+  .panel button.card.policy { width: 100%; padding: 6px 8px; gap: 2px; }
+  .panel button.card.policy .char-status .hint { display: none; }
+  .panel button.card.policy .char-status:has(.hint:only-child) { display: none; }
+  .pol-summary { font-size: 11px; }
+}

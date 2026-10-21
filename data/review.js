@@ -31,6 +31,19 @@ export const COMMENTS = [
     'Left {time} into a 20-minute shift. We checked: the coffee machine was working.',
     'Burned out after {time}. Onboarding will be repeated in full.',
   ] },
+  // Shift Policies (data/policies.js).
+  { when: (c) => c.badCount >= 3, pri: 7, lines: [
+    'Volunteered for {badCount} bad policies at once. HR has flagged this as a cry for help.',
+    'Signed up to {badCount} bad policies. Nobody asked you to. Nobody ever asks you to.',
+  ] },
+  { when: (c) => c.won && c.has('budgetCuts'), pri: 7, lines: ['Survived Budget Cuts. Finance is thrilled and has cut the budget again.'] },
+  { when: (c) => c.has('auditWeek') && c.time >= 300, pri: 6, lines: ['Worked through Audit Week. The auditors raised no findings, apart from you.'] },
+  { when: (c) => c.won && c.has('changeFreeze'), pri: 6, lines: ['Respected the Change Freeze all shift. The Change Advisory Board has never been prouder.'] },
+  { when: (c) => c.has('mondayMorning') && c.time >= 300, pri: 5, lines: ['Handled the whole weekend\'s queue before lunch. Please do not tell the other teams it is possible.'] },
+  { when: (c) => c.has('vendorLockIn'), pri: 4, lines: ['Made it work with only the contracted tools. The vendor has asked to use you in a case study.'] },
+  { when: (c) => c.perkCount >= 2, pri: 5, lines: ['Worked a shift with {perks}. Must be nice.'] },
+  { when: (c) => c.has('workFromHome'), pri: 3, lines: ['Worked from home. Camera was off the entire time.'] },
+  { when: (c) => c.has('casualFriday'), pri: 3, lines: ['Embraced Casual Friday. The users did too, at speed.'] },
   { when: (c) => c.revived && !c.won, pri: 7, lines: ['Came back from burnout once already this shift. The Union Rep has asked us to stop calling.'] },
   { when: (c) => c.kills >= 3000, pri: 6, lines: [
     'Closed {kills} tickets. We have raised your quota to {quota}.',

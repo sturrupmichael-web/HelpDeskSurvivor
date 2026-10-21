@@ -5,6 +5,7 @@ import { RATINGS, MANAGERS, COMMENTS, GOALS, BOSS_NAMES } from '../../data/revie
 import { MAPS } from '../../data/maps.js';
 import { MAP_BOSS_EVENT } from '../../data/waves.js';
 import { fmtTime } from '../ui/hud.js';
+import { POLICIES } from '../../data/policies.js';
 
 const pick = (list, rnd) => list[Math.floor(rnd() * list.length)];
 const fill = (text, c) => text.replace(/\{(\w+)\}/g, (m, k) => (c[k] === undefined ? m : String(c[k])));
@@ -18,7 +19,13 @@ export function performanceReview(s, run, rnd = Math.random) {
   const beaten = run.bosses.filter((id) => BOSS_NAMES[id] && id !== 'executive');
   const dodged = run.bossesMet.filter((id) => BOSS_NAMES[id] && id !== 'executive' && !run.bosses.includes(id));
   const k = run.killsById;
+  const pol = (s.policies ?? []).filter((id) => POLICIES[id]);
+  const perks = pol.filter((id) => POLICIES[id].group === 'perk');
   const c = {
+    has: (id) => pol.includes(id), // a Shift Policy was on
+    badCount: pol.filter((id) => POLICIES[id].group === 'bad').length,
+    perkCount: perks.length,
+    perks: perks.map((id) => POLICIES[id].name).join(' and '),
     won: s.won,
     time: fmtTime(s.time).replace(/^0/, ''),
     kills: s.kills.toLocaleString(),
