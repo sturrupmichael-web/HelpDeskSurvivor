@@ -1,7 +1,7 @@
 // settings: part of the menu screens (src/ui/screens.js holds the shared Screens helpers).
 // `scr` is the Screens instance.
 
-import { sfx } from '../../engine/audio.js';
+import { sfx, isMuted, toggleMute } from '../../engine/audio.js';
 import { VERSION } from '../../version.js';
 
 // Settings: volumes and comfort toggles. `back` returns to the screen that opened it.
@@ -17,6 +17,8 @@ export function settings(scr, back) {
     `<div class="panel">
       <h2>SETTINGS</h2>
       <div class="settings">
+        <div class="setting"><label>Sound</label>
+          <button class="toggle ${isMuted() ? '' : 'on'}" data-mute>${isMuted() ? 'OFF' : 'ON'}</button></div>
         ${slider('music', 'Music volume')}
         ${slider('sfx', 'Sound effects volume')}
         ${toggle('shake', 'Screen shake')}
@@ -24,7 +26,7 @@ export function settings(scr, back) {
         ${toggle('stick', 'Touch joystick')}
       </div>
       <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
-      <p class="tiny"><kbd>M</kbd> mutes everything at any time.</p>
+      <p class="tiny keys-only"><kbd>M</kbd> mutes everything at any time.</p>
       <p class="version">Version ${VERSION}</p>
     </div>`,
     (code) => {
@@ -41,7 +43,14 @@ export function settings(scr, back) {
       if (el.dataset.key === 'sfx') sfx('ticket');
     }),
   );
-  scr.root.querySelectorAll('button.toggle').forEach((el) =>
+  scr.root.querySelector('[data-mute]').addEventListener('click', (e) => {
+    const el = e.currentTarget;
+    g.hud.setMuted(toggleMute());
+    el.classList.toggle('on', !isMuted());
+    el.textContent = isMuted() ? 'OFF' : 'ON';
+    sfx('click');
+  });
+  scr.root.querySelectorAll('button.toggle[data-key]').forEach((el) =>
     el.addEventListener('click', () => {
       const k = el.dataset.key;
       st[k] = !st[k];

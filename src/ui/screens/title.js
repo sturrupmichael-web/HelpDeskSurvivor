@@ -72,7 +72,7 @@ export function title(scr) {
         <tr><td>Best CSAT</td><td>${m.best.csat.toLocaleString()}</td></tr>
         <tr><td>Shifts worked / survived</td><td>${m.shifts} / ${m.wins}</td></tr>
       </table>
-      <div class="controls">
+      <div class="controls keys-only">
         <div><kbd>WASD</kbd>/<kbd>Arrows</kbd> move · your tools fire automatically</div>
         <div><kbd>Esc</kbd> pause · <kbd>M</kbd> mute${DEBUG_ALLOWED ? ' · <kbd>`</kbd> debug' : ''}</div>
       </div>

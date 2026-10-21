@@ -11,7 +11,7 @@ import { CHARACTERS } from '../../data/player.js';
 import { SPAWNER, EVENTS } from '../../data/waves.js';
 import { TICKETS, MAX_ITEMS } from '../../data/pickups.js';
 import { EVOLUTIONS } from '../../data/evolutions.js';
-import { sfx, toggleMute, startMusic, stopMusic, duckMusic, setVolumes, setMusicStyle, setListener } from '../engine/audio.js';
+import { sfx, toggleMute, isMuted, startMusic, stopMusic, duckMusic, setVolumes, setMusicStyle, setListener } from '../engine/audio.js';
 import { drawTouchStick } from '../engine/input.js';
 import { loadSettings, saveSettings } from './settings.js';
 import { Achievements } from './achievements.js';
@@ -456,6 +456,14 @@ export class Game {
     }
     if (code === 'KeyM') {
       this.hud.setMuted(toggleMute());
+      // Keep the Sound buttons on the pause menu and Settings in step.
+      const pauseBtn = this.screens.root.querySelector('[data-act=mute]');
+      if (pauseBtn) pauseBtn.innerHTML = pauseBtn.innerHTML.replace(/On|Off/, isMuted() ? 'Off' : 'On');
+      const toggle = this.screens.root.querySelector('[data-mute]');
+      if (toggle) {
+        toggle.textContent = isMuted() ? 'OFF' : 'ON';
+        toggle.classList.toggle('on', !isMuted());
+      }
       return;
     }
     if (this.screens.onKey(code)) return;

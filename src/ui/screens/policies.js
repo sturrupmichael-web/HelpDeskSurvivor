@@ -105,6 +105,7 @@ export function policiesStep(scr, pick) {
         <button data-act="reorg" title="${POLICY_RULES.reorgCount} random bad policies, +${Math.round((POLICY_RULES.reorgBonus - 1) * 100)}% while you keep them">🎲 Reorg <kbd>R</kbd></button>
         <button data-act="clear" ${picked.length ? '' : 'disabled'}>No policies <kbd>N</kbd></button>
       </div>
+      <p class="pol-note">🎲 Reorg signs you up to ${POLICY_RULES.reorgCount} random bad policies for an extra +${Math.round((POLICY_RULES.reorgBonus - 1) * 100)}% while you keep them.</p>
       ${groups}
       <div class="setup-bar">
         <button data-act="back">${stepNo === 1 ? 'Cancel' : 'Back'} <kbd>Esc</kbd></button>

@@ -1,7 +1,7 @@
 // pause: part of the menu screens (src/ui/screens.js holds the shared Screens helpers).
 // `scr` is the Screens instance.
 
-import { sfx } from '../../engine/audio.js';
+import { sfx, isMuted, toggleMute } from '../../engine/audio.js';
 import { bugScreen } from '../bugreport.js';
 import { recordWiki } from '../../game/wiki.js';
 import { PAUSE_LINES } from '../../../data/flavor.js';
@@ -51,6 +51,11 @@ export function pause(scr) {
     } else if (act === 'stats') scr.stats();
     else if (act === 'settings') scr.settings(() => scr.pause());
     else if (act === 'bug') bugScreen(scr, 'pause', () => scr.pause());
+    else if (act === 'mute') {
+      scr.game.hud.setMuted(toggleMute());
+      sfx('click');
+      scr.pause();
+    }
   };
   const restartLabel = `${training ? 'Restart Training' : 'Restart Shift'} <kbd>R</kbd>`;
   const quitLabel = `${training ? 'Skip Training' : 'Quit to Title'} <kbd>Q</kbd>`;
@@ -63,11 +68,11 @@ export function pause(scr) {
       <button data-act="stats">Shift Stats <kbd>T</kbd></button>
       <button data-act="settings">Settings <kbd>O</kbd></button>
       <button data-act="bug">Report a Bug <kbd>B</kbd></button>
+      <button data-act="mute">${isMuted() ? 'Sound: Off' : 'Sound: On'} <kbd>M</kbd></button>
       <div class="pause-danger">
         <button class="confirm" data-act="restart">${restartLabel}</button>
         <button class="confirm" data-act="quit">${quitLabel}</button>
       </div>
-      <p class="tiny"><kbd>M</kbd> mute / unmute sound</p>
     </div>`,
     (code) => {
       if (code === 'Escape' || code === 'KeyP') go('resume');

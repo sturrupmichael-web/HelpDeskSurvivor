@@ -4,6 +4,19 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-ux3',
+    date: 'Oct 21, 2026',
+    title: 'Better on phones',
+    items: [
+      'Keyboard hints are hidden on touch screens. Press any key and they come back.',
+      'New Sound on/off button in the pause menu and in Settings, so you can mute on a phone.',
+      'Bigger tap targets: tap anywhere on a leaderboard row to open a profile, and the pause button, toggles and tabs are easier to hit.',
+      'Tap the policy icons on the leaderboard to see their names. The Policies step now explains what Reorg does.',
+      'Achievement pop-ups shrink to a strip along the top while a menu is open, so they no longer cover level-up cards or your shift summary.',
+      'All four level-up cards fit on an upright phone, and the pause button sits beside the clock instead of on top of it.',
+    ],
+  },
+  {
     id: '2026-10-21-ux2',
     date: 'Oct 21, 2026',
     title: 'Quicker Clock In',

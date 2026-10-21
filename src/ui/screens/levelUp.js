@@ -34,7 +34,7 @@ export function levelUp(scr, choices, tip, onReroll, rerollsLeft, onPick) {
       ${c.hint ? `<div class="card-hint">${c.hint}</div>` : ''}
     </button>`;
   scr.show(
-    `<div class="panel wide">
+    `<div class="panel wide levelup-panel">
       <h2>LEVEL UP!</h2>
       <p class="sub">${pickLine(LEVEL_UP_LINES)}</p>
       ${tip ? `<p class="levelup-tip"><b>TRAINING:</b> ${tip}</p>` : ''}

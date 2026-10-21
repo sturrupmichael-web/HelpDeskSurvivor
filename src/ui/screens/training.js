@@ -51,7 +51,7 @@ export function trainingDone(scr) {
         <li>Survive the 20-minute shift and beat The Executive to clock out.</li>
         <li>Every shift pays Overtime Pay, even a short one. Spend it in the Overtime Shop on permanent upgrades, or hire new technicians.</li>
         <li>Bosses drop a Change Approved chest. A maxed tool plus the right passive can evolve in one (the Wiki has hints).</li>
-        <li><kbd>Esc</kbd> or the II button pauses. Training is always on the title screen if you want it again.</li>
+        <li>Pause with the II button<span class="keys-only"> or <kbd>Esc</kbd></span>. Training is always on the title screen if you want it again.</li>
       </ul>
       <button class="primary" data-act="start">Clock In <kbd>Enter</kbd></button>
       <button data-act="title">Title <kbd>Esc</kbd></button>

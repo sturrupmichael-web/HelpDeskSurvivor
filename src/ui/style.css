@@ -436,3 +436,52 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
   .summary .summary-buttons button { min-height: 40px; padding: 6px; font-size: 13px; }
   .summary .summary-buttons kbd { display: none; }
 }
+
+/* Touch screens (html.touch, set in src/ui/index.js): no keyboard hints, bigger targets (UX review 6, 11) */
+html.touch #overlay kbd, html.touch .keys-only, html.touch .hud-right kbd { display: none; }
+html.touch .panel button.toggle, html.touch .panel button.tab { min-height: 44px; }
+html.touch .board-table tr[data-name] td { padding-top: 10px; padding-bottom: 10px; }
+.board-table tr[data-name] { cursor: pointer; }
+.board-table tr[data-name]:hover td { background: rgba(255, 205, 117, 0.08); }
+.board-table .mods { cursor: help; }
+.board-table .mods.named { display: block; max-width: 9em; white-space: normal; font-size: 11px; line-height: 1.3; color: var(--gray); }
+.board-table td:nth-child(2) { min-width: 6em; }
+/* Pause button: 44 px, beside the clock so it never covers the timer or the HUD blocks (UX review 10, 11). */
+#hud .hud-pause { top: 14px; left: calc(50% + 64px); transform: none; width: 44px; height: 44px; }
+.pol-note { font-size: 12px; color: var(--gray); text-align: left; margin: 2px 0 4px; }
+
+/* Achievement toasts while a menu is open: a slim strip along the top edge instead of over the cards (UX review 7) */
+.menu-open .toasts { top: 0; left: 0; right: 0; align-items: center; gap: 2px; }
+.menu-open .toast { padding: 3px 10px; border-width: 1px; box-shadow: none; gap: 8px; max-width: calc(100vw - 16px); }
+.menu-open .toast .icon { width: 16px; height: 16px; }
+.menu-open .toast > div { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.menu-open .toast b { font-size: 12px; }
+
+/* Level-up on an upright phone: all four cards and the reroll button on one screen (UX review 9) */
+@media (max-width: 600px) {
+  .panel .cards.levelup { gap: 6px; }
+  .panel .cards.levelup .card-flavor { display: none; }
+  .panel .cards.levelup button.card { padding: 8px 10px; gap: 4px; }
+  .panel .cards.levelup .card-head .icon { width: 32px; height: 32px; }
+  .panel .cards.levelup .card-text { font-size: 12px; }
+  .panel .cards.levelup .card-hint { font-size: 11px; padding-top: 4px; }
+  .panel.levelup-panel h2 { font-size: 24px; margin-bottom: 4px; }
+  .panel.levelup-panel .sub { margin-bottom: 10px; font-size: 13px; }
+  .panel.levelup-panel .always { margin-top: 10px; }
+}
+
+/* Sideways phones: the compact phone HUD (UX review 10) */
+@media (max-height: 500px) {
+  .hud-timer { top: 14px; }
+  .hud-timer .t { font-size: 22px; }
+  .hud-timer small { font-size: 8px; }
+  .hud-left { top: 22px; left: 8px; }
+  .hud-right { top: 20px; right: 8px; font-size: 11px; line-height: 1.5; }
+  .hud-right b { font-size: 13px; }
+  .hud-sanity .label { display: none; }
+  .hud-sanity svg { width: 110px; }
+  .slots { gap: 2px; margin-top: 4px; }
+  .slot { width: 26px; height: 32px; }
+  .slot svg { width: 18px; height: 18px; }
+  #hud .hud-pause { top: 10px; }
+}

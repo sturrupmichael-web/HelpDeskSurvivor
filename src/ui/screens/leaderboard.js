@@ -15,12 +15,13 @@ import { parseMods, fmtMult } from '../../game/policies.js';
 // Clean-only filter, remembered while the page is open.
 let cleanOnly = false;
 
-// The policies on a row, as small icons (names on hover).
+// The policies on a row, as small icons. Names show on hover, or on a tap (phones can't hover).
 function modsCell(row) {
   const ids = parseMods(row.mods);
   if (!ids.length) return '<span class="tiny">—</span>';
   const names = ids.map((id) => (id === 'reorg' ? 'Reorg bonus' : POLICIES[id].name)).join(', ');
-  return `<span class="mods" title="${names} (${fmtMult(Number(row.mult) || 1)})">${ids
+  const label = `${names} (${fmtMult(Number(row.mult) || 1)})`;
+  return `<span class="mods" title="${label}" data-label="${label}">${ids
     .map((id) => (id === 'reorg' ? '🎲' : icon(POLICIES[id].icon, 14)))
     .join('')}</span>`;
 }
@@ -36,7 +37,7 @@ export function leaderboard(scr, mapId = this.game.meta.data.map) {
   scr.show(
     `<div class="panel wide board">
       <h2>LEADERBOARD</h2>
-      <p class="sub">Top ${LEADERBOARD.top} per map. Score = CSAT x the shift's policies. Tap a name to see that player's profile.</p>
+      <p class="sub">Top ${LEADERBOARD.top} per map. Score = CSAT x the shift's policies. Tap a player to see their profile, or tap the policy icons to see their names.</p>
       <div class="tabs">${tabs}</div>
       <div class="tabs board-filter">
         <button class="tab ${cleanOnly ? '' : 'selected'}" data-clean="0">All shifts</button>
@@ -72,15 +73,27 @@ export function leaderboard(scr, mapId = this.game.meta.data.map) {
         <tr class="head"><td>#</td><td>Name</td><td>Technician</td><td>Time</td><td>Policies</td><td>Score</td></tr>
         ${r.rows
           .map(
-            (row, i) => `<tr${row.name === scr.game.meta.data.playerName ? ' class="me"' : ''}><td>${i + 1}</td><td><button class="name-link" data-name="${esc(row.name)}">${esc(row.name)}</button></td>
+            (row, i) => `<tr data-name="${esc(row.name)}"${row.name === scr.game.meta.data.playerName ? ' class="me"' : ''}><td>${i + 1}</td><td><button class="name-link" data-name="${esc(row.name)}">${esc(row.name)}</button></td>
             <td>${esc(row.character)}</td><td>${fmtTime(Number(row.seconds) || 0)}${row.won ? ' <b class="ok">✓</b>' : ''}</td><td>${modsCell(row)}</td><td>${Number(row.score ?? row.csat).toLocaleString()}</td></tr>`,
           )
           .join('')}
       </table>`;
-    body.querySelectorAll('.name-link').forEach((el) =>
-      el.addEventListener('click', () => {
+    // The whole row opens the profile, so it's an easy tap target (the name stays a button
+    // for keyboard and controller). Tapping the policy icons shows their names instead.
+    body.querySelectorAll('tr[data-name]').forEach((tr) =>
+      tr.addEventListener('click', () => {
         sfx('click');
-        profileScreen(scr, el.dataset.name, () => scr.leaderboard(mapId));
+        profileScreen(scr, tr.dataset.name, () => scr.leaderboard(mapId));
+      }),
+    );
+    body.querySelectorAll('.mods').forEach((el) =>
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        el.classList.toggle('named');
+        if (el.classList.contains('named')) {
+          el.dataset.icons = el.innerHTML;
+          el.textContent = el.dataset.label;
+        } else el.innerHTML = el.dataset.icons;
       }),
     );
   });

@@ -29,6 +29,7 @@ export class Screens {
   show(html, keys) {
     this.root.innerHTML = html;
     this.root.style.display = 'flex';
+    document.body.classList.add('menu-open'); // achievement toasts move out of the way
     this.keys = keys;
     // With a controller, start with the first button focused so it's obvious where you are.
     if (gamepadConnected()) this.focusables()[0]?.focus();
@@ -40,6 +41,7 @@ export class Screens {
 
   hide() {
     this.root.style.display = 'none';
+    document.body.classList.remove('menu-open');
     this.root.innerHTML = '';
     this.keys = null;
   }

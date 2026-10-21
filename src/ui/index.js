@@ -18,6 +18,13 @@ export function browserUi(game) {
 // Hooks the page UI to the game once it exists: the HUD's pause button and the cloud
 // save's prompts.
 export function attachUi(game) {
+  // Touch screens hide keyboard hints (<kbd>, .keys-only); a key press brings them back.
+  const touchUi = (on) => document.documentElement.classList.toggle('touch', on);
+  touchUi(matchMedia('(hover: none) and (pointer: coarse)').matches);
+  addEventListener('pointerdown', (e) => e.pointerType === 'touch' && touchUi(true), true);
+  addEventListener('keydown', (e) => {
+    if (!(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) touchUi(false);
+  }, true);
   game.hud.onPause(() => {
     if (game.state === 'run') game.pause();
   });
