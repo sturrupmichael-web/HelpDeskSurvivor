@@ -30,7 +30,7 @@ export const MAPS = {
     blurb: 'Cubicles, a water cooler and 847 unread tickets. Where every career starts.',
     twistText: 'No surprises. Just users.',
     pay: 1,
-    hpMult: 1,
+    hpMult: 0.9,
     speedMult: 1,
     mixBoost: {},
     music: { transpose: 0, tempo: 1, lead: 'square', cutoff: 1400 },
@@ -60,7 +60,7 @@ export const MAPS = {
     speedMult: 1,
     mixBoost: { randy: 2, walkup: 1.4 },
     music: { transpose: 2, tempo: 1.1, lead: 'square', cutoff: 2000 },
-    twist: { type: 'phones', every: 3.5, delay: 1.4, radius: 50, damage: 12, damagePerMin: 1.5 },
+    twist: { type: 'phones', every: 4.5, delay: 1.4, radius: 50, damage: 8, damagePerMin: 1.2 },
     boss: { boss: 'caller', title: 'THE ANGRY CALLER', text: 'Line 1 has been on hold for forty minutes. Line 1 is coming to you.' },
   },
   garage: {
@@ -84,8 +84,8 @@ export const MAPS = {
     blurb: "Congratulations, you've been acquired! Two logos, two badge systems, two ticketing systems.",
     twistText: 'The new parent company takes more of the floor every minute. On their navy floor users are tougher but drop double tickets.',
     pay: 1.5,
-    hpMult: 1.1,
-    speedMult: 1.05,
+    hpMult: 1.2,
+    speedMult: 1.06,
     mixBoost: { vip: 1.4 },
     newUsers: {
       dave: { from: 45, share: 0.1 },

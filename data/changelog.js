@@ -6,13 +6,15 @@ export const CHANGELOG = [
   {
     id: '2026-10-21-merger',
     date: 'Oct 21, 2026',
-    title: 'New map: Merger Day',
+    title: 'New map: Merger Day, unlocks and a rebalance',
     items: [
       "Congratulations, you've been acquired! Win the Night Shift in the Parking Garage to unlock Merger Day (1.5x Overtime Pay).",
       "The new parent company's navy-and-gold floor spreads every minute. Users who start on it are tougher, but every ticket closed there counts double.",
       'New users: Synergy Consultants (always in pairs; close one and the other gets angry), Duplicate Dave (comes back once as Dave (2)) and Badge Brenda (slows you down while she tailgates you).',
       'At 10:00 the Hostile Takeover tours the floor. It absorbs any user it touches to heal and grow, sends Restructuring memos down warned lanes, and spins off a Subsidiary at half HP.',
       'Smash Unclaimed Moving Boxes for a free pickup, and grab the Welcome Swag Bag for sanity and a burst of speed.',
+      'Winning maps now unlocks new things. Server Room: five tools, the Network Engineer and The Intern. Call Center: four passives and the Help Desk Manager. Parking Garage: six evolutions and the Cloud Architect. Anything you have already used or hired stays yours.',
+      'Rebalance: the Open Office is a little gentler, the Major Incident, Angry Caller and Call Center phones hit softer, and The Executive has 60,000 HP (was 80,000). Every map should now feel about as tough as the gear you have when you get there.',
     ],
   },
   {

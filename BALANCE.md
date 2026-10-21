@@ -395,3 +395,33 @@ the same as the Parking Garage.
 The parent company's floor starts at 30% and grows 3.5% a minute, to 92% at most
 (`twist` in `data/maps.js`); the share is measured over the chunks around the start, so
 it reads right whatever the noise does.
+
+## Map-win unlocks and the full rebalance (2026-10-21)
+
+The 5 newest tools unlock with a Server Room win, the 4 newest passives with a Call Center
+win and the 6 newest evolutions with a Parking Garage win (`data/unlocks.js`), so each map
+was rebalanced for the gear a player has when they get there. Bot v2 (keeps its distance,
+dodges bomb circles and boss bullets, closes in on bosses, picks owned tools and
+evolution passives first) played 8 shifts per profile, Tier 1 Tech:
+
+| Map | Shop upgrades | Unlocked from | Before | After |
+| --- | --- | --- | --- | --- |
+| Open Office | none | nothing | 10:39, 0 won | 12:37, 0 / 8 won |
+| Open Office | 40% | nothing | 15:04, 0 / 6 | 16:27, 1 / 8 |
+| Server Room | 50% | Office | 19:09, 1 / 6 | 16:28, 1 / 8 |
+| Call Center | 70% | + Server Room (tools) | 15:48, 0 / 6 | 18:03, 2 / 8 |
+| Parking Garage | 85% | + Call Center (passives) | 16:21, 1 / 6 | 17:24, 2 / 8 |
+| Merger Day | all | + Garage (evolutions) | 21:53, 4 / 6 | 18:04, 2 / 8 |
+
+Before, the Major Incident was the hardest boss in the game (no bot ever closed it with
+40% upgrades), the Call Center was the hardest map and Merger Day, with everything
+unlocked, the easiest. Changes:
+- Open Office users x0.9 HP.
+- Major Incident 12,000 to 9,000 HP, ring gap 3 to 5 bullets, ring damage 12 to 10,
+  4 Status Updates per wave (was 6).
+- Angry Caller 12,500 to 9,000 HP, hold ring 10 to 8 phones for 12 (was 16), scream 14
+  to 11, conference call 6 Randys (was 10). Call Center phones every 4.5 s (was 3.5) for
+  8 + 1.2/min (was 12 + 1.5).
+- The Executive 80,000 to 60,000 HP: shifts that reached 20:00 mostly couldn't finish it.
+- Merger Day users x1.2 HP and x1.06 speed (was x1.1 / x1.05); Hostile Takeover 13,000 HP
+  (was 13,500), heals 15 per user absorbed (was 25).
