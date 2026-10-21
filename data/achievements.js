@@ -13,7 +13,7 @@ export const ACHIEVEMENTS = [
   { id: 'streak', name: 'Customer Obsessed', icon: 'cert', desc: 'Reach the maximum CSAT streak multiplier.', check: (r) => r.maxMult >= 5 },
   { id: 'evolve', name: 'Digital Transformation', icon: 'key', desc: 'Evolve a tool.', check: (r) => r.evolutions >= 1 },
   { id: 'evolve_all', name: 'Fully Automated', icon: 'policy', desc: 'Evolve all four tools in one shift.', check: (r) => r.evolutions >= 4 },
-  { id: 'incident', name: 'Incident Commander', icon: 'mfa', desc: 'Resolve the Major Incident.', check: (r) => r.incident },
+  { id: 'incident', name: 'Incident Commander', icon: 'mfa', desc: 'Resolve the Major Incident.', check: (r) => r.bosses.includes('incident') },
   { id: 'win', name: 'Clocked Out', icon: 'firewall', desc: "Close The Executive's ticket.", check: (r) => r.won },
   { id: 'win_flawless', name: 'Zen Mode', icon: 'headphones', desc: 'Win a shift without ever dropping below half sanity.', check: (r) => r.won && r.minHpFrac >= 0.5 },
   { id: 'overtime', name: 'Unpaid Overtime', icon: 'coffee', desc: 'Still be on the clock at 21:00.', check: (r) => r.time >= 1260 },

@@ -27,16 +27,16 @@ const WIDE_POSE = 1;
 function startMemo(e, game) {
   const m = e.params.memo;
   const pl = game.player;
-  e.ax = Math.random() < 0.5 ? 1 : 0; // 1 = horizontal strips
-  e.lines.length = 0;
+  e.ai.horizontal = Math.random() < 0.5;
+  e.ai.lanes.length = 0;
   const shift = (Math.random() - 0.5) * m.width * 0.6;
   for (let i = 0; i < m.lanes; i++) {
     const off = (i - (m.lanes - 1) / 2) * m.gap + shift;
-    e.lines.push(e.ax ? pl.y + off : pl.x + off);
+    e.ai.lanes.push(e.ai.horizontal ? pl.y + off : pl.x + off);
   }
-  e.ay = e.ax ? pl.x : pl.y; // middle of the strips along their length
-  e.state = MEMO_TELL;
-  e.stateT = m.telegraph;
+  e.ai.laneMid = e.ai.horizontal ? pl.x : pl.y; // middle of the strips along their length
+  e.ai.state = MEMO_TELL;
+  e.ai.stateT = m.telegraph;
   e.anim = 'attack';
   e.pose = MEMO_POSE;
   sfx('warn', e.x);
@@ -45,10 +45,10 @@ function startMemo(e, game) {
 function memoHits(e, game) {
   const m = e.params.memo;
   const pl = game.player;
-  const across = e.ax ? pl.y : pl.x;
-  const along = e.ax ? pl.x : pl.y;
-  if (Math.abs(along - e.ay) > m.length / 2) return false;
-  return e.lines.some((c) => Math.abs(across - c) < m.width / 2 + pl.r);
+  const across = e.ai.horizontal ? pl.y : pl.x;
+  const along = e.ai.horizontal ? pl.x : pl.y;
+  if (Math.abs(along - e.ai.laneMid) > m.length / 2) return false;
+  return e.ai.lanes.some((c) => Math.abs(across - c) < m.width / 2 + pl.r);
 }
 
 function allHands(e, game) {
@@ -60,20 +60,20 @@ function allHands(e, game) {
     spawnEnemy(game, a.id, pl.x + Math.cos(ang) * a.radius, pl.y + Math.sin(ang) * a.radius, hpMult);
   }
   // The banner the first time; after that everyone knows the drill.
-  if (!e.ay2) game.hud.banner('ALL-HANDS MEETING', 'Mandatory. Cameras on. The consultants are here to help.', 2);
+  if (!e.ai.calledAllHands) game.hud.banner('ALL-HANDS MEETING', 'Mandatory. Cameras on. The consultants are here to help.', 2);
   else game.fx.text(pl.x, pl.y - 34, 'ALL-HANDS!', '#ffcd75');
-  e.ay2 = 1;
+  e.ai.calledAllHands = true;
   game.fx.ring(e.x, e.y, 60, '#ffcd75', 0.5);
   sfx('alarm');
 }
 
 function spinOff(e, game) {
   const p = e.params;
-  e.phase = 1;
+  e.ai.spunOff = true;
   const c = spawnEnemy(game, p.spin, e.x + 40, e.y);
   if (!c) return;
   c.kx = 180;
-  c.t0 = 1.5;
+  c.ai.attackIn = 1.5;
   game.addBossPart(c);
   game.hud.banner('SPIN-OFF', 'It spun off a Subsidiary. Close them both.', 2.5);
   game.fx.ring(e.x, e.y, 70, '#ffcd75', 0.5);
@@ -85,11 +85,11 @@ function spinOff(e, game) {
 function startAttack(e, game) {
   const list = e.params.attacks;
   let i = (Math.random() * list.length) | 0;
-  if (list.length > 1 && list[i] === e.n) i = (i + 1) % list.length; // no repeats
-  e.n = list[i];
-  if (e.n === 'memo') return startMemo(e, game);
-  e.state = POSE;
-  e.stateT = POSE_TIME;
+  if (list.length > 1 && list[i] === e.ai.lastAttack) i = (i + 1) % list.length; // no repeats
+  e.ai.lastAttack = list[i];
+  if (e.ai.lastAttack === 'memo') return startMemo(e, game);
+  e.ai.state = POSE;
+  e.ai.stateT = POSE_TIME;
   e.anim = 'attack';
   e.pose = WIDE_POSE;
   allHands(e, game);
@@ -97,36 +97,43 @@ function startAttack(e, game) {
 
 function endAttack(e) {
   const p = e.params;
-  e.state = WALK;
+  e.ai.state = WALK;
   e.anim = 'walk';
   e.pose = -1;
-  e.t0 = p.attackGap[e.hp < e.maxHp * p.enrageAt ? 1 : 0];
+  e.ai.attackIn = p.attackGap[e.hp < e.maxHp * p.enrageAt ? 1 : 0];
 }
 
 export default {
   init(e) {
-    e.lines = e.lines ?? [];
-    e.lines.length = 0;
-    e.t0 = e.params.isSmall ? 1.5 : 2.5; // until the first attack
-    e.t1 = 0; // absorb budget (users it may still acquire this second)
-    e.ay2 = 0; // has it called an all-hands yet?
-    e.n = '';
+    // This boss's own state (pool objects are reused, so it's made fresh each fight).
+    e.ai = {
+      state: WALK,
+      stateT: 0, // seconds left in the current state
+      attackIn: e.params.isSmall ? 1.5 : 2.5, // seconds until the next attack
+      lastAttack: '', // never the same attack twice in a row
+      absorbBudget: 0, // users it may still acquire this second
+      calledAllHands: false, // the banner shows only the first time
+      spunOff: false, // has it spun off The Subsidiary yet?
+      horizontal: false, // memo lanes run horizontally (else vertically)
+      lanes: [], // memo lane positions across the floor
+      laneMid: 0, // middle of the lanes along their length
+    };
   },
 
   update(e, game, dt) {
     const p = e.params;
     const pl = game.player;
-    if (p.absorb) e.t1 = Math.min(p.absorb.perSec, e.t1 + p.absorb.perSec * dt);
-    if (e.phase === 0 && p.spinAt && e.hp < e.maxHp * p.spinAt) spinOff(e, game);
-    switch (e.state) {
+    if (p.absorb) e.ai.absorbBudget = Math.min(p.absorb.perSec, e.ai.absorbBudget + p.absorb.perSec * dt);
+    if (!e.ai.spunOff && p.spinAt && e.hp < e.maxHp * p.spinAt) spinOff(e, game);
+    switch (e.ai.state) {
       case WALK:
         stepToward(e, pl.x, pl.y, e.speed * e.slow * e.buff, dt);
-        if ((e.t0 -= dt) <= 0) startAttack(e, game);
+        if ((e.ai.attackIn -= dt) <= 0) startAttack(e, game);
         break;
       case MEMO_TELL:
-        if ((e.stateT -= dt) <= 0) {
-          e.state = MEMO;
-          e.stateT = MEMO_SHOW;
+        if ((e.ai.stateT -= dt) <= 0) {
+          e.ai.state = MEMO;
+          e.ai.stateT = MEMO_SHOW;
           if (memoHits(e, game) && hurtPlayer(game, p.memo.damage)) game.onPlayerHurt();
           game.camera.shake(3);
           sfx('whoosh', e.x);
@@ -134,7 +141,7 @@ export default {
         break;
       case MEMO:
       case POSE:
-        if ((e.stateT -= dt) <= 0) endAttack(e);
+        if ((e.ai.stateT -= dt) <= 0) endAttack(e);
         break;
     }
   },
@@ -142,16 +149,16 @@ export default {
   // After the spatial hash is built: acquire the users it is touching.
   post(e, game) {
     const a = e.params.absorb;
-    if (!a || e.t1 < 1) return;
+    if (!a || e.ai.absorbBudget < 1) return;
     const buf = game.scratch2;
     const n = game.hash.query(e.x, e.y, e.r + 10, buf);
-    for (let k = 0; k < n && e.t1 >= 1; k++) {
+    for (let k = 0; k < n && e.ai.absorbBudget >= 1; k++) {
       const o = game.enemies.items[buf[k]];
       if (o === e || o.dead || o.def.boss || o.def.anchored) continue;
       const rr = e.r + o.r;
       if ((o.x - e.x) ** 2 + (o.y - e.y) ** 2 > rr * rr) continue;
       o.dead = true; // acquired: no ticket for you
-      e.t1 -= 1;
+      e.ai.absorbBudget -= 1;
       e.hp = Math.min(e.maxHp, e.hp + a.heal);
       if (e.scale < a.maxScale) {
         e.scale = Math.min(a.maxScale, e.scale + a.grow);
@@ -164,13 +171,13 @@ export default {
 
   // Restructuring telegraph: red strips with a blinking border, then the memo itself.
   drawUnder(e, game, ctx) {
-    if (e.state !== MEMO_TELL && e.state !== MEMO) return;
+    if (e.ai.state !== MEMO_TELL && e.ai.state !== MEMO) return;
     const m = e.params.memo;
     const half = m.length / 2;
-    for (const c of e.lines) {
-      const [x, y, w, h] = e.ax ? [e.ay - half, c - m.width / 2, m.length, m.width] : [c - m.width / 2, e.ay - half, m.width, m.length];
-      if (e.state === MEMO_TELL) {
-        const k = 1 - e.stateT / m.telegraph;
+    for (const c of e.ai.lanes) {
+      const [x, y, w, h] = e.ai.horizontal ? [e.ai.laneMid - half, c - m.width / 2, m.length, m.width] : [c - m.width / 2, e.ai.laneMid - half, m.width, m.length];
+      if (e.ai.state === MEMO_TELL) {
+        const k = 1 - e.ai.stateT / m.telegraph;
         ctx.globalAlpha = 0.18 + 0.25 * k;
         ctx.fillStyle = '#b13e53';
         ctx.fillRect(x, y, w, h);
@@ -180,11 +187,11 @@ export default {
         ctx.strokeRect(x, y, w, h);
       } else {
         // The memo: a sheet of paper sliding down the whole lane.
-        ctx.globalAlpha = Math.min(1, (e.stateT / MEMO_SHOW) * 2);
+        ctx.globalAlpha = Math.min(1, (e.ai.stateT / MEMO_SHOW) * 2);
         ctx.fillStyle = '#f4f4f4';
         ctx.fillRect(x, y, w, h);
         ctx.fillStyle = '#94b0c2';
-        if (e.ax) for (let i = 8; i < w - 8; i += 24) ctx.fillRect(x + i, y + h / 2 - 1, 14, 2);
+        if (e.ai.horizontal) for (let i = 8; i < w - 8; i += 24) ctx.fillRect(x + i, y + h / 2 - 1, 14, 2);
         else for (let i = 8; i < h - 8; i += 24) ctx.fillRect(x + w / 2 - 1, y + i, 2, 14);
       }
     }

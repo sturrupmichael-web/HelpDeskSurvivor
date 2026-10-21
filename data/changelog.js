@@ -4,6 +4,16 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-21-groundwork',
+    date: 'Oct 21, 2026',
+    title: 'Under the hood',
+    items: [
+      'The game now tests itself: every map, every boss, the menus and the training shift are played automatically before each update goes out, so fewer bugs should reach you.',
+      'Art is saved on your device after the first load, so the game opens faster, and after an update only changed art is downloaded again.',
+      'Lots of behind-the-scenes tidying so new maps, bosses and pickups are quicker to add.',
+    ],
+  },
+  {
     id: '2026-10-21-perf',
     date: 'Oct 21, 2026',
     title: 'Smoother on phones',

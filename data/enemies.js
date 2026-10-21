@@ -235,6 +235,7 @@ export const ENEMIES = {
   executive: {
     name: 'The Executive Who Needs It Fixed Before The Board Meeting', sprite: 'executive', behavior: 'executiveBoss',
     boss: true, final: true,
+    downBanner: ['SHIFT COMPLETE', 'The Executive left for the board meeting. Everyone else went home.'],
     params: {
       phases: [0.66, 0.33], // HP fractions where phase 2 and 3 begin
       attackGap: [2.6, 2.2, 1.6], // seconds between attacks, per phase

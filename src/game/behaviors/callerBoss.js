@@ -58,8 +58,8 @@ function aim(e, game) {
   const dx = pl.x - e.x;
   const dy = pl.y - (e.y + MOUTH_Y);
   const d = Math.hypot(dx, dy) || 1;
-  e.ax = dx / d;
-  e.ay = dy / d;
+  e.ai.aimX = dx / d;
+  e.ai.aimY = dy / d;
   e.flip = dx < 0;
 }
 
@@ -68,7 +68,7 @@ function scream(e, game, s) {
   const dx = pl.x - e.x;
   const dy = pl.y - (e.y + MOUTH_Y);
   const d = Math.hypot(dx, dy) || 1;
-  const off = Math.acos(Math.max(-1, Math.min(1, (dx * e.ax + dy * e.ay) / d)));
+  const off = Math.acos(Math.max(-1, Math.min(1, (dx * e.ai.aimX + dy * e.ai.aimY) / d)));
   if (d < s.range && off < s.spread / 2) {
     if (hurtPlayer(game, s.damage)) game.onPlayerHurt();
     pl.kx += (dx / d) * s.push;
@@ -82,36 +82,43 @@ function scream(e, game, s) {
 function startAttack(e, game) {
   const p = e.params;
   let i = (Math.random() * p.attacks.length) | 0;
-  if (p.attacks[i] === e.n) i = (i + 1) % p.attacks.length; // no repeats
-  e.n = p.attacks[i];
+  if (p.attacks[i] === e.ai.lastAttack) i = (i + 1) % p.attacks.length; // no repeats
+  e.ai.lastAttack = p.attacks[i];
   e.anim = 'attack';
   aim(e, game);
-  if (e.n === 'scream') {
-    e.state = SCREAM_TELL;
-    e.stateT = p.scream.telegraph;
+  if (e.ai.lastAttack === 'scream') {
+    e.ai.state = SCREAM_TELL;
+    e.ai.stateT = p.scream.telegraph;
     sfx('warn', e.x);
     e.pose = SCREAM;
   } else {
-    e.state = POSE;
-    e.stateT = POSE_TIME;
+    e.ai.state = POSE;
+    e.ai.stateT = POSE_TIME;
     e.pose = PHONE;
-    if (e.n === 'hold') hold(e, game, p.hold, e.hp < e.maxHp * p.enrageAt);
+    if (e.ai.lastAttack === 'hold') hold(e, game, p.hold, e.hp < e.maxHp * p.enrageAt);
     else conference(e, game, p.conference);
   }
 }
 
 export default {
   init(e) {
-    e.t0 = 2.5;
-    e.n = '';
-    e.t1 = Math.random() < 0.5 ? 1 : -1; // strafe direction
+    // This boss's own state (pool objects are reused, so it's made fresh each fight).
+    e.ai = {
+      state: WALK,
+      stateT: 0, // seconds left in the current state
+      attackIn: 2.5, // seconds until the next attack
+      lastAttack: '', // never the same attack twice in a row
+      strafe: Math.random() < 0.5 ? 1 : -1, // which way it circles you
+      aimX: 1, // unit vector of the scream
+      aimY: 0,
+    };
   },
 
   update(e, game, dt) {
     const p = e.params;
     const pl = game.player;
     const enraged = e.hp < e.maxHp * p.enrageAt;
-    if (e.state === WALK) {
+    if (e.ai.state === WALK) {
       e.anim = 'walk';
       e.pose = -1;
       // Keep a shouting distance: close in, back off, or circle around you.
@@ -127,27 +134,27 @@ export default {
         e.x -= (dx / d) * sp;
         e.y -= (dy / d) * sp;
       } else {
-        e.x += (-dy / d) * sp * e.t1;
-        e.y += (dx / d) * sp * e.t1;
+        e.x += (-dy / d) * sp * e.ai.strafe;
+        e.y += (dx / d) * sp * e.ai.strafe;
       }
       e.flip = dx < 0;
-      if ((e.t0 -= dt) <= 0) startAttack(e, game);
-    } else if ((e.stateT -= dt) <= 0) {
-      if (e.state === SCREAM_TELL) scream(e, game, p.scream);
-      e.state = WALK;
-      e.t0 = p.attackGap[enraged ? 1 : 0];
-      if (Math.random() < 0.3) e.t1 = -e.t1;
+      if ((e.ai.attackIn -= dt) <= 0) startAttack(e, game);
+    } else if ((e.ai.stateT -= dt) <= 0) {
+      if (e.ai.state === SCREAM_TELL) scream(e, game, p.scream);
+      e.ai.state = WALK;
+      e.ai.attackIn = p.attackGap[enraged ? 1 : 0];
+      if (Math.random() < 0.3) e.ai.strafe = -e.ai.strafe;
     }
   },
 
   drawUnder(e, game, ctx) {
-    if (e.state !== SCREAM_TELL) return;
+    if (e.ai.state !== SCREAM_TELL) return;
     const s = e.params.scream;
-    const a = Math.atan2(e.ay, e.ax);
+    const a = Math.atan2(e.ai.aimY, e.ai.aimX);
     const x = e.x;
     const y = e.y + MOUTH_Y;
     const blink = (game.time * 10) & 1;
-    ctx.globalAlpha = 0.2 + 0.25 * (1 - e.stateT / s.telegraph);
+    ctx.globalAlpha = 0.2 + 0.25 * (1 - e.ai.stateT / s.telegraph);
     ctx.fillStyle = '#b13e53';
     ctx.beginPath();
     ctx.moveTo(x, y);

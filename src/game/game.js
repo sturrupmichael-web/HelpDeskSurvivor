@@ -398,14 +398,13 @@ export class Game {
         if (i < 200) this.fx.burst(o.x, o.y - 6, o.def.particle, 2);
       }
       for (let i = 0; i < this.tickets.count; i++) this.tickets.items[i].magnet = true; // bulk close on the way out
-      this.hud.banner('SHIFT COMPLETE', 'The Executive left for the board meeting. Everyone else went home.', VICTORY_DELAY);
+      const [title, text] = e.def.downBanner ?? ['SHIFT COMPLETE', 'Everyone went home.'];
+      this.hud.banner(title, text, VICTORY_DELAY);
       sfx('evolve');
     } else {
       // A split boss's last piece (no banner of its own) counts as the whole boss.
       const def = e.def.downBanner || !this.bossDef ? e.def : this.bossDef;
-      const id = def.sprite;
-      if (id === 'incident') this.achievements.run.incident = true;
-      this.achievements.run.bosses.push(id);
+      this.achievements.run.bosses.push(def.sprite);
       const [title, text] = def.downBanner ?? ['BOSS DOWN', 'Grab the Change Approved.'];
       this.hud.banner(title, text, 3);
       dropItem(this, 'chest', e.x, e.y);

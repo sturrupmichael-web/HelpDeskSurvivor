@@ -30,13 +30,13 @@ function aimAtPlayer(e, game) {
   const dx = pl.x - e.x;
   const dy = pl.y - e.y;
   const d = Math.hypot(dx, dy) || 1;
-  e.ax = dx / d;
-  e.ay = dy / d;
+  e.ai.aimX = dx / d;
+  e.ai.aimY = dy / d;
   e.flip = dx < 0;
 }
 
 function throwCone(e, game, c) {
-  const base = Math.atan2(e.ay, e.ax);
+  const base = Math.atan2(e.ai.aimY, e.ai.aimX);
   for (let i = 0; i < c.bullets; i++) {
     const a = base + (c.bullets > 1 ? (i / (c.bullets - 1) - 0.5) * c.spread : 0);
     game.hazards.bullet(e.x, e.y + HAND_Y, a, c.speed, c.damage, 'hazard_slide');
@@ -55,26 +55,26 @@ function summon(e, game, s) {
 
 function startAttack(e, game) {
   const p = e.params;
-  const list = p.attacks[e.phase];
+  const list = p.attacks[e.ai.phase];
   let i = (Math.random() * list.length) | 0;
-  if (list.length > 1 && list[i] === e.n) i = (i + 1) % list.length; // no repeats
+  if (list.length > 1 && list[i] === e.ai.lastAttack) i = (i + 1) % list.length; // no repeats
   const name = list[i];
-  e.n = name;
+  e.ai.lastAttack = name;
   e.anim = 'attack';
   aimAtPlayer(e, game);
   if (name === 'charge') {
-    e.state = CHARGE_TELL;
-    e.stateT = p.charge.telegraph;
+    e.ai.state = CHARGE_TELL;
+    e.ai.stateT = p.charge.telegraph;
     sfx('warn', e.x);
     e.pose = POINT;
   } else if (name === 'cone') {
-    e.state = CONE_TELL;
-    e.stateT = p.cone.telegraph;
+    e.ai.state = CONE_TELL;
+    e.ai.stateT = p.cone.telegraph;
     sfx('warn', e.x);
     e.pose = POINT;
   } else {
-    e.state = POSE;
-    e.stateT = POSE_TIME;
+    e.ai.state = POSE;
+    e.ai.stateT = POSE_TIME;
     e.pose = PHONE;
     if (name === 'bombs') {
       const b = p.bombs;
@@ -90,16 +90,26 @@ function startAttack(e, game) {
 }
 
 function endAttack(e) {
-  e.state = WALK;
+  e.ai.state = WALK;
   e.anim = 'walk';
   e.pose = -1;
-  e.t0 = e.params.attackGap[e.phase];
+  e.ai.attackIn = e.params.attackGap[e.ai.phase];
 }
 
 export default {
   init(e) {
-    e.t0 = 2;
-    e.n = '';
+    // This boss's own state (pool objects are reused, so it's made fresh each fight).
+    e.ai = {
+      state: WALK,
+      stateT: 0, // seconds left in the current attack step
+      attackIn: 2, // seconds until the next attack
+      phase: 0, // index into params.phases reached so far
+      lastAttack: '', // no repeats
+      aimX: 1, // locked-in aim for the charge and cone
+      aimY: 0,
+      chargeHit: false, // the current charge already hit you
+      volleysLeft: 0,
+    };
   },
 
   update(e, game, dt) {
@@ -110,8 +120,8 @@ export default {
     const frac = e.hp / e.maxHp;
     let phase = 0;
     while (phase < p.phases.length && frac < p.phases[phase]) phase++;
-    if (phase > e.phase) {
-      e.phase = phase;
+    if (phase > e.ai.phase) {
+      e.ai.phase = phase;
       const b = p.phaseBanners[phase];
       if (b) game.hud.banner(b[0], b[1], 3);
       game.camera.shake(6);
@@ -120,32 +130,32 @@ export default {
       sfx('siren');
     }
 
-    switch (e.state) {
+    switch (e.ai.state) {
       case WALK:
-        stepToward(e, pl.x, pl.y, e.speed * (1 + 0.25 * e.phase) * e.slow * e.buff, dt);
-        if ((e.t0 -= dt) <= 0) startAttack(e, game);
+        stepToward(e, pl.x, pl.y, e.speed * (1 + 0.25 * e.ai.phase) * e.slow * e.buff, dt);
+        if ((e.ai.attackIn -= dt) <= 0) startAttack(e, game);
         break;
       case CHARGE_TELL:
-        if ((e.stateT -= dt) <= 0) {
-          e.state = CHARGING;
-          e.stateT = p.charge.time;
-          e.t1 = 0; // has the charge hit you yet?
+        if ((e.ai.stateT -= dt) <= 0) {
+          e.ai.state = CHARGING;
+          e.ai.stateT = p.charge.time;
+          e.ai.chargeHit = false;
           e.anim = 'walk';
           e.pose = -1;
           sfx('charge', e.x);
         }
         break;
       case CHARGING: {
-        e.x += e.ax * p.charge.speed * dt;
-        e.y += e.ay * p.charge.speed * dt;
+        e.x += e.ai.aimX * p.charge.speed * dt;
+        e.y += e.ai.aimY * p.charge.speed * dt;
         e.animT += dt * 2; // legs pump faster
         const rr = e.r + pl.r + 4;
-        if (!e.t1 && (pl.x - e.x) ** 2 + (pl.y - e.y) ** 2 < rr * rr) {
-          e.t1 = 1;
+        if (!e.ai.chargeHit && (pl.x - e.x) ** 2 + (pl.y - e.y) ** 2 < rr * rr) {
+          e.ai.chargeHit = true;
           if (hurtPlayer(game, p.charge.damage)) game.onPlayerHurt();
           game.camera.shake(5);
         }
-        if ((e.stateT -= dt) <= 0) {
+        if ((e.ai.stateT -= dt) <= 0) {
           game.camera.shake(3);
           game.fx.burst(e.x, e.y + 20, ['#566c86', '#94b0c2'], 10);
           endAttack(e);
@@ -153,24 +163,24 @@ export default {
         break;
       }
       case CONE_TELL:
-        if ((e.stateT -= dt) <= 0) {
-          e.state = CONE;
-          e.t1 = p.cone.volleys[e.phase];
-          e.stateT = 0;
+        if ((e.ai.stateT -= dt) <= 0) {
+          e.ai.state = CONE;
+          e.ai.volleysLeft = p.cone.volleys[e.ai.phase];
+          e.ai.stateT = 0;
         }
         break;
       case CONE:
-        if ((e.stateT -= dt) <= 0) {
-          if (e.t1-- <= 0) endAttack(e);
+        if ((e.ai.stateT -= dt) <= 0) {
+          if (e.ai.volleysLeft-- <= 0) endAttack(e);
           else {
             aimAtPlayer(e, game);
             throwCone(e, game, p.cone);
-            e.stateT = VOLLEY_GAP;
+            e.ai.stateT = VOLLEY_GAP;
           }
         }
         break;
       case POSE:
-        if ((e.stateT -= dt) <= 0) endAttack(e);
+        if ((e.ai.stateT -= dt) <= 0) endAttack(e);
         break;
     }
   },
@@ -179,12 +189,12 @@ export default {
   drawUnder(e, game, ctx) {
     const p = e.params;
     const blink = (game.time * 10) & 1;
-    if (e.state === CHARGE_TELL) {
+    if (e.ai.state === CHARGE_TELL) {
       const len = p.charge.speed * p.charge.time;
       ctx.save();
       ctx.translate(e.x, e.y);
-      ctx.rotate(Math.atan2(e.ay, e.ax));
-      ctx.globalAlpha = 0.22 + 0.25 * (1 - e.stateT / p.charge.telegraph);
+      ctx.rotate(Math.atan2(e.ai.aimY, e.ai.aimX));
+      ctx.globalAlpha = 0.22 + 0.25 * (1 - e.ai.stateT / p.charge.telegraph);
       ctx.fillStyle = '#b13e53';
       ctx.fillRect(0, -e.r, len, e.r * 2);
       ctx.globalAlpha = blink ? 0.9 : 0.5;
@@ -192,10 +202,10 @@ export default {
       ctx.lineWidth = 2;
       ctx.strokeRect(0, -e.r, len, e.r * 2);
       ctx.restore();
-    } else if (e.state === CONE_TELL) {
-      const a = Math.atan2(e.ay, e.ax);
+    } else if (e.ai.state === CONE_TELL) {
+      const a = Math.atan2(e.ai.aimY, e.ai.aimX);
       const y = e.y + HAND_Y;
-      ctx.globalAlpha = 0.2 + 0.25 * (1 - e.stateT / p.cone.telegraph);
+      ctx.globalAlpha = 0.2 + 0.25 * (1 - e.ai.stateT / p.cone.telegraph);
       ctx.fillStyle = '#b13e53';
       ctx.beginPath();
       ctx.moveTo(e.x, y);

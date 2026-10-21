@@ -1,53 +1,23 @@
 // Full-screen overlays: title, Clock In picker (tech then map), character select, Overtime Pay shop, pause, level-up
 // choice, Change Approved chest, and the end-of-shift summary.
 // Each screen renders into the overlay element and handles its own keys via onKey().
+// The screens themselves live in src/ui/screens/, one file per screen; the methods below
+// just forward to them, so callers keep using game.screens.title() and so on.
 
-import { icon } from './icons.js';
-import { fmtTime } from './hud.js';
-import { sfx } from '../engine/audio.js';
-import { CHARACTERS } from '../../data/player.js';
-import { WEAPONS } from '../../data/weapons.js';
-import { SHOP } from '../../data/meta.js';
-import { PASSIVES } from '../../data/passives.js';
-import { ACHIEVEMENTS } from '../../data/achievements.js';
 import { gamepadConnected } from '../engine/input.js';
-import { DEBUG_ALLOWED } from './debug.js';
-import { MAPS, MAP_ORDER } from '../../data/maps.js';
 import { Floor } from '../game/floor.js';
-import { topScores } from '../game/leaderboard.js';
-import { accountScreen, conflictScreen, boardPost } from './account.js';
-import { profileScreen } from './profile.js';
-import { newsScreen, newsPending } from './news.js';
-import { bugScreen } from './bugreport.js';
-import { VERSION, PREVIEW } from '../version.js';
-import { account } from '../game/account.js';
-import { recordWiki } from '../game/wiki.js';
-import { wikiScreen, wikiProgress } from './wiki.js';
-import { LEADERBOARD } from '../../data/leaderboard.js';
-import { TITLE_TAGLINES, LEVEL_UP_LINES, BURNOUT_QUIPS, VICTORY_QUIPS, PAUSE_LINES } from '../../data/flavor.js';
-
-const pickLine = (list) => list[(Math.random() * list.length) | 0];
-
-// The HR performance review on the end-of-shift screen (worked out in src/game/review.js).
-function reviewCard(s) {
-  const r = s.review;
-  const stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
-  return `<div class="review rating-${r.ratingId}">
-    <div class="review-head"><span>PERFORMANCE REVIEW</span><span>${s.character}</span></div>
-    <div class="review-rating"><span class="review-stars" aria-label="${r.stars} out of 5">${stars}</span><b>${r.rating}</b></div>
-    <div class="review-label">Manager's comments</div>
-    <ul>${r.lines.map((l) => `<li>${l}</li>`).join('')}</ul>
-    <div class="review-goal"><span class="review-label">Goal for next quarter</span> ${r.goal}</div>
-    <div class="review-sign">Signed, <i>${r.manager}</i></div>
-  </div>`;
-}
-const DIGITS = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8, Numpad1: 0, Numpad2: 1, Numpad3: 2, Numpad4: 3, Numpad5: 4, Numpad6: 5, Numpad7: 6, Numpad8: 7, Numpad9: 8 };
-// Display name of a map-win unlock ({ kind, id } from Meta.unlocksFor).
-const unlockName = ({ kind, id }) =>
-  kind === 'characters' ? `${CHARACTERS[id].name} (hire)` : kind === 'passives' ? PASSIVES[id].name : kind === 'evolutions' ? `${WEAPONS[id].name} (evolution)` : WEAPONS[id].name;
-const PAY = (n) => `<span class="pay">$${n.toLocaleString()}</span>`;
-// Names on the leaderboard come from other players: always escape before showing them.
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+import { title } from './screens/title.js';
+import { trainingOffer, trainingDone } from './screens/training.js';
+import { settings } from './screens/settings.js';
+import { achievementsScreen, stats } from './screens/achievements.js';
+import { shiftSetup } from './screens/shiftSetup.js';
+import { leaderboard } from './screens/leaderboard.js';
+import { maps } from './screens/maps.js';
+import { characters } from './screens/characters.js';
+import { shop } from './screens/shop.js';
+import { pause } from './screens/pause.js';
+import { levelUp, chest } from './screens/levelUp.js';
+import { gameOver } from './screens/gameOver.js';
 
 export class Screens {
   constructor(root, game) {
@@ -124,388 +94,31 @@ export class Screens {
   }
 
   title() {
-    if (this.pendingConflict) return this.pendingConflict();
-    if (newsPending(this.game.meta)) return newsScreen(this, () => this.title());
-    const m = this.game.meta.data;
-    const ch = CHARACTERS[m.selected];
-    const wiki = wikiProgress(this.game.meta);
-    const go = (act) => {
-      sfx('click');
-      if (act === 'start') {
-        // Brand-new players get offered the training shift once.
-        if (!m.trained && !m.shifts && !m.offeredTraining) this.trainingOffer();
-        else this.shiftSetup();
-      } else if (act === 'training') this.game.startTutorial();
-      else if (act === 'chars') this.characters();
-      else if (act === 'shop') this.shop();
-      else if (act === 'ach') this.achievementsScreen();
-      else if (act === 'settings') this.settings(() => this.title());
-      else if (act === 'maps') this.maps();
-      else if (act === 'board') this.leaderboard();
-      else if (act === 'wiki') wikiScreen(this);
-      else if (act === 'account') accountScreen(this);
-      else if (act === 'news') newsScreen(this, () => this.title(), true);
-      else if (act === 'bug') bugScreen(this, 'title', () => this.title());
-      else if (act === 'install') {
-        window.installPrompt?.prompt();
-        window.installPrompt = null;
-        this.title();
-      }
-    };
-    this.show(
-      `<div class="panel title">
-        ${PREVIEW ? '<p class="preview-banner">PREVIEW BUILD · not the live game yet</p>' : ''}
-        <h1>HELPDESK<br>SURVIVORS</h1>
-        <p class="sub">${pickLine(TITLE_TAGLINES)}</p>
-        <div class="title-char"><canvas data-spr="${ch.sprite}" width="64" height="64"></canvas>
-          <div><div class="card-name">${ch.name}</div><div class="card-flavor">${ch.perk}</div></div></div>
-        <button class="primary" data-act="start">Clock In <kbd>Enter</kbd></button>
-        <button data-act="training">Training Shift <kbd>T</kbd></button>
-        <button data-act="maps">Map: ${MAPS[m.map].name} <kbd>L</kbd></button>
-        <button data-act="chars">Characters <kbd>C</kbd></button>
-        <button data-act="shop">Overtime Shop ${PAY(m.pay)} <kbd>S</kbd></button>
-        <button data-act="board">Leaderboard <kbd>B</kbd></button>
-        <button data-act="wiki">Help Desk Wiki ${wiki.found}/${wiki.total} <kbd>K</kbd></button>
-        <button data-act="account">${!account.user ? 'Account: not signed in' : account.user.guest ? 'Account: Guest' : 'Account: Google'} <kbd>U</kbd></button>
-        ${window.installPrompt ? '<button data-act="install">Install App</button>' : ''}
-        <div class="row-buttons">
-          <button data-act="ach">Achievements ${Object.keys(m.achievements ?? {}).length}/${ACHIEVEMENTS.length} <kbd>A</kbd></button>
-          <button data-act="settings">Settings <kbd>O</kbd></button>
-        </div>
-        <button data-act="bug">Report a Bug</button>
-        <table class="stats records">
-          <tr><td>Longest shift</td><td>${fmtTime(m.best.time)}</td></tr>
-          <tr><td>Most tickets closed</td><td>${m.best.tickets.toLocaleString()}</td></tr>
-          <tr><td>Best CSAT</td><td>${m.best.csat.toLocaleString()}</td></tr>
-          <tr><td>Shifts worked / survived</td><td>${m.shifts} / ${m.wins}</td></tr>
-        </table>
-        <div class="controls">
-          <div><kbd>WASD</kbd>/<kbd>Arrows</kbd> move · your tools fire automatically</div>
-          <div><kbd>Esc</kbd> pause · <kbd>M</kbd> mute${DEBUG_ALLOWED ? ' · <kbd>`</kbd> debug' : ''}</div>
-        </div>
-        <p class="version">Version ${VERSION} · <button class="name-link" data-act="news">What's new</button></p>
-      </div>`,
-      (code) => {
-        if (code === 'Enter' || code === 'Space') go('start');
-        else if (code === 'KeyC') go('chars');
-        else if (code === 'KeyT') go('training');
-        else if (code === 'KeyL') go('maps');
-        else if (code === 'KeyB') go('board');
-        else if (code === 'KeyK') go('wiki');
-        else if (code === 'KeyU') go('account');
-        else if (code === 'KeyS') go('shop');
-        else if (code === 'KeyA') go('ach');
-        else if (code === 'KeyO') go('settings');
-        else return false;
-      },
-    );
-    this.bind('button', (i, el) => go(el.dataset.act));
-    this.drawThumbs();
+    return title(this);
   }
 
-  // First Clock In ever: offer the training shift (once; it stays on the title screen).
   trainingOffer() {
-    const m = this.game.meta;
-    m.data.offeredTraining = true;
-    m.save();
-    const go = (act) => {
-      sfx('click');
-      if (act === 'training') this.game.startTutorial();
-      else this.shiftSetup();
-    };
-    this.show(
-      `<div class="panel training">
-        <h2>FIRST DAY?</h2>
-        <p class="sub">A two-minute training shift shows you how to move, close tickets and level up.</p>
-        <button class="primary" data-act="training">Start Training <kbd>Enter</kbd></button>
-        <button data-act="skip">Skip, I know the drill <kbd>Esc</kbd></button>
-        <p class="tiny">You can take training any time from the title screen.</p>
-      </div>`,
-      (code) => {
-        if (code === 'Enter' || code === 'Space' || code === 'KeyT') go('training');
-        else if (code === 'Escape') go('skip');
-        else return false;
-      },
-    );
-    this.bind('button', (i, el) => go(el.dataset.act));
+    return trainingOffer(this);
   }
 
-  // End of the training shift.
   trainingDone() {
-    let ready = false;
-    setTimeout(() => (ready = true), 600); // don't let a held key skip it
-    const go = (act) => {
-      if (!ready) return;
-      sfx('click');
-      // Reset the floor behind the menu (training ran on the Office).
-      this.game.newRun();
-      this.game.setState('title');
-      if (act === 'start') this.shiftSetup();
-      else this.title();
-    };
-    this.show(
-      `<div class="panel training">
-        <h1>TRAINING<br>COMPLETE</h1>
-        <p class="sub">You're ready for the floor. A few things to know:</p>
-        <ul class="training-list">
-          <li>Survive the 20-minute shift and beat The Executive to clock out.</li>
-          <li>Every shift pays Overtime Pay, even a short one. Spend it in the Overtime Shop on permanent upgrades, or hire new technicians.</li>
-          <li>Bosses drop a Change Approved chest. A maxed tool plus the right passive can evolve in one (the Wiki has hints).</li>
-          <li><kbd>Esc</kbd> or the II button pauses. Training is always on the title screen if you want it again.</li>
-        </ul>
-        <button class="primary" data-act="start">Clock In <kbd>Enter</kbd></button>
-        <button data-act="title">Title <kbd>Esc</kbd></button>
-      </div>`,
-      (code) => {
-        if (code === 'Enter' || code === 'Space') go('start');
-        else if (code === 'Escape') go('title');
-        else return false;
-      },
-    );
-    this.bind('button', (i, el) => go(el.dataset.act));
+    return trainingDone(this);
   }
 
-  // Settings: volumes and comfort toggles. `back` returns to the screen that opened it.
   settings(back) {
-    const g = this.game;
-    const st = g.settings;
-    const slider = (key, label) => `<div class="setting"><label for="set-${key}">${label}</label>
-      <input type="range" id="set-${key}" data-key="${key}" min="0" max="100" step="5" value="${Math.round(st[key] * 100)}">
-      <span class="val">${Math.round(st[key] * 100)}</span></div>`;
-    const toggle = (key, label) => `<div class="setting"><label>${label}</label>
-      <button class="toggle ${st[key] ? 'on' : ''}" data-key="${key}">${st[key] ? 'ON' : 'OFF'}</button></div>`;
-    this.show(
-      `<div class="panel">
-        <h2>SETTINGS</h2>
-        <div class="settings">
-          ${slider('music', 'Music volume')}
-          ${slider('sfx', 'Sound effects volume')}
-          ${toggle('shake', 'Screen shake')}
-          ${toggle('numbers', 'Damage numbers')}
-          ${toggle('stick', 'Touch joystick')}
-        </div>
-        <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
-        <p class="tiny"><kbd>M</kbd> mutes everything at any time.</p>
-        <p class="version">Version ${VERSION}</p>
-      </div>`,
-      (code) => {
-        if (code === 'Escape' || code === 'Enter') back();
-        else return false;
-      },
-    );
-    this.root.querySelectorAll('input[type=range]').forEach((el) =>
-      el.addEventListener('input', () => {
-        const v = Math.max(0, Math.min(100, Number(el.value)));
-        st[el.dataset.key] = v / 100;
-        el.nextElementSibling.textContent = v;
-        g.applySettings();
-        if (el.dataset.key === 'sfx') sfx('ticket');
-      }),
-    );
-    this.root.querySelectorAll('button.toggle').forEach((el) =>
-      el.addEventListener('click', () => {
-        const k = el.dataset.key;
-        st[k] = !st[k];
-        el.classList.toggle('on', st[k]);
-        el.textContent = st[k] ? 'ON' : 'OFF';
-        g.applySettings();
-        sfx('click');
-      }),
-    );
-    this.bind('[data-act=back]', () => back());
+    return settings(this, back);
   }
 
   achievementsScreen() {
-    const got = this.game.meta.data.achievements ?? {};
-    const card = (a) => `<div class="ach ${got[a.id] ? '' : 'locked'}">${icon(a.icon, 32)}<div><b>${a.name}</b><span>${a.desc}</span></div></div>`;
-    this.show(
-      `<div class="panel wide">
-        <h2>ACHIEVEMENTS</h2>
-        <p class="sub">${Object.keys(got).length} of ${ACHIEVEMENTS.length} unlocked</p>
-        <div class="ach-grid">${ACHIEVEMENTS.map(card).join('')}</div>
-        <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
-      </div>`,
-      (code) => {
-        if (code === 'Escape' || code === 'Enter') this.title();
-        else return false;
-      },
-    );
-    this.bind('[data-act=back]', () => this.title());
+    return achievementsScreen(this);
   }
 
-  // Pause-menu page with the current shift's numbers.
   stats() {
-    const g = this.game;
-    const p = g.player;
-    const t = Math.max(1, g.time);
-    const pct = (v) => `${v >= 1 ? '+' : ''}${Math.round((v - 1) * 100)}%`;
-    const top = Math.max(1, ...p.weapons.map((w) => w.damageDone));
-    const tools = [...p.weapons]
-      .sort((a, b) => b.damageDone - a.damageDone)
-      .map(
-        (w) => `<div class="tool-row ${w.def.evolved ? 'evolved' : ''}">${icon(w.def.icon, 20)}<span class="tool-name">${w.def.name} ${w.def.evolved ? '' : 'Lv' + w.level}</span>
-          <span class="tool-bar"><i style="width:${Math.round((w.damageDone / top) * 100)}%"></i></span>
-          <span class="tool-dmg">${Math.round(w.damageDone).toLocaleString()}</span><span class="tool-dps">${Math.round(w.damageDone / t)}/s</span></div>`,
-      )
-      .join('');
-    const passives = Object.entries(p.passives).map(([id, lvl]) => `<div>${PASSIVES[id].name} <b>Lv${lvl}</b></div>`).join('') || '<div>None yet</div>';
-    const s = p.stats;
-    this.show(
-      `<div class="panel wide stats-page">
-        <h2>SHIFT STATS</h2>
-        <div class="stat-grid">
-          <div>Time <b>${fmtTime(g.time)}</b></div>
-          <div>Level <b>${p.level}</b></div>
-          <div>Tickets closed <b>${g.score.kills.toLocaleString()}</b></div>
-          <div>CSAT <b>${g.score.csat.toLocaleString()}</b></div>
-          <div>Sanity <b>${Math.ceil(p.hp)}/${p.maxHp}</b></div>
-          <div>Users on floor <b>${g.enemies.count}</b></div>
-          <div>Rerolls left <b>${p.rerolls}</b></div>
-          <div>Union Rep <b>${p.revives ? 'on call' : 'none'}</b></div>
-          ${p.passives.warranty ? `<div>Extended Warranty <b>${p.warranty ? 'covered' : 'claimed'}</b></div>` : ''}
-        </div>
-        <div class="section-head">YOUR STATS</div>
-        <div class="stat-grid">
-          <div>Damage <b>${pct(s.damage)}</b></div>
-          <div>Cooldowns <b>${pct(s.cooldown)}</b></div>
-          <div>Area <b>${pct(s.area)}</b></div>
-          <div>Attack speed <b>${pct(s.attackSpeed)}</b></div>
-          <div>Move speed <b>${pct(s.moveSpeed)}</b></div>
-          <div>Damage taken <b>${pct(s.damageTaken)}</b></div>
-          <div>XP gain <b>${pct(s.growth)}</b></div>
-          <div>Pickup radius <b>${pct(s.pickupRadius)}</b></div>
-          ${s.luck !== 1 ? `<div>Luck <b>${pct(s.luck)}</b></div>` : ''}
-          ${p.regen ? `<div>Sanity regen <b>${p.regen.toFixed(2)}/s</b></div>` : ''}
-          ${p.extraCount ? `<div>Extra projectiles <b>+${p.extraCount}</b></div>` : ''}
-        </div>
-        <div class="section-head">TOOLS (damage, average per second)</div>
-        <div class="tools">${tools}</div>
-        <div class="section-head">PASSIVES</div>
-        <div class="stat-grid">${passives}</div>
-        <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
-      </div>`,
-      (code) => {
-        if (code === 'Escape' || code === 'KeyT' || code === 'Enter') this.pause();
-        else return false;
-      },
-    );
-    this.bind('[data-act=back]', () => this.pause());
+    return stats(this);
   }
 
-  // Clock In: pick a tech, then a map, then confirm, all in one flow. Both start on the
-  // last shift's picks, which are saved when the shift starts. Locked ones show why.
   shiftSetup(step = 'char', pick) {
-    const g = this.game;
-    const meta = g.meta;
-    pick ??= { char: meta.data.selected, map: meta.data.map };
-    const chars = Object.keys(CHARACTERS);
-    const isChar = step === 'char';
-    const ids = isChar ? chars : MAP_ORDER;
-    const usable = (id) => (isChar ? meta.isUnlocked(id) : meta.mapUnlocked(id));
-    const again = () => this.shiftSetup(step, pick);
-    const next = () => {
-      sfx('click');
-      if (isChar) return this.shiftSetup('map', pick);
-      meta.select(pick.char);
-      meta.selectMap(pick.map);
-      g.newRun();
-    };
-    const back = () => {
-      sfx('click');
-      if (isChar) this.title();
-      else this.shiftSetup('char', pick);
-    };
-    // Tapping the highlighted card again moves on, so a double tap (or A twice) is enough.
-    const choose = (i) => {
-      const id = ids[i];
-      if (!id) return;
-      if (id === pick[isChar ? 'char' : 'map'] && usable(id)) return next();
-      if (isChar && !meta.isUnlocked(id)) {
-        if (!meta.unlock(id)) return; // hire with Overtime Pay
-        g.achievements.check();
-        sfx('chest');
-      } else if (!usable(id)) return;
-      else sfx('click');
-      pick[isChar ? 'char' : 'map'] = id;
-      again();
-    };
-    const move = (dir) => {
-      const open = ids.filter(usable);
-      const at = open.indexOf(pick[isChar ? 'char' : 'map']);
-      pick[isChar ? 'char' : 'map'] = open[(at + dir + open.length) % open.length];
-      sfx('click');
-      again();
-    };
-    const charCard = (id, i) => {
-      const c = CHARACTERS[id];
-      const unlocked = meta.isUnlocked(id);
-      const hireable = meta.itemUnlocked('characters', id);
-      const afford = hireable && meta.data.pay >= c.cost;
-      const status = pick.char === id
-        ? '<b class="ok">PICKED</b>'
-        : unlocked
-          ? 'Tap to pick'
-          : !hireable
-            ? `Locked: win a shift in the ${MAPS[meta.unlockedBy('characters', id)].name}`
-            : afford
-              ? `Hire for ${PAY(c.cost)}`
-              : `Locked: ${PAY(c.cost)}`;
-      return `<button class="card char ${pick.char === id ? 'selected' : ''} ${unlocked ? '' : 'locked'}" data-i="${i}" ${!unlocked && !afford ? 'disabled' : ''}>
-        <div class="card-head"><canvas data-spr="${c.sprite}" width="64" height="64"></canvas>
-          <div class="card-name">${c.name}</div><kbd>${i + 1}</kbd></div>
-        <div class="card-level">Starts with ${WEAPONS[c.starter].name}</div>
-        <div class="card-text">${c.perk}</div>
-        <div class="char-status">${status}</div>
-      </button>`;
-    };
-    const mapCard = (id, i) => {
-      const m = MAPS[id];
-      const unlocked = meta.mapUnlocked(id);
-      const best = meta.data.mapBest[id];
-      const status = pick.map === id ? '<b class="ok">PICKED</b>' : unlocked ? 'Tap to pick' : `Locked: win a shift in the ${MAPS[m.unlockAfter].name}`;
-      return `<button class="card map ${pick.map === id ? 'selected' : ''} ${unlocked ? '' : 'locked'}" data-i="${i}" ${unlocked ? '' : 'disabled'}>
-        <div class="card-head"><canvas data-map="${m.floor}" width="96" height="96"></canvas>
-          <div><div class="card-name">${m.name}</div>
-          <div class="card-level">${m.pay > 1 ? `${m.pay}x Overtime Pay` : 'Standard pay'}</div></div><kbd>${i + 1}</kbd></div>
-        <div class="card-text">${m.twistText}</div>
-        ${best ? `<div class="card-hint">Best: ${fmtTime(best.time)} · ${best.tickets.toLocaleString()} tickets · ${best.wins} won</div>` : ''}
-        <div class="char-status">${status}</div>
-      </button>`;
-    };
-    const tech = CHARACTERS[pick.char];
-    this.show(
-      `<div class="panel wide chars setup">
-        <p class="setup-step">STEP ${isChar ? 1 : 2} OF 2</p>
-        <h2>${isChar ? 'PICK YOUR TECH' : 'PICK YOUR MAP'}</h2>
-        ${
-          isChar
-            ? `<p class="sub">Overtime Pay: ${PAY(meta.data.pay)}</p>`
-            : `<button class="setup-tech" data-act="back"><canvas data-spr="${tech.sprite}" width="64" height="64"></canvas>
-                <span><b>${tech.name}</b><small>Change tech</small></span></button>`
-        }
-        <div class="cards">${ids.map(isChar ? charCard : mapCard).join('')}</div>
-        <div class="setup-bar">
-          <button data-act="back">${isChar ? 'Cancel' : 'Back'} <kbd>Esc</kbd></button>
-          <button class="primary" data-act="next">${isChar ? 'Next: Map' : `Clock In: ${MAPS[pick.map].name}`} <kbd>Enter</kbd></button>
-        </div>
-      </div>`,
-      (code) => {
-        if (DIGITS[code] !== undefined) choose(DIGITS[code]);
-        else if (code === 'ArrowRight' || code === 'ArrowDown' || code === 'KeyD' || code === 'KeyS') move(1);
-        else if (code === 'ArrowLeft' || code === 'ArrowUp' || code === 'KeyA' || code === 'KeyW') move(-1);
-        else if (code === 'Enter' || code === 'Space') next();
-        else if (code === 'Escape' || code === 'Backspace') back();
-        else return false;
-      },
-    );
-    this.bind('.card', (i) => choose(i));
-    this.bind('[data-act=back]', back);
-    this.bind('[data-act=next]', next);
-    this.drawThumbs();
-    if (!isChar) this.drawMapThumbs();
-    const picked = this.root.querySelector('.card.selected');
-    picked?.scrollIntoView({ block: 'nearest' });
-    if (gamepadConnected()) picked?.focus();
+    return shiftSetup(this, step, pick);
   }
 
   // Floor previews in every <canvas data-map>: one generated chunk of each map, scaled down.
@@ -520,422 +133,35 @@ export class Screens {
     });
   }
 
-  // Character select: pick an unlocked tech, or unlock one with Overtime Pay.
-  // Map select: each map unlocks after a won shift on the one before it.
-  // Online leaderboard: top CSAT per map, one map at a time (1-4 or the tabs).
   leaderboard(mapId = this.game.meta.data.map) {
-    const tabs = MAP_ORDER.map(
-      (id, i) => `<button class="tab ${id === mapId ? 'selected' : ''}" data-map="${id}">${MAPS[id].name} <kbd>${i + 1}</kbd></button>`,
-    ).join('');
-    this.show(
-      `<div class="panel wide board">
-        <h2>LEADERBOARD</h2>
-        <p class="sub">Top ${LEADERBOARD.top} CSAT scores per map. Tap a name to see that player's profile.</p>
-        <div class="tabs">${tabs}</div>
-        <div class="board-body"><p class="board-msg">Loading…</p></div>
-        <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
-      </div>`,
-      (code) => {
-        if (DIGITS[code] !== undefined && MAP_ORDER[DIGITS[code]]) this.leaderboard(MAP_ORDER[DIGITS[code]]);
-        else if (code === 'Escape' || code === 'Enter') this.title();
-        else return false;
-      },
-    );
-    this.bind('.tab', (i, el) => this.leaderboard(el.dataset.map));
-    this.bind('[data-act=back]', () => this.title());
-    const body = this.root.querySelector('.board-body');
-    topScores(mapId).then((r) => {
-      if (this.root.querySelector('.board-body') !== body) return; // screen changed meanwhile
-      if (!r.ok) body.innerHTML = '<p class="board-msg">Couldn\'t reach the leaderboard. Check your connection and try again.</p>';
-      else if (!r.rows.length) body.innerHTML = '<p class="board-msg">No scores on this map yet. Be the first.</p>';
-      else
-        body.innerHTML = `<table class="stats board-table">
-          <tr class="head"><td>#</td><td>Name</td><td>Technician</td><td>Time</td><td>CSAT</td></tr>
-          ${r.rows
-            .map(
-              (row, i) => `<tr${row.name === this.game.meta.data.playerName ? ' class="me"' : ''}><td>${i + 1}</td><td><button class="name-link" data-name="${esc(row.name)}">${esc(row.name)}</button></td>
-              <td>${esc(row.character)}</td><td>${fmtTime(Number(row.seconds) || 0)}${row.won ? ' <b class="ok">✓</b>' : ''}</td><td>${Number(row.csat).toLocaleString()}</td></tr>`,
-            )
-            .join('')}
-        </table>`;
-      body.querySelectorAll('.name-link').forEach((el) =>
-        el.addEventListener('click', () => {
-          sfx('click');
-          profileScreen(this, el.dataset.name, () => this.leaderboard(mapId));
-        }),
-      );
-    });
+    return leaderboard(this, mapId);
   }
 
   maps() {
-    const g = this.game;
-    const meta = g.meta;
-    const act = (i) => {
-      const id = MAP_ORDER[i];
-      if (!id || !meta.selectMap(id)) return;
-      sfx('chest');
-      g.setMap(id);
-      g.newRun(); // fresh floor behind the menu
-      g.setState('title');
-      this.maps();
-    };
-    const card = (id, i) => {
-      const m = MAPS[id];
-      const unlocked = meta.mapUnlocked(id);
-      const selected = meta.data.map === id;
-      const best = meta.data.mapBest[id];
-      const status = selected
-        ? '<b class="ok">ON SHIFT</b>'
-        : unlocked
-          ? 'Select'
-          : `Locked: win a shift in the ${MAPS[m.unlockAfter].name}`;
-      return `<button class="card map ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}" data-i="${i}" ${unlocked ? '' : 'disabled'}>
-        <div class="card-head"><canvas data-map="${m.floor}" width="96" height="96"></canvas>
-          <div><div class="card-name">${m.name}</div>
-          <div class="card-level">${m.pay > 1 ? `${m.pay}x Overtime Pay` : 'Standard pay'}</div></div><kbd>${i + 1}</kbd></div>
-        <div class="card-text">${m.twistText}</div>
-        <div class="card-flavor">${m.blurb}</div>
-        ${best ? `<div class="card-hint">Best: ${fmtTime(best.time)} · ${best.tickets.toLocaleString()} tickets · ${best.wins} won</div>` : ''}
-        <div class="char-status">${status}</div>
-      </button>`;
-    };
-    this.show(
-      `<div class="panel wide chars maps">
-        <h2>OFFICE MAPS</h2>
-        <p class="sub">Win a shift on a map to unlock the next one.</p>
-        <div class="cards">${MAP_ORDER.map(card).join('')}</div>
-        <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
-      </div>`,
-      (code) => {
-        if (DIGITS[code] !== undefined) act(DIGITS[code]);
-        else if (code === 'Escape' || code === 'Enter') this.title();
-        else return false;
-      },
-    );
-    this.bind('.card', (i) => act(i));
-    this.bind('[data-act=back]', () => this.title());
-    this.drawMapThumbs();
+    return maps(this);
   }
 
   characters() {
-    const meta = this.game.meta;
-    const ids = Object.keys(CHARACTERS);
-    const act = (i) => {
-      const id = ids[i];
-      if (!id) return;
-      if (meta.isUnlocked(id)) meta.select(id);
-      else if (!meta.unlock(id)) return;
-      else this.game.achievements.check();
-      sfx(meta.isUnlocked(id) ? 'chest' : 'click');
-      this.characters();
-    };
-    const card = (id, i) => {
-      const c = CHARACTERS[id];
-      const unlocked = meta.isUnlocked(id);
-      const selected = meta.data.selected === id;
-      const hireable = meta.itemUnlocked('characters', id); // some need a map win first (data/unlocks.js)
-      const afford = hireable && meta.data.pay >= c.cost;
-      const status = selected
-        ? '<b class="ok">ON SHIFT</b>'
-        : unlocked
-          ? 'Select'
-          : !hireable
-            ? `Locked: win a shift in the ${MAPS[meta.unlockedBy('characters', id)].name}`
-            : afford
-              ? `Hire for ${PAY(c.cost)}`
-              : `Locked: ${PAY(c.cost)}`;
-      return `<button class="card char ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}" data-i="${i}" ${!unlocked && !afford ? 'disabled' : ''}>
-        <div class="card-head"><canvas data-spr="${c.sprite}" width="64" height="64"></canvas>
-          <div class="card-name">${c.name}</div><kbd>${i + 1}</kbd></div>
-        <div class="card-level">Starts with ${WEAPONS[c.starter].name}</div>
-        <div class="card-text">${c.perk}</div>
-        <div class="card-flavor">${c.blurb}</div>
-        <div class="char-status">${status}</div>
-      </button>`;
-    };
-    this.show(
-      `<div class="panel wide chars">
-        <h2>CHARACTERS</h2>
-        <p class="sub">Overtime Pay: ${PAY(meta.data.pay)}</p>
-        <div class="cards">${ids.map(card).join('')}</div>
-        <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
-      </div>`,
-      (code) => {
-        if (DIGITS[code] !== undefined) act(DIGITS[code]);
-        else if (code === 'Escape' || code === 'Enter') this.title();
-        else return false;
-      },
-    );
-    this.bind('.card', (i) => act(i));
-    this.bind('[data-act=back]', () => this.title());
-    this.drawThumbs();
+    return characters(this);
   }
 
-  // Overtime Pay shop: permanent upgrades.
   shop() {
-    const meta = this.game.meta;
-    const ids = Object.keys(SHOP);
-    const buy = (i) => {
-      const id = ids[i];
-      if (!id) return;
-      if (meta.buy(id)) {
-        sfx('chest');
-        this.game.achievements.check();
-        this.shop();
-      }
-    };
-    const row = (id, i) => {
-      const d = SHOP[id];
-      const lvl = meta.level(id);
-      const cost = meta.nextCost(id);
-      const max = d.costs.length;
-      return `<button class="shop-row" data-i="${i}" ${cost === null || meta.data.pay < cost ? 'disabled' : ''}>
-        ${icon(d.icon, 32)}
-        <div class="shop-info"><div class="card-name">${d.name} <span class="pips">${'▮'.repeat(lvl)}${'▯'.repeat(max - lvl)}</span></div>
-          <div class="card-text">${d.desc}</div><div class="card-flavor">${d.flavor}</div></div>
-        <div class="shop-cost">${cost === null ? '<b class="ok">MAXED</b>' : PAY(cost)}</div>
-        <kbd>${i + 1}</kbd>
-      </button>`;
-    };
-    this.show(
-      `<div class="panel wide">
-        <h2>OVERTIME SHOP</h2>
-        <p class="sub">Balance: ${PAY(meta.data.pay)}. Upgrades are permanent and apply to every character.</p>
-        <div class="shop-list">${ids.map(row).join('')}</div>
-        <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
-      </div>`,
-      (code) => {
-        if (DIGITS[code] !== undefined) buy(DIGITS[code]);
-        else if (code === 'Escape' || code === 'Enter') this.title();
-        else return false;
-      },
-    );
-    this.bind('.shop-row', (i) => buy(i));
-    this.bind('[data-act=back]', () => this.title());
+    return shop(this);
   }
 
   pause() {
-    const training = !!this.game.tutorial;
-    const go = (act) => {
-      if (act === 'resume') this.game.resume();
-      else if (act === 'restart') {
-        recordWiki(this.game);
-        if (this.game.tutorial) this.game.startTutorial();
-        else this.game.newRun();
-      } else if (act === 'quit') {
-        recordWiki(this.game);
-        this.game.newRun();
-        this.game.setState('title');
-        this.title();
-      } else if (act === 'stats') this.stats();
-      else if (act === 'settings') this.settings(() => this.pause());
-      else if (act === 'bug') bugScreen(this, 'pause', () => this.pause());
-    };
-    this.show(
-      `<div class="panel">
-        <h2>ON HOLD</h2>
-        <p class="sub">${pickLine(PAUSE_LINES)}</p>
-        <button class="primary" data-act="resume">Resume <kbd>Esc</kbd></button>
-        <button data-act="stats">Shift Stats <kbd>T</kbd></button>
-        <button data-act="settings">Settings <kbd>O</kbd></button>
-        <button data-act="bug">Report a Bug <kbd>B</kbd></button>
-        <button data-act="restart">${training ? 'Restart Training' : 'Restart Shift'} <kbd>R</kbd></button>
-        <button data-act="quit">${training ? 'Skip Training' : 'Quit to Title'} <kbd>Q</kbd></button>
-        <p class="tiny"><kbd>M</kbd> mute / unmute sound</p>
-      </div>`,
-      (code) => {
-        if (code === 'Escape' || code === 'KeyP') go('resume');
-        else if (code === 'KeyR') go('restart');
-        else if (code === 'KeyQ') go('quit');
-        else if (code === 'KeyT') go('stats');
-        else if (code === 'KeyO') go('settings');
-        else if (code === 'KeyB') go('bug');
-        else return false;
-      },
-    );
-    this.bind('button', (i, el) => go(el.dataset.act));
+    return pause(this);
   }
 
-  // onPick(choice, always): `always` is true when the player chose to auto-take the
-  // pizza for the rest of the run (offered once every item is maxed).
-  // onReroll is null when no rerolls are available.
-  // `tip` is the training shift's explanation, shown above the cards (or null).
   levelUp(choices, tip, onReroll, rerollsLeft, onPick) {
-    let done = false;
-    const onlyPizza = choices.length === 1 && choices[0].kind === 'reward';
-    const pick = (i, always = false) => {
-      if (done || !choices[i]) return;
-      done = true;
-      sfx('click');
-      onPick(choices[i], always);
-    };
-    const card = (c, i) => `
-      <button class="card" data-i="${i}">
-        <div class="card-head">${icon(c.icon, 40)}
-          <div><div class="card-name">${c.name}</div>
-          <div class="card-level">${c.kind === 'reward' ? 'Reward' : c.level === 1 ? 'NEW!' : `Level ${c.level}`}</div></div>
-          <kbd>${i + 1}</kbd>
-        </div>
-        <div class="card-text">${c.text}</div>
-        <div class="card-flavor">${c.flavor}</div>
-        ${c.hint ? `<div class="card-hint">${c.hint}</div>` : ''}
-      </button>`;
-    this.show(
-      `<div class="panel wide">
-        <h2>LEVEL UP!</h2>
-        <p class="sub">${pickLine(LEVEL_UP_LINES)}</p>
-        ${tip ? `<p class="levelup-tip"><b>TRAINING:</b> ${tip}</p>` : ''}
-        <div class="cards levelup">${choices.map(card).join('')}</div>
-        ${
-          onlyPizza
-            ? `<button class="always" data-act="always">Everything's maxed: always take the pizza from now on <kbd>A</kbd></button>`
-            : ''
-        }
-        ${onReroll ? `<button class="always" data-act="reroll">Escalate: reroll these cards (${rerollsLeft} left) <kbd>R</kbd></button>` : ''}
-      </div>`,
-      (code) => {
-        const n = DIGITS[code];
-        if (n !== undefined) pick(n);
-        else if (onlyPizza && code === 'KeyA') pick(0, true);
-        else if (onReroll && code === 'KeyR' && !done) {
-          done = true;
-          sfx('click');
-          onReroll();
-        }
-        else return code !== 'Escape' ? false : true; // swallow Esc so it can't pause mid-choice
-      },
-    );
-    this.bind('.card', (i) => pick(i));
-    this.bind('[data-act=always]', () => pick(0, true));
-    this.bind('[data-act=reroll]', () => {
-      if (done) return;
-      done = true;
-      sfx('click');
-      onReroll();
-    });
+    return levelUp(this, choices, tip, onReroll, rerollsLeft, onPick);
   }
 
-  // result: { evolved?: { from, to }, upgrades: [choice] } from upgrades.openChest().
   chest(result, onClose) {
-    let done = false;
-    let ready = false;
-    const close = () => {
-      if (done || !ready) return;
-      done = true;
-      sfx('click');
-      onClose();
-    };
-    const ev = result.evolved;
-    const body = ev
-      ? `<p class="sub">Emergency change approved by the CAB. Your tool has evolved!</p>
-        <div class="evolve">
-          <div class="evo-from">${icon(ev.from.icon, 40)}<span>${ev.from.name}</span></div>
-          <div class="evo-arrow">&#9654;</div>
-          <div class="evo-to">${icon(ev.to.icon, 56)}<b>${ev.to.name}</b></div>
-        </div>
-        <div class="card-text">${ev.to.desc}</div>
-        <div class="card-flavor">${ev.to.flavor}</div>`
-      : `<p class="sub">Standard change approved. ${result.upgrades.length > 1 ? 'Triple sign-off!' : 'One sign-off.'}</p>
-        <div class="chest-list">${result.upgrades
-          .map(
-            (c) => `<div class="chest-item">${icon(c.icon, 32)}<div><div class="card-name">${c.name}</div>
-              <div class="card-level">${c.kind === 'reward' ? 'Reward' : c.level === 1 ? 'NEW!' : `Level ${c.level}`}</div></div></div>`,
-          )
-          .join('')}</div>`;
-    this.show(
-      `<div class="panel chest">
-        <h2>CHANGE APPROVED</h2>
-        ${body}
-        <button class="primary" data-act="ok">Deploy to Production <kbd>Enter</kbd></button>
-      </div>`,
-      (code) => {
-        if (code === 'Enter' || code === 'Space') close();
-        else return code !== 'Escape' ? false : true;
-      },
-    );
-    // Short delay so a held movement key or a stray click can't skip the reveal.
-    this.root.querySelector('button').disabled = true;
-    setTimeout(() => {
-      ready = true;
-      const b = this.root.querySelector('[data-act=ok]');
-      if (b) b.disabled = false;
-    }, 400);
-    this.bind('[data-act=ok]', close);
+    return chest(this, result, onClose);
   }
 
-  // s: run stats from Game.endRun (plus pay, records, balance from Meta.finishShift).
   gameOver(s) {
-    let ready = false;
-    setTimeout(() => (ready = true), 600); // don't let a held key skip the summary
-    const go = (act) => {
-      if (!ready) return;
-      sfx('click');
-      if (act === 'again') this.game.newRun();
-      else {
-        this.game.setState('title');
-        if (act === 'shop') this.shop();
-        else if (act === 'switch') this.shiftSetup();
-        else this.title();
-      }
-    };
-    const rec = (k) => (s.records.includes(k) ? ' <b class="record">NEW RECORD</b>' : '');
-    const topDamage = Math.max(1, ...s.tools.map((t) => t.damage));
-    const tools = s.tools
-      .map(
-        (t) => `<div class="tool-row ${t.evolved ? 'evolved' : ''}">${icon(t.icon, 20)}<span class="tool-name">${t.name}</span>
-          <span class="tool-bar"><i style="width:${Math.round((t.damage / topDamage) * 100)}%"></i></span><span class="tool-dmg">${t.damage.toLocaleString()}</span></div>`,
-      )
-      .join('');
-    this.show(
-      `<div class="panel wide summary ${s.won ? 'win' : 'lose'}">
-        <h1>${s.won ? 'CLOCKED OUT!' : 'BURNOUT'}</h1>
-        <p class="sub">${pickLine(s.won ? VICTORY_QUIPS : BURNOUT_QUIPS)}</p>
-        ${s.wikiNew?.length ? `<p class="wiki-new">NEW IN THE WIKI: ${s.wikiNew.slice(0, 6).map((n) => `<b>${n}</b>`).join(', ')}${s.wikiNew.length > 6 ? ` and ${s.wikiNew.length - 6} more` : ''}</p>` : ''}
-        ${s.newMap ? `<p class="unlock">NEW MAP UNLOCKED: <b>${MAPS[s.newMap].name}</b> (pick it under Map on the title screen)</p>` : ''}
-        ${s.newUnlocks?.length ? `<p class="unlock">NOW AVAILABLE: ${s.newUnlocks.map((u) => `<b>${unlockName(u)}</b>`).join(', ')}</p>` : ''}
-        <div class="summary-cols">
-          <table class="stats">
-            <tr><td>Technician</td><td>${s.character}</td></tr>
-            <tr><td>Map</td><td>${s.mapName}</td></tr>
-            <tr><td>Time survived</td><td>${fmtTime(s.time)}${rec('time')}</td></tr>
-            <tr><td>Tickets closed</td><td>${s.kills.toLocaleString()}${rec('tickets')}</td></tr>
-            <tr><td>CSAT score</td><td>${s.csat.toLocaleString()}${rec('csat')}</td></tr>
-            <tr><td>Best streak</td><td>x${s.bestStreak}</td></tr>
-            <tr><td>Level reached</td><td>${s.level}</td></tr>
-            <tr class="paid"><td>Overtime Pay earned</td><td>+${PAY(s.pay)}</td></tr>
-            <tr><td>Balance</td><td>${PAY(s.balance)}</td></tr>
-          </table>
-          <div class="tools"><div class="tools-head">Damage by tool</div>${tools}</div>
-        </div>
-        ${s.review ? reviewCard(s) : ''}
-        ${
-          s.cheated
-            ? '<p class="board-note">Debug mode was on this shift, so it can\'t go on the leaderboard.</p>'
-            : '<div class="board-post"></div>'
-        }
-        <div class="summary-buttons">
-          <button class="primary" data-act="again">Next Shift <kbd>Enter</kbd></button>
-          <button data-act="switch">Change Tech or Map <kbd>C</kbd></button>
-          <button data-act="shop">Overtime Shop <kbd>S</kbd></button>
-          <button data-act="title">Title <kbd>Esc</kbd></button>
-        </div>
-      </div>`,
-      (code) => {
-        const typing = document.activeElement?.classList.contains('board-name');
-        if (typing) {
-          if (code === 'Enter') post();
-          else if (code === 'Escape') document.activeElement.blur();
-          return;
-        }
-        if (code === 'Enter' || code === 'Space') go('again');
-        else if (code === 'KeyP') post();
-        else if (code === 'KeyS') go('shop');
-        else if (code === 'KeyC') go('switch');
-        else if (code === 'Escape') go('title');
-        else return false;
-      },
-    );
-    const post = s.cheated ? () => {} : boardPost(this, s);
-    this.bind('.summary-buttons button', (i, el) => go(el.dataset.act));
+    return gameOver(this, s);
   }
 }

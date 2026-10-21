@@ -24,19 +24,19 @@ function aim(e, game) {
   const dx = pl.x - e.x;
   const dy = pl.y - e.y;
   const d = Math.hypot(dx, dy) || 1;
-  e.ax = dx / d;
-  e.ay = dy / d;
+  e.ai.aimX = dx / d;
+  e.ai.aimY = dy / d;
   e.flip = dx < 0;
 }
 
 function mop(e, game, m, wet) {
-  const base = Math.atan2(e.ay, e.ax);
+  const base = Math.atan2(e.ai.aimY, e.ai.aimX);
   for (let i = 0; i < m.count; i++) {
     const a = base + (i / (m.count - 1) - 0.5) * m.spread;
     const r = m.reach * (0.45 + 0.55 * ((i * 7) % m.count) / m.count);
     game.zones.add(e.x + Math.cos(a) * r, e.y + Math.sin(a) * r, wet);
   }
-  game.fx.burst(e.x + e.ax * 30, e.y + e.ay * 30, ['#41a6f6', '#f4f4f4'], 12);
+  game.fx.burst(e.x + e.ai.aimX * 30, e.y + e.ai.aimY * 30, ['#41a6f6', '#f4f4f4'], 12);
   sfx('slosh', e.x);
 }
 
@@ -44,20 +44,20 @@ function startAttack(e, game) {
   const p = e.params;
   const list = game.map.twist?.type === 'dark' ? p.attacks : p.attacks.filter((a) => a !== 'lights');
   let i = (Math.random() * list.length) | 0;
-  if (list[i] === e.n) i = (i + 1) % list.length; // no repeats
-  e.n = list[i];
+  if (list[i] === e.ai.lastAttack) i = (i + 1) % list.length; // no repeats
+  e.ai.lastAttack = list[i];
   e.anim = 'attack';
   aim(e, game);
-  if (e.n === 'charge') {
-    e.state = CHARGE_TELL;
-    e.stateT = p.charge.telegraph;
+  if (e.ai.lastAttack === 'charge') {
+    e.ai.state = CHARGE_TELL;
+    e.ai.stateT = p.charge.telegraph;
     sfx('warn', e.x);
     e.pose = LEAN;
   } else {
-    e.state = POSE;
-    e.stateT = POSE_TIME;
+    e.ai.state = POSE;
+    e.ai.stateT = POSE_TIME;
     e.pose = MOP;
-    if (e.n === 'mop') mop(e, game, p.mop, p.wet);
+    if (e.ai.lastAttack === 'mop') mop(e, game, p.mop, p.wet);
     else {
       game.twist.dim(p.lights.time, p.lights.scale);
       game.hud.banner('LIGHTS OUT', 'The janitor found the breaker panel.', 1.5);
@@ -67,17 +67,25 @@ function startAttack(e, game) {
 }
 
 function endAttack(e, enraged) {
-  e.state = WALK;
+  e.ai.state = WALK;
   e.anim = 'walk';
   e.pose = -1;
-  e.t0 = e.params.attackGap[enraged ? 1 : 0];
+  e.ai.attackIn = e.params.attackGap[enraged ? 1 : 0];
 }
 
 export default {
   init(e) {
-    e.t0 = 2.5;
-    e.t1 = 0;
-    e.n = '';
+    // This boss's own state (pool objects are reused, so it's made fresh each fight).
+    e.ai = {
+      state: WALK,
+      stateT: 0, // seconds left in the current state
+      attackIn: 2.5, // seconds until the next attack
+      trailIn: 0, // seconds until the next wet patch behind the buffer
+      lastAttack: '', // never the same attack twice in a row
+      aimX: 1, // unit vector of the current attack
+      aimY: 0,
+      chargeHit: false, // has this charge hit you yet?
+    };
   },
 
   update(e, game, dt) {
@@ -85,58 +93,58 @@ export default {
     const pl = game.player;
     const enraged = e.hp < e.maxHp * p.enrageAt;
     // The buffer leaves a wet trail wherever it goes.
-    if ((e.t1 -= dt) <= 0) {
-      e.t1 = e.state === CHARGING ? p.trailEvery / 3 : p.trailEvery;
+    if ((e.ai.trailIn -= dt) <= 0) {
+      e.ai.trailIn = e.ai.state === CHARGING ? p.trailEvery / 3 : p.trailEvery;
       game.zones.add(e.x, e.y + e.foot - 6, p.wet);
     }
-    switch (e.state) {
+    switch (e.ai.state) {
       case WALK:
         stepToward(e, pl.x, pl.y, e.speed * e.slow * e.buff, dt);
         e.animT += dt;
-        if ((e.t0 -= dt) <= 0) startAttack(e, game);
+        if ((e.ai.attackIn -= dt) <= 0) startAttack(e, game);
         break;
       case CHARGE_TELL:
-        if ((e.stateT -= dt) <= 0) {
-          e.state = CHARGING;
-          e.stateT = p.charge.time;
-          e.n = 'charge';
-          e.ax2 = 0; // has the charge hit you yet?
+        if ((e.ai.stateT -= dt) <= 0) {
+          e.ai.state = CHARGING;
+          e.ai.stateT = p.charge.time;
+          e.ai.lastAttack = 'charge';
+          e.ai.chargeHit = false;
           e.pose = -1;
           sfx('charge', e.x);
         }
         break;
       case CHARGING: {
-        e.x += e.ax * p.charge.speed * dt;
-        e.y += e.ay * p.charge.speed * dt;
+        e.x += e.ai.aimX * p.charge.speed * dt;
+        e.y += e.ai.aimY * p.charge.speed * dt;
         e.animT += dt * 3;
         const rr = e.r + pl.r + 4;
-        if (!e.ax2 && (pl.x - e.x) ** 2 + (pl.y - e.y) ** 2 < rr * rr) {
-          e.ax2 = 1;
+        if (!e.ai.chargeHit && (pl.x - e.x) ** 2 + (pl.y - e.y) ** 2 < rr * rr) {
+          e.ai.chargeHit = true;
           if (hurtPlayer(game, p.charge.damage)) game.onPlayerHurt();
-          pl.kx += e.ax * 220;
-          pl.ky += e.ay * 220;
+          pl.kx += e.ai.aimX * 220;
+          pl.ky += e.ai.aimY * 220;
           game.camera.shake(5);
         }
-        if ((e.stateT -= dt) <= 0) {
+        if ((e.ai.stateT -= dt) <= 0) {
           game.camera.shake(3);
           endAttack(e, enraged);
         }
         break;
       }
       case POSE:
-        if ((e.stateT -= dt) <= 0) endAttack(e, enraged);
+        if ((e.ai.stateT -= dt) <= 0) endAttack(e, enraged);
         break;
     }
   },
 
   drawUnder(e, game, ctx) {
-    if (e.state !== CHARGE_TELL) return;
+    if (e.ai.state !== CHARGE_TELL) return;
     const c = e.params.charge;
     const len = c.speed * c.time;
     ctx.save();
     ctx.translate(e.x, e.y);
-    ctx.rotate(Math.atan2(e.ay, e.ax));
-    ctx.globalAlpha = 0.22 + 0.25 * (1 - e.stateT / c.telegraph);
+    ctx.rotate(Math.atan2(e.ai.aimY, e.ai.aimX));
+    ctx.globalAlpha = 0.22 + 0.25 * (1 - e.ai.stateT / c.telegraph);
     ctx.fillStyle = '#b13e53';
     ctx.fillRect(0, -e.r, len, e.r * 2);
     ctx.globalAlpha = (game.time * 10) & 1 ? 0.9 : 0.5;

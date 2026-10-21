@@ -29,13 +29,14 @@ export const TIMELINE = [
 //          `speed`, one wall every `gap` seconds, each from a random side
 //   boss   spawns `boss` at the screen edge; `spawnScale` multiplies normal spawning
 //          while it lives. The `final` boss ends the shift when it is defeated.
+//          `mapBoss: true` marks the fight a map's own boss replaces (`boss` in data/maps.js).
 export const EVENTS = [
   {
     t: 300, type: 'ring', warn: 4, count: 140, mix: { pam: 3, quinn: 1 },
     title: 'PATCH TUESDAY', text: 'Updates are being pushed to every machine. All of them. Now.',
   },
   {
-    t: 600, type: 'boss', boss: 'incident', warn: 5, spawnScale: 0.6,
+    t: 600, type: 'boss', boss: 'incident', mapBoss: true, warn: 5, spawnScale: 0.6,
     title: 'MAJOR INCIDENT', text: 'Sev 1 declared. Everyone join the bridge. Now.',
   },
   {
@@ -47,6 +48,9 @@ export const EVENTS = [
     title: 'THE EXECUTIVE IS HERE', text: 'Needs it fixed before the board meeting. The board meeting is now.',
   },
 ];
+
+// The boss fight each map can swap for its own (the Major Incident unless a map has one).
+export const MAP_BOSS_EVENT = EVENTS.find((e) => e.mapBoss);
 
 export const SPAWNER = {
   maxEnemies: 1000, // hard cap on live enemies (pool size)
