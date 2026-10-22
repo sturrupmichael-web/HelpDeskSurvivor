@@ -24,8 +24,9 @@ import duck from './duck.js';
 import rollout from './rollout.js';
 import cluster from './cluster.js';
 import grid from './grid.js';
+import disc from './disc.js';
 
-export const WEAPON_BEHAVIORS = { pulse, projectile, boomerang, orbit, aura, homing, chain, turret, nuke, whip, minion, trail, shield, sweep, trap, beam, duck, rollout, cluster, grid };
+export const WEAPON_BEHAVIORS = { pulse, projectile, boomerang, orbit, aura, homing, chain, turret, nuke, whip, minion, trail, shield, sweep, trap, beam, duck, rollout, cluster, grid, disc };
 
 // `slot` indexes the per-enemy hit timers (enemy.hitAt) used by damage-over-time weapons.
 export function createWeapon(id, slot, def = WEAPONS[id]) {

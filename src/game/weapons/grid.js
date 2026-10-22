@@ -1,7 +1,8 @@
 // "Grid" behavior: on cooldown, plans a square grid of tiles centered where you stand.
 // After `plan` seconds the grid applies: for `live` seconds every tile hits each user on
-// it once. Used by: Terraform Apply.
-// stats: damage, cooldown, size (tiles per side), tile (px), plan, live, knockback
+// it once. Used by: Terraform Apply, Terraform Destroy (evolved: with `hitInterval`, live
+// tiles hit the same user again every that many seconds).
+// stats: damage, cooldown, size (tiles per side), tile (px), plan, live, knockback, hitInterval
 
 import { damageEnemy } from '../enemies.js';
 import { sfx } from '../../engine/audio.js';
@@ -38,10 +39,11 @@ export default {
       const n = game.hash.query(g.x, g.y, g.half * 1.42, buf);
       for (let k = 0; k < n; k++) {
         const e = items[buf[k]];
-        // One hit per user per grid: hitAt remembers which grid last hit it.
-        if (e.dead || e.hitAt[w.slot] === g.cast) continue;
+        // One hit per user per grid (hitAt remembers which grid last hit it), or one per
+        // hitInterval seconds (hitAt is then the time of the last hit).
+        if (e.dead || (s.hitInterval ? game.time - e.hitAt[w.slot] < s.hitInterval : e.hitAt[w.slot] === g.cast)) continue;
         if (Math.abs(e.x - g.x) > g.half + e.r * 0.5 || Math.abs(e.y - g.y) > g.half + e.r * 0.5) continue;
-        e.hitAt[w.slot] = g.cast;
+        e.hitAt[w.slot] = s.hitInterval ? game.time : g.cast;
         damageEnemy(game, e, dmg, w, e.x - g.x, e.y - g.y, s.knockback);
       }
     }

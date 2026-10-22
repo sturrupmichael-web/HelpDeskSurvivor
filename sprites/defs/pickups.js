@@ -34,6 +34,8 @@ export default {
     // PTO Request: a calendar page with a beach on it. Brief invulnerability.
     // Welcome Swag Bag (Merger Day): a navy tote with the new logo. Sanity and a speed boost.
     swag_bag: one(['...kkkkkk...', '..kk....kk..', '..k......k..', 'kkkkkkkkkkkk', 'kaaaaaaaaaak', 'kaayyyyyaaak', 'kaawwaayyaak', 'kaawwaayyaak', 'kaayyyyyaaak', 'kaaaaaaaaaak', 'kkkkkkkkkkkk']),
+    // Fruit gummies (The 19th Hole's ace drops): a purple bag with a window of gummies.
+    gummies: one(['.kkkkkkkkkk.', '.kwwwwwwwwk.', 'kkkkkkkkkkkk', 'kprrwyywoopk', 'kprrwyywoopk', 'kpeewrrwyypk', 'kpeewrrwyypk', 'kppppppppppk', 'kkkkkkkkkkkk']),
     pto: one(['kkkkkkkkkkkk', 'krrrrrrrrrrk', 'kkkkkkkkkkkk', 'kwwwwwwwwwwk', 'kwwwyywwwwwk', 'kwwyyyywwwwk', 'kwwwyywwwwwk', 'kwwwwwwBBBBk', 'kBBBBBBBBBBk', 'kkkkkkkkkkkk']),
   },
 };

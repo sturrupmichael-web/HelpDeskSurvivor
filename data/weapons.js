@@ -408,7 +408,7 @@ export const WEAPONS = {
       { damage: 24, cooldown: 1.2, radius: 46, range: 210, crowdBonus: 0.18, crowdMax: 14, knockback: 40 },
       { damage: 30, cooldown: 1.0, radius: 52, range: 230, crowdBonus: 0.2, crowdMax: 16, knockback: 50 },
     ],
-    notes: ['Blasts the biggest bunch of users near you.', '+3 damage.', 'Bigger blast, faster, bunches count more.', '+3 damage.', 'Bigger, faster, bunches count more.', '+4 damage, faster.', '+4 damage, bigger.', 'Golden record: +6 damage, much faster and bigger.'],
+    notes: ['Blasts the biggest bunch of users near you.', '+3 damage.', 'Bigger blast, faster, bunches count more.', '+3 damage.', 'Bigger, faster, bunches count more.', '+4 damage, faster.', '+4 damage, bigger.', 'Master data: +6 damage, much faster and bigger.'],
   },
   fairwayDriver: {
     name: 'Fairway Driver', icon: 'frisbee', behavior: 'boomerang', sprite: 'proj_disc', tags: ['sport'], weight: 9, color: '#ef7d57',
@@ -566,6 +566,56 @@ export const WEAPONS = {
     desc: 'Two radar beams. Every user they pass gets flagged and takes extra damage from everything.',
     flavor: '40,000 alerts a day. One of them is real. Good luck.',
     levels: [{ damage: 26, range: 140, rotSpeed: 3.8, width: 0.7, hitInterval: 0.7, beams: 2, mark: 3, markAmp: 0.3 }],
+    notes: ['Evolved.'],
+  },
+
+  // --- Evolutions for the job-title tools (idea 63) ---
+  patchTuesday: {
+    name: 'Patch Tuesday', icon: 'rollout', behavior: 'rollout', evolved: true, from: 'patchRollout', stunAll: true, bossDamage: 2,
+    tags: ['restart'], color: '#38b764',
+    desc: 'Five fast rings that reach right across the screen, and every one of them stuns.',
+    flavor: 'Second Tuesday of the month. Nobody gets any work done. Including you.',
+    // stunAll: every ring stuns, not just the last.
+    levels: [{ damage: 20, cooldown: 2.6, radius: 300, gap: 0.3, rings: [0.2, 0.4, 0.6, 0.8, 1], stun: 0.8, knockback: 140, speed: 520 }],
+    notes: ['Evolved.'],
+  },
+  goldenRecord: {
+    name: 'Golden Record', icon: 'dedupe', behavior: 'cluster', evolved: true, from: 'dedupe', merge: 1.25,
+    tags: ['data'], color: '#ffcd75',
+    bonusVs: { dave: 2, dave2: 2, consultant: 2, consultant_b: 2 },
+    desc: 'Merges two bunches at once. Each merged bunch drops one big ticket worth all of them, and a bit more.',
+    flavor: 'One true record per customer. There are now four true records per customer.',
+    // blasts: bunches hit per cast. merge: users it closes drop no tickets of their own;
+    // each blast drops one ticket worth all of them times this.
+    levels: [{ damage: 38, cooldown: 0.9, radius: 60, range: 260, crowdBonus: 0.22, crowdMax: 18, knockback: 60, blasts: 2 }],
+    notes: ['Evolved.'],
+  },
+  nineteenthHole: {
+    name: 'The 19th Hole', icon: 'frisbee', behavior: 'disc', sprite: 'proj_disc', evolved: true, from: 'fairwayDriver', aceDrop: 'gummies', bossDamage: 2,
+    tags: ['sport'], color: '#ef7d57',
+    desc: 'Discs ricochet from user to user. Every 5th throw adds a huge ace disc, and users it closes drop fruit gummies. At 80% sanity or more, every disc bounces once more.',
+    flavor: 'Shot a 54. Ate a whole bag of gummies in the parking lot. Back for the 2:00.',
+    // bounces: how many times a disc jumps to the next user. Every aceEvery-th throw adds
+    // an ace (aceMult damage, aceBounces bounces). fullHp: the sanity share for +1 bounce.
+    levels: [{ damage: 40, cooldown: 1.1, count: 3, speed: 300, life: 0.9, bounces: 4, bounceRange: 130, knockback: 60, aceEvery: 5, aceMult: 3, aceBounces: 8, fullHp: 0.8 }],
+    notes: ['Evolved.'],
+  },
+  terraformDestroy: {
+    name: 'Terraform Destroy', icon: 'terraform', behavior: 'grid', evolved: true, from: 'terraform', bossDamage: 2,
+    tags: ['cloud'], color: '#7a4ea0',
+    desc: 'A giant 9x9 grid that applies almost at once. The tiles stay live and keep hurting anyone on them.',
+    flavor: 'Do you really want to destroy all resources? Only \'yes\' will be accepted. yes',
+    // hitInterval: live tiles hit the same user again every this many seconds.
+    levels: [{ damage: 26, cooldown: 2.2, size: 9, tile: 24, plan: 0.15, live: 1.2, hitInterval: 0.4, knockback: 40 }],
+    notes: ['Evolved.'],
+  },
+  rfidInventory: {
+    name: 'RFID Inventory', icon: 'barcode', behavior: 'projectile', sprite: 'proj_tag', evolved: true, from: 'assetTag',
+    tags: ['data'], color: '#f4f4f4', tagXp: 3, tagMark: [4, 0.25],
+    desc: 'Tags that stick and beep. Tagged users take 25% more damage from all your tools and drop triple tickets.',
+    flavor: 'We can now locate every laptop in the building. Just not the one you need.',
+    // tagMark: [seconds, extra damage] every user it hits is flagged for.
+    levels: [{ damage: 30, cooldown: 0.75, count: 7, speed: 320, pierce: 4, life: 1.9, knockback: 35 }],
     notes: ['Evolved.'],
   },
 };

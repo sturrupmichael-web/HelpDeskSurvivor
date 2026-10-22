@@ -85,6 +85,11 @@ Other per-enemy knobs: `onDeath: { spawn, count }` (Randy splitting), `explode: 
 | `boomerang` + `curlAlt` | Fairway Driver | as `boomerang`, plus `curl` (rad/s); every other disc bends the other way |
 | `grid` | Terraform Apply | `damage`, `cooldown`, `size` (tiles per side), `tile` (px), `plan` (s before it applies), `live` (s it stays hot), `knockback` |
 | `projectile` + `tagXp` | Asset Tag | as `projectile`; users it hits drop `tagXp` times the ticket |
+| `rollout` + `stunAll` | Patch Tuesday | as `rollout`; every ring stuns |
+| `cluster` + `merge` | Golden Record | as `cluster`, plus `blasts` per cast; closed users drop no tickets, each blast drops one worth all of them x `merge` |
+| `disc` | The 19th Hole | `damage`, `cooldown`, `count`, `speed`, `life` (s per flight), `bounces`, `bounceRange`, `knockback`, `aceEvery`, `aceMult`, `aceBounces`, `fullHp` (sanity share for +1 bounce); def `aceDrop` |
+| `grid` + `hitInterval` | Terraform Destroy | as `grid`; live tiles hit again every `hitInterval` s |
+| `projectile` + `tagMark` | RFID Inventory | as `projectile` + `tagXp`; every hit flags the user (`tagMark`: [s, extra damage]) |
 
 A flagged user (`mark`) takes `markAmp` extra damage from every tool; flags from the duck
 and the SIEM don't stack, the bigger one counts. Bosses shake off confusion like stuns
@@ -226,6 +231,11 @@ in `data/weapons.js` (`evolved: true`, one level row):
 | Remote Wipe | Remote Desktop Session | Ticket Queue Filter | 8 cursors that `pierce` 2, `vacuum` closed users' tickets to you |
 | Sabbatical | Out-of-Office Reply | Extended Warranty | big bubble almost always up, boss bullets come back as `reflect` damage |
 | SIEM | Ping Sweep | Runbook | `beams: 2`, flags users (`mark`) for +30% damage |
+| Patch Tuesday | Patch Rollout | Second Monitor | 5 rings out to radius 300, `stunAll` |
+| Golden Record | Dedupe | Mechanical Keyboard | `blasts: 2`, `merge: 1.25` (one big ticket per blast) |
+| The 19th Hole | Fairway Driver | Snack Drawer | `disc`: discs ricochet 4 times; every 5th throw an ace (x3, 8 bounces) whose kill drops fruit gummies (+8 sanity); +1 bounce at 80% sanity |
+| Terraform Destroy | Terraform Apply | Domain Admin Rights | 9x9 grid, 0.15 s plan, tiles live 1.2 s hitting every 0.4 s |
+| RFID Inventory | Asset Tag | Lucky Lanyard | 7 tags, pierce 4, `tagXp: 3`, `tagMark` +25% damage for 4 s |
 
 ## Pickups (`data/pickups.js`)
 
@@ -238,6 +248,7 @@ you; touching one collects it.
 | Pizza | 0.4% | `heal` sanity |
 | Bulk Close | 0.12% | every ticket on the floor flies to you |
 | PTO (Out of Office) | 0.06% | `invulnerable` seconds of no damage |
+| Fruit gummies | never at random | The 19th Hole's ace kills: `heal` 8 sanity |
 | Change Approved | VIP 15%, Major Incident 100% | evolution, else `CHEST_REWARDS` (1 upgrade 75%, 3 upgrades 25%) |
 
 ## Sound (`data/audio.js`)
@@ -504,3 +515,26 @@ veteran save (6 shifts each). The existing 8 techs set the range: Open Office 8:
 Tuning on the way: the IT Director also starts with Delegate (Out-of-Office Reply alone
 closed almost nothing early on), and Fairway Driver got +20% damage and gentler curves
 (its discs were curling away from the crowd).
+
+## Evolutions for the job-title tools (idea 63), 2026-10-22
+
+Damage per second against a steady crowd of 120 users (150 HP each), one tool alone,
+30 s: the 13 older evolutions run from 1,107 (Outsourced Team) to 2,848 (SIEM). First
+cut, Patch Tuesday did 4,111 and Terraform Destroy 2,888, so Patch Tuesday went to 20
+damage every 2.6 s (from 34 every 2.0 s; every ring stuns, so it's worth more than its
+number) and Terraform Destroy to 26 damage. After: Patch Tuesday 2,685, Terraform Destroy
+2,458, Golden Record 2,350, RFID Inventory 1,814 (plus its +25% flag for every other tool),
+The 19th Hole 1,718 (plus the gummies).
+
+Bot check, Parking Garage with the veteran save, 6 shifts per tech that starts with one
+of the tools (before = the job-title table above):
+
+| Tech (tool) | Before | After |
+| --- | --- | --- |
+| Systems Operations Manager (Patch Rollout) | 6/6 | 5/6, 21:47 |
+| CRM Analyst (Dedupe) | 4/6 | 3/6, 18:42 |
+| CRM Manager (Fairway Driver) | 5/6 | 6/6, 21:49 |
+| Cloud Engineer (Terraform Apply) | 5/6 | 4/6, 22:22 |
+| Asset Management Analyst (Asset Tag) | 3/6 | 5/6, 22:47 |
+
+23 of 30 wins before and after: within the bot's noise, so nothing else was changed.

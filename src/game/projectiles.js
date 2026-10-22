@@ -2,12 +2,16 @@
 //   straight   flies in a line
 //   homing     steers toward a target enemy, re-targeting if it dies
 //   boomerang  flies out, slows, turns around and returns to the player
+// Any kind can `bounce`: after a hit it turns toward the nearest user it hasn't hit yet
+// (within `bounceRange`), that many times (The 19th Hole). An `ace` disc's kills drop its
+// weapon's `aceDrop` pickup, one per disc.
 // Each projectile remembers which enemies it already hit, so piercing shots hit each
 // enemy once (boomerangs forget when they turn around, so they can hit on the way back).
 
 import { Pool } from '../engine/pool.js';
 import { damageEnemy, nearestEnemy } from './enemies.js';
 import { hitBuf as buf } from '../engine/spatialHash.js';
+import { dropItem } from './pickups.js';
 
 const MAX_HITS = 32;
 
@@ -17,13 +21,15 @@ export function createProjectilePool() {
     x: 0, y: 0, vx: 0, vy: 0, speed: 0, r: 5,
     damage: 0, knockback: 0, pierce: 0, life: 0, age: 0,
     target: null, targetUid: 0, turn: 0, decel: 0, returning: false,
-    rot: 0, spin: 0, curl: 0,
+    rot: 0, spin: 0, curl: 0, scale: 1,
+    bounce: 0, bounceRange: 0, ace: false, dropped: false,
     hits: new Int32Array(MAX_HITS), hitCount: 0, dead: false,
   }));
 }
 
 // Spawns a projectile. `o` holds: kind, spr, speed, damage, knockback, pierce, life,
-// r, turn, decel, spin, curl (outbound boomerangs bend by this many rad/s), target. Returns it (or null if the pool is full).
+// r, turn, decel, spin, curl (outbound boomerangs bend by this many rad/s), target,
+// scale (drawn size), bounce, bounceRange, ace. Returns it (or null if the pool is full).
 export function fireProjectile(game, weapon, x, y, dirX, dirY, o) {
   const p = game.projectiles.spawn();
   if (!p) return null;
@@ -50,6 +56,11 @@ export function fireProjectile(game, weapon, x, y, dirX, dirY, o) {
   p.rot = 0;
   p.spin = o.spin ?? 0;
   p.curl = o.curl ?? 0;
+  p.scale = o.scale ?? 1;
+  p.bounce = o.bounce ?? 0;
+  p.bounceRange = o.bounceRange ?? 0;
+  p.ace = !!o.ace;
+  p.dropped = false;
   p.hitCount = 0;
   p.dead = false;
   return p;
@@ -137,6 +148,21 @@ export function updateProjectiles(game, dt) {
       if (dx * dx + dy * dy >= rr * rr || hitAlready(p, e.uid)) continue;
       if (p.hitCount < MAX_HITS) p.hits[p.hitCount++] = e.uid;
       damageEnemy(game, e, p.damage, p.weapon, p.vx, p.vy, p.knockback);
+      if (p.ace && e.dead && !p.dropped && p.weapon.def.aceDrop) {
+        p.dropped = true;
+        dropItem(game, p.weapon.def.aceDrop, e.x, e.y);
+      }
+      if (p.bounce > 0) {
+        p.bounce--;
+        const t = nearestEnemy(game, e.x, e.y, p.bounceRange, (o) => hitAlready(p, o.uid));
+        if (t) {
+          const d = Math.hypot(t.x - p.x, t.y - p.y) || 1;
+          p.vx = ((t.x - p.x) / d) * p.speed;
+          p.vy = ((t.y - p.y) / d) * p.speed;
+          p.age = 0; // a fresh flight to the next user
+        }
+        break;
+      }
       if (p.pierce-- <= 0) {
         p.dead = true;
         break;
@@ -155,7 +181,7 @@ export function drawProjectiles(game, ctx) {
       ctx.save();
       ctx.translate(Math.round(p.x), Math.round(p.y));
       ctx.rotate(p.rot);
-      ctx.drawImage(s.image, f[0], f[1], s.w, s.h, -s.w / 2, -s.h / 2, s.w, s.h);
+      ctx.drawImage(s.image, f[0], f[1], s.w, s.h, (-s.w / 2) * p.scale, (-s.h / 2) * p.scale, s.w * p.scale, s.h * p.scale);
       ctx.restore();
     } else {
       ctx.drawImage(s.image, f[0], f[1], s.w, s.h, Math.round(p.x - s.w / 2), Math.round(p.y - s.h / 2), s.w, s.h);

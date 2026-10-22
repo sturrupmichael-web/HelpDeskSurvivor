@@ -189,6 +189,7 @@ export function damageEnemy(game, e, amount, weapon, dx, dy, knockback) {
   if (pd.bonusVs) amount *= pd.bonusVs[e.def.sprite] ?? 1;
   if (pd.slowedAmp && e.slow < 1) amount *= 1 + pd.slowedAmp;
   if (weapon?.def.tagXp) e.tagXp = weapon.def.tagXp; // Asset Tag
+  if (weapon?.def.tagMark) markEnemy(e, weapon.def.tagMark[0], weapon.def.tagMark[1]); // RFID Inventory
   e.hp -= amount;
   // Bosses take hits constantly; flash them in short blinks so their art stays readable
   // (not at all with Reduce flashing, where a big sprite blinking white is the problem).
@@ -224,12 +225,17 @@ export function markEnemy(e, seconds, amp) {
   if (seconds > e.mark) e.mark = seconds;
 }
 
-// `weapon` is the tool that closed it, if any (Remote Wipe pulls the ticket straight to you).
+// `weapon` is the tool that closed it, if any (Remote Wipe pulls the ticket straight to you;
+// Golden Record keeps the XP and drops one merged ticket per blast).
 export function killEnemy(game, e, weapon) {
   e.dead = true;
   if (e.xp > 0) {
-    const t = dropTicket(game, e.x, e.y, e.xp * e.tagXp * game.twist.xpMult(game, e.x, e.y) * game.policy.ticketXp);
-    if (weapon?.def.vacuum) t.magnet = true;
+    const xp = e.xp * e.tagXp * game.twist.xpMult(game, e.x, e.y) * game.policy.ticketXp;
+    if (weapon?.def.merge) weapon.mergeXp += xp;
+    else {
+      const t = dropTicket(game, e.x, e.y, xp);
+      if (weapon?.def.vacuum) t.magnet = true;
+    }
   }
   game.fx.burst(e.x, e.y - 6, e.def.particle, 6);
   game.score.onKill();

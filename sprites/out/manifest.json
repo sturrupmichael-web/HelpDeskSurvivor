@@ -5,7 +5,7 @@
   "characters": "characters.png?v=afcf611ddc",
   "maps": "maps.png?v=cbb97f4483",
   "office": "office.png?v=2426fe9356",
-  "pickups": "pickups.png?v=9093137fd9",
+  "pickups": "pickups.png?v=9f173cd9a1",
   "projectiles": "projectiles.png?v=59aa799338"
  },
  "sprites": {
@@ -3145,7 +3145,7 @@
     }
    }
   },
-  "pto": {
+  "gummies": {
    "sheet": "pickups",
    "w": 16,
    "h": 16,
@@ -3160,6 +3160,26 @@
       [
        0,
        112
+      ]
+     ]
+    }
+   }
+  },
+  "pto": {
+   "sheet": "pickups",
+   "w": 16,
+   "h": 16,
+   "anchor": [
+    8,
+    16
+   ],
+   "fps": 1,
+   "anims": {
+    "idle": {
+     "frames": [
+      [
+       0,
+       128
       ]
      ]
     }

@@ -33,6 +33,8 @@ export const ITEMS = {
     effects: ['heal', 'boost'], sound: 'heal', burst: [['#34488f', '#ffcd75', '#f4f4f4'], 12],
   },
   pto: { sprite: 'pto', chance: 0.0006, invulnerable: 6, label: 'OUT OF OFFICE', glow: '#41a6f6', effects: ['invulnerable'], sound: 'pto', ring: [40, '#41a6f6', 0.5, true] },
+  // The 19th Hole only: its ace disc drops these (chance 0, never at random).
+  gummies: { sprite: 'gummies', chance: 0, heal: 8, label: '+8 SANITY', effects: ['heal'], sound: 'heal', burst: [['#b13e53', '#38b764', '#ffcd75', '#ef7d57'], 8] },
   chest: { sprite: 'chest', chance: 0, label: 'CHANGE APPROVED', glow: '#ffcd75', edgeArrow: true, effects: ['chest'] },
 };
 

@@ -1,7 +1,7 @@
 // "Rollout" behavior: on cooldown, a series of shockwave rings goes out from the player,
 // one every `gap` seconds, each wider than the last (deployment rings: pilot, then
 // broader). Each ring hits every user it passes once; the last ring also stuns.
-// Used by: Patch Rollout.
+// Used by: Patch Rollout, Patch Tuesday (evolved: the def's `stunAll` makes every ring stun).
 // stats: damage, cooldown, radius, gap, rings (each ring's radius as a share of
 //        `radius`), stun, knockback, speed
 
@@ -33,7 +33,7 @@ export default {
         const dy = e.y - p.y;
         const d = Math.max(0, Math.sqrt(dx * dx + dy * dy) - e.r);
         if (d < r0 || d >= r1) continue;
-        if (ring.last) stunEnemy(e, s.stun);
+        if (ring.last || w.def.stunAll) stunEnemy(e, s.stun);
         damageEnemy(game, e, dmg, w, dx, dy, s.knockback);
       }
       ring.r = r1;

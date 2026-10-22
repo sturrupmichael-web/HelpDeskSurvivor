@@ -4,6 +4,19 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-22-evolutions63',
+    date: 'Oct 22, 2026',
+    title: 'Five new evolutions',
+    items: [
+      'The five job-title tools can now evolve. Max one out, own its passive, then open a Change Approved chest.',
+      'Patch Rollout + Second Monitor = Patch Tuesday: five screen-wide rings, and every ring stuns.',
+      'Dedupe + Mechanical Keyboard = Golden Record: merges two bunches at once, and each bunch drops one big ticket worth all of them.',
+      'Fairway Driver + Snack Drawer = The 19th Hole: discs ricochet between users, every 5th throw adds a huge ace disc whose kill drops fruit gummies, and discs bounce once more at 80% sanity or more.',
+      'Terraform Apply + Domain Admin Rights = Terraform Destroy: a giant 9x9 grid that applies almost at once and keeps burning.',
+      'Asset Tag + Lucky Lanyard = RFID Inventory: tagged users take 25% more damage from all your tools and drop triple tickets.',
+    ],
+  },
+  {
     id: '2026-10-22-kb',
     date: 'Oct 22, 2026',
     title: 'The Wiki is now the Knowledge Base',

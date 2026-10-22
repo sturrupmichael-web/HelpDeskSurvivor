@@ -16,4 +16,9 @@ export const EVOLUTIONS = {
   rdp: { passive: 'queueFilter', into: 'remoteWipe' },
   outOfOffice: { passive: 'warranty', into: 'sabbatical' },
   pingSweep: { passive: 'runbook', into: 'siem' },
+  patchRollout: { passive: 'secondMonitor', into: 'patchTuesday' },
+  dedupe: { passive: 'mechKeyboard', into: 'goldenRecord' },
+  fairwayDriver: { passive: 'snackDrawer', into: 'nineteenthHole' },
+  terraform: { passive: 'domainAdmin', into: 'terraformDestroy' },
+  assetTag: { passive: 'luckyLanyard', into: 'rfidInventory' },
 };

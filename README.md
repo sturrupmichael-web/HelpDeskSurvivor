@@ -303,3 +303,5 @@ current `manifest.json` for the full list):
     IT Director, CRM Analyst, CRM Manager, Cloud Engineer, Systems Engineer, EUC Engineer,
     Security Manager, Security Engineer and Asset Management Analyst, with five new tools
     (Patch Rollout, Dedupe, Fairway Driver, Terraform Apply, Asset Tag).
+15. **Evolutions for the job-title tools (idea 63):** Patch Tuesday, Golden Record, The
+    19th Hole (its ace disc drops fruit gummies), Terraform Destroy and RFID Inventory.
