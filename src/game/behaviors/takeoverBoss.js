@@ -16,6 +16,7 @@ import { stepToward } from './chase.js';
 import { spawnEnemy } from '../enemies.js';
 import { hurtPlayer } from '../player.js';
 import { sfx } from '../../engine/audio.js';
+import { strokeAttack, blinkAlpha } from '../hazards.js';
 import { belowPhase2, enterPhase2 } from './phase2.js';
 
 const WALK = 0;
@@ -204,13 +205,16 @@ export default {
         ctx.globalAlpha = 0.18 + 0.25 * k;
         ctx.fillStyle = '#b13e53';
         ctx.fillRect(x, y, w, h);
-        ctx.globalAlpha = game.fx.calm || (game.time * 10) & 1 ? 0.9 : 0.5;
-        ctx.strokeStyle = '#b13e53';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x, y, w, h);
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+        strokeAttack(ctx, '#b13e53', 2, blinkAlpha(game));
       } else {
         // The memo: a sheet of paper sliding down the whole lane.
-        ctx.globalAlpha = Math.min(1, (e.ai.stateT / MEMO_SHOW) * 2);
+        const a = Math.min(1, (e.ai.stateT / MEMO_SHOW) * 2);
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+        strokeAttack(ctx, '#94b0c2', 1, a);
+        ctx.globalAlpha = a;
         ctx.fillStyle = '#f4f4f4';
         ctx.fillRect(x, y, w, h);
         ctx.fillStyle = '#94b0c2';

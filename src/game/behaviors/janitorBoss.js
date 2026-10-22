@@ -13,6 +13,7 @@
 import { stepToward } from './chase.js';
 import { hurtPlayer } from '../player.js';
 import { sfx } from '../../engine/audio.js';
+import { strokeAttack, blinkAlpha } from '../hazards.js';
 import { belowPhase2, enterPhase2 } from './phase2.js';
 
 const WALK = 0;
@@ -208,13 +209,10 @@ export default {
       ctx.beginPath();
       ctx.arc(e.x, e.y, sp.radius * k, 0, Math.PI * 2);
       ctx.fill();
-      ctx.globalAlpha = (game.time * 10) & 1 ? 0.9 : 0.5;
-      ctx.strokeStyle = tell ? '#b13e53' : '#f4f4f4';
-      ctx.lineWidth = 2;
       ctx.beginPath();
       if (tell) ctx.arc(e.x, e.y, sp.radius, 0, Math.PI * 2);
       else ctx.arc(e.x, e.y, sp.radius, game.time * 14, game.time * 14 + Math.PI * 1.2);
-      ctx.stroke();
+      strokeAttack(ctx, tell ? '#b13e53' : '#f4f4f4', 2, blinkAlpha(game));
       ctx.globalAlpha = 1;
       return;
     }
@@ -227,10 +225,9 @@ export default {
     ctx.globalAlpha = 0.22 + 0.25 * (1 - e.ai.stateT / c.telegraph);
     ctx.fillStyle = '#b13e53';
     ctx.fillRect(0, -e.r, len, e.r * 2);
-    ctx.globalAlpha = (game.time * 10) & 1 ? 0.9 : 0.5;
-    ctx.strokeStyle = '#b13e53';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(0, -e.r, len, e.r * 2);
+    ctx.beginPath();
+    ctx.rect(0, -e.r, len, e.r * 2);
+    strokeAttack(ctx, '#b13e53', 2, blinkAlpha(game));
     ctx.restore();
     ctx.globalAlpha = 1;
   },

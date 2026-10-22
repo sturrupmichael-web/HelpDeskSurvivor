@@ -14,6 +14,7 @@
 import { spawnEnemy } from '../enemies.js';
 import { hurtPlayer } from '../player.js';
 import { sfx } from '../../engine/audio.js';
+import { strokeAttack, blinkAlpha } from '../hazards.js';
 import { belowPhase2, enterPhase2 } from './phase2.js';
 
 const WALK = 0;
@@ -145,12 +146,9 @@ function drawTransfer(e, game, ctx) {
   ctx.beginPath();
   ctx.arc(e.ai.tx, e.ai.ty, t.radius * k, 0, Math.PI * 2);
   ctx.fill();
-  ctx.globalAlpha = (game.time * 10) & 1 ? 0.9 : 0.5;
-  ctx.strokeStyle = '#b13e53';
-  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(e.ai.tx, e.ai.ty, t.radius, 0, Math.PI * 2);
-  ctx.stroke();
+  strokeAttack(ctx, '#b13e53', 2, blinkAlpha(game));
   ctx.globalAlpha = 1;
 }
 
@@ -213,7 +211,6 @@ export default {
     const a = Math.atan2(e.ai.aimY, e.ai.aimX);
     const x = e.x;
     const y = e.y + MOUTH_Y;
-    const blink = (game.time * 10) & 1;
     ctx.globalAlpha = 0.2 + 0.25 * (1 - e.ai.stateT / s.telegraph);
     ctx.fillStyle = '#b13e53';
     ctx.beginPath();
@@ -221,10 +218,7 @@ export default {
     ctx.arc(x, y, s.range, a - s.spread / 2, a + s.spread / 2);
     ctx.closePath();
     ctx.fill();
-    ctx.globalAlpha = blink ? 0.9 : 0.5;
-    ctx.strokeStyle = '#b13e53';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    strokeAttack(ctx, '#b13e53', 2, blinkAlpha(game));
     ctx.globalAlpha = 1;
   },
 };

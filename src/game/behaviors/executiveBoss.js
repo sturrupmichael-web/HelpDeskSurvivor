@@ -14,6 +14,7 @@ import { stepToward } from './chase.js';
 import { spawnEnemy } from '../enemies.js';
 import { hurtPlayer } from '../player.js';
 import { sfx } from '../../engine/audio.js';
+import { strokeAttack, blinkAlpha } from '../hazards.js';
 import { enterPhase2 } from './phase2.js';
 
 const WALK = 0;
@@ -211,7 +212,7 @@ export default {
   // Floor telegraphs for the charge lane and the slide-deck cone.
   drawUnder(e, game, ctx) {
     const p = e.params;
-    const blink = (game.time * 10) & 1;
+    const edge = blinkAlpha(game);
     if (e.ai.state === CHARGE_TELL) {
       const len = p.charge.speed * p.charge.time;
       ctx.save();
@@ -220,10 +221,9 @@ export default {
       ctx.globalAlpha = 0.22 + 0.25 * (1 - e.ai.stateT / p.charge.telegraph);
       ctx.fillStyle = '#b13e53';
       ctx.fillRect(0, -e.r, len, e.r * 2);
-      ctx.globalAlpha = blink ? 0.9 : 0.5;
-      ctx.strokeStyle = '#b13e53';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(0, -e.r, len, e.r * 2);
+      ctx.beginPath();
+      ctx.rect(0, -e.r, len, e.r * 2);
+      strokeAttack(ctx, '#b13e53', 2, edge);
       ctx.restore();
     } else if (e.ai.state === CONE_TELL) {
       const a = Math.atan2(e.ai.aimY, e.ai.aimX);
@@ -235,10 +235,7 @@ export default {
       ctx.arc(e.x, y, 170, a - p.cone.spread / 2, a + p.cone.spread / 2);
       ctx.closePath();
       ctx.fill();
-      ctx.globalAlpha = blink ? 0.9 : 0.5;
-      ctx.strokeStyle = '#b13e53';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      strokeAttack(ctx, '#b13e53', 2, edge);
     }
     ctx.globalAlpha = 1;
   },

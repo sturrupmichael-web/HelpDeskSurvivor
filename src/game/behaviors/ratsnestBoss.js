@@ -12,6 +12,7 @@ import { stepToward } from './chase.js';
 import { spawnEnemy } from '../enemies.js';
 import { hurtPlayer } from '../player.js';
 import { sfx } from '../../engine/audio.js';
+import { strokeAttack, blinkAlpha } from '../hazards.js';
 import { belowPhase2, enterPhase2 } from './phase2.js';
 
 const WALK = 0;
@@ -160,17 +161,16 @@ export default {
     ctx.translate(x, y);
     if (e.ai.state === LASH_TELL) {
       const k = 1 - e.ai.stateT / p.lashTelegraph;
-      const blink = game.fx.calm || (game.time * 10) & 1;
+      const edge = blinkAlpha(game);
       for (const a of e.ai.lashAngles) {
         ctx.save();
         ctx.rotate(a);
         ctx.globalAlpha = 0.2 + 0.25 * k;
         ctx.fillStyle = '#b13e53';
         ctx.fillRect(0, -p.lashWidth / 2, len, p.lashWidth);
-        ctx.globalAlpha = blink ? 0.9 : 0.5;
-        ctx.strokeStyle = '#b13e53';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(0, -p.lashWidth / 2, len, p.lashWidth);
+        ctx.beginPath();
+        ctx.rect(0, -p.lashWidth / 2, len, p.lashWidth);
+        strokeAttack(ctx, '#b13e53', 1.5, edge);
         ctx.restore();
       }
     } else {
@@ -182,7 +182,8 @@ export default {
         ctx.rotate(a);
         const reach = len * Math.min(1, t * 3);
         const wob = Math.sin(t * Math.PI * 3 + i) * 8;
-        for (const [col, lw] of [['#1a1c2c', 5], [COLORS[i % COLORS.length], 3]]) {
+        // Dark rim, bright edge, then the cable's own colour (see strokeAttack).
+        for (const [col, lw] of [['#1a1c2c', 9], ['#ffcd75', 7], ['#1a1c2c', 5], [COLORS[i % COLORS.length], 3]]) {
           ctx.strokeStyle = col;
           ctx.lineWidth = lw;
           ctx.beginPath();

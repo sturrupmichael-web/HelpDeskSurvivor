@@ -4,6 +4,16 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-22-bossoutlines',
+    date: 'Oct 22, 2026',
+    title: 'Boss attacks stand out',
+    items: [
+      'Everything a boss throws at you (ringing phones, slide decks) now has a bright yellow outline, so it no longer gets lost in a crowd of users.',
+      'Boss warning areas (charge lanes, cones, circles, cable lashes, Reorg memos) get the same bright edge.',
+      'With Reduce flashing on, the outlines stay steady and warning areas no longer blink for any boss.',
+    ],
+  },
+  {
     id: '2026-10-22-evolutions63',
     date: 'Oct 22, 2026',
     title: 'Five new evolutions',

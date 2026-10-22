@@ -9,6 +9,7 @@
 import { stepToward } from './chase.js';
 import { spawnEnemy } from '../enemies.js';
 import { sfx } from '../../engine/audio.js';
+import { strokeAttack, blinkAlpha } from '../hazards.js';
 import { belowPhase2, enterPhase2 } from './phase2.js';
 
 const WALK = 0;
@@ -44,10 +45,9 @@ function drawArms(e, game, ctx) {
     ctx.globalAlpha = 0.2 + 0.3 * k;
     ctx.fillStyle = '#b13e53';
     ctx.fillRect(0, -5, 170, 10);
-    ctx.globalAlpha = (game.time * 10) & 1 ? 0.9 : 0.5;
-    ctx.strokeStyle = '#b13e53';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(0, -5, 170, 10);
+    ctx.beginPath();
+    ctx.rect(0, -5, 170, 10);
+    strokeAttack(ctx, '#b13e53', 2, blinkAlpha(game));
     ctx.restore();
   }
   ctx.restore();
@@ -148,7 +148,7 @@ export default {
     const half = (p.ringGap * Math.PI) / p.ringBullets;
     const x = e.x;
     const y = e.y + MOUTH_Y;
-    const pulse = (game.time * 10) & 1;
+    const edge = blinkAlpha(game, 0.9, 0.6);
     ctx.globalAlpha = 0.18;
     ctx.fillStyle = '#38b764';
     ctx.beginPath();
@@ -156,12 +156,10 @@ export default {
     ctx.arc(x, y, 160, e.ai.gapAngle - half, e.ai.gapAngle + half);
     ctx.closePath();
     ctx.fill();
-    ctx.globalAlpha = pulse ? 0.9 : 0.6;
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#b13e53';
     ctx.beginPath();
     ctx.arc(x, y, 44, e.ai.gapAngle + half, e.ai.gapAngle - half + Math.PI * 2);
-    ctx.stroke();
+    strokeAttack(ctx, '#b13e53', 3, edge);
+    ctx.lineWidth = 3;
     ctx.strokeStyle = '#38b764';
     ctx.beginPath();
     ctx.arc(x, y, 44, e.ai.gapAngle - half, e.ai.gapAngle + half);

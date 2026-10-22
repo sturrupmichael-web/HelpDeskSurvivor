@@ -636,7 +636,7 @@ export class Game {
     drawItems(this, ctx, left, top, right, bottom);
     const sh = shadow();
     drawEnemies(this, ctx, sh, left, top, right, bottom);
-    this.hazards.drawTelegraphs(ctx);
+    this.hazards.drawTelegraphs(this, ctx);
     drawBossTelegraphs(this, ctx);
 
     // Player (blinks and wears a blue halo while Out of Office)
@@ -678,7 +678,7 @@ export class Game {
     if (this.twist.drawOverlay(this, ctx, p.x - left, p.y - 4 - top)) {
       // In the dark, attacks you have to dodge still show up.
       ctx.setTransform(1, 0, 0, 1, -left, -top);
-      this.hazards.drawTelegraphs(ctx);
+      this.hazards.drawTelegraphs(this, ctx);
       drawBossTelegraphs(this, ctx);
       this.hazards.draw(ctx);
       ctx.setTransform(1, 0, 0, 1, 0, 0);

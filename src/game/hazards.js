@@ -1,9 +1,69 @@
 // Boss attacks that hurt the player: pooled bullets (ringing phones, slide decks) and
 // telegraphed bombs (a warning circle that fills up, then goes off).
+// Everything a boss throws is drawn with a bright outline (yellow, then a dark rim), so it
+// stands out from a crowd of users in any colour. Outlines never blink, and telegraph
+// borders only blink when Reduce flashing is off.
 
 import { Pool } from '../engine/pool.js';
 import { hurtPlayer } from './player.js';
 import { sfx } from '../engine/audio.js';
+
+const EDGE = '#ffcd75'; // the bright outline
+const RIM = '#1a1c2c'; // dark rim outside it, for light floors and white flashes
+
+// Strokes the current path as an attack border: a dark rim, a bright edge, then `color`.
+// `alpha` is the border's strength (blinking telegraphs pass a lower one on off-beats).
+export function strokeAttack(ctx, color, lineWidth, alpha = 0.9) {
+  ctx.globalAlpha = alpha * 0.8;
+  ctx.strokeStyle = RIM;
+  ctx.lineWidth = lineWidth + 4;
+  ctx.stroke();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = EDGE;
+  ctx.lineWidth = lineWidth + 2;
+  ctx.stroke();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+}
+
+// Border strength for a telegraph that blinks in the last moments (steady when calm).
+export function blinkAlpha(game, on = 0.9, off = 0.5) {
+  return game.fx.calm || (game.time * 10) & 1 ? on : off;
+}
+
+// A copy of a sprite's first frame with a 1px bright outline and a 1px dark rim around it
+// (2px bigger on every side), made once per sprite.
+const outlined = new WeakMap();
+function outlinedFrame(s) {
+  let c = outlined.get(s);
+  if (c) return c;
+  const f = s.anims.idle.frames[0];
+  const w = s.w + 4;
+  const h = s.h + 4;
+  const tint = (color) => {
+    const t = document.createElement('canvas');
+    t.width = w;
+    t.height = h;
+    const g = t.getContext('2d');
+    g.drawImage(s.image, f[0], f[1], s.w, s.h, 2, 2, s.w, s.h);
+    g.globalCompositeOperation = 'source-in';
+    g.fillStyle = color;
+    g.fillRect(0, 0, w, h);
+    return t;
+  };
+  c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const g = c.getContext('2d');
+  const rim = tint(RIM);
+  const edge = tint(EDGE);
+  for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) if (Math.abs(dx) + Math.abs(dy) <= 3) g.drawImage(rim, dx, dy);
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) g.drawImage(edge, dx, dy);
+  g.drawImage(s.image, f[0], f[1], s.w, s.h, 2, 2, s.w, s.h);
+  outlined.set(s, c);
+  return c;
+}
 
 export class Hazards {
   constructor(assets) {
@@ -79,23 +139,21 @@ export class Hazards {
   }
 
   // Bomb telegraph circles, drawn over the horde (under the player) so they stay visible.
-  drawTelegraphs(ctx) {
+  // Near the end the border blinks; with Reduce flashing it turns solid yellow instead.
+  drawTelegraphs(game, ctx) {
     const bm = this.bombs;
     for (let i = 0; i < bm.count; i++) {
       const b = bm.items[i];
       const k = b.t / b.delay;
-      const blink = k > 0.7 && (b.t * 12) & 1;
+      const late = k > 0.7 && (game.fx.calm || (b.t * 12) & 1);
       ctx.globalAlpha = 0.25;
       ctx.fillStyle = '#b13e53';
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r * k, 0, Math.PI * 2);
       ctx.fill();
-      ctx.globalAlpha = blink ? 1 : 0.7;
-      ctx.strokeStyle = blink ? '#ffcd75' : '#b13e53';
-      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-      ctx.stroke();
+      strokeAttack(ctx, late ? EDGE : '#b13e53', 2, late ? 1 : 0.8);
     }
     ctx.globalAlpha = 1;
   }
@@ -104,12 +162,11 @@ export class Hazards {
     const bl = this.bullets;
     for (let i = 0; i < bl.count; i++) {
       const b = bl.items[i];
-      const s = b.spr;
-      const f = s.anims.idle.frames[0];
+      const img = outlinedFrame(b.spr);
       ctx.save();
       ctx.translate(Math.round(b.x), Math.round(b.y));
       ctx.rotate(b.rot);
-      ctx.drawImage(s.image, f[0], f[1], s.w, s.h, -s.w / 2, -s.h / 2, s.w, s.h);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
       ctx.restore();
     }
   }
