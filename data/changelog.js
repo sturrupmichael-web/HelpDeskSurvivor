@@ -9,7 +9,7 @@ export const CHANGELOG = [
     title: 'Overtime gets harder',
     items: [
       'If The Executive is still around at 20:00, you get 5 minutes of overtime at the usual difficulty to finish the fight. The HUD counts it down.',
-      'After that, every minute of overtime makes new users 10% tougher and brings 10% more of them, shown as OVERTIME x1, x2 and so on. Sooner or later you close the ticket or burn out.',
+      'After that, every minute of overtime (shown as OVERTIME x1, x2 and so on) makes new users tougher, faster and harder-hitting, brings more of them, and slowly drains your sanity. Sooner or later you close the ticket or burn out.',
     ],
   },
   {
