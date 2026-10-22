@@ -1,4 +1,4 @@
-// Help Desk Wiki screen: a codex of users, bosses, tools and passives that fills in as
+// Knowledge Base screen: a codex of users, bosses, tools and passives that fills in as
 // you meet them (records in src/game/wiki.js). Unknown entries show as a dark
 // silhouette or a "???" card.
 
@@ -179,7 +179,7 @@ export function wikiScreen(screens, tab = 'users', back = () => screens.title())
   ).join('');
   screens.show(
     `<div class="panel wide board wiki">
-      <h2>HELP DESK WIKI</h2>
+      <h2>KNOWLEDGE BASE</h2>
       <p class="sub">${all.found} of ${all.total} articles written. New ones appear as you meet users and use tools.</p>
       <div class="tabs">${tabs}</div>
       <div class="section-head">${WIKI_TABS.find((t) => t.id === tab).name.toUpperCase()} · ${found} / ${sec.ids.length}</div>

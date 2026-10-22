@@ -380,7 +380,7 @@ export class Game {
     this.bossMax = e.maxHp;
     this.bossPhase2 = false;
     this.bossDef = e.def; // the pieces' pool objects may be reused by the time it's over
-    this.achievements.run.bossesMet.push(e.def.sprite); // for the Help Desk Wiki
+    this.achievements.run.bossesMet.push(e.def.sprite); // for the Knowledge Base
     this.camera.shake(5);
   }
 

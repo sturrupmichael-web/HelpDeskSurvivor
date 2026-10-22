@@ -2,7 +2,7 @@
 // to the game. Tools and passives join the level-up cards, evolutions start happening in
 // Change Approved chests, and characters can be hired in the Characters screen (they still
 // cost Overtime Pay). Anything not listed here is there from the start.
-// Players keep whatever their Help Desk Wiki shows they have already used or hired.
+// Players keep whatever their Knowledge Base shows they have already used or hired.
 
 export const UNLOCKS = {
   server: {

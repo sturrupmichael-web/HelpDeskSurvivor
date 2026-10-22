@@ -256,7 +256,7 @@ html, body, #game { touch-action: none; -webkit-user-select: none; user-select: 
   .panel .cards.levelup .card-text, .panel .cards.levelup .card-hint { font-size: calc(12px * var(--fs)); }
 }
 
-/* Help Desk Wiki */
+/* Knowledge Base */
 .wiki-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; text-align: left; margin-top: 6px; }
 .wiki-entry { display: flex; gap: 10px; align-items: flex-start; padding: 8px; background: var(--ink); border: 2px solid var(--gray); }
 .wiki-entry.evolved { border-color: var(--yellow); }

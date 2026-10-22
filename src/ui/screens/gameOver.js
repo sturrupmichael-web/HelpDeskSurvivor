@@ -39,7 +39,7 @@ export function gameOver(scr, s) {
     `<div class="panel wide summary ${s.won ? 'win' : 'lose'}">
       <h1>${s.won ? 'CLOCKED OUT!' : 'BURNOUT'}</h1>
       <p class="sub">${pickLine(s.won ? VICTORY_QUIPS : BURNOUT_QUIPS)}</p>
-      ${s.wikiNew?.length ? `<p class="wiki-new">NEW IN THE WIKI: ${s.wikiNew.slice(0, 6).map((n) => `<b>${n}</b>`).join(', ')}${s.wikiNew.length > 6 ? ` and ${s.wikiNew.length - 6} more` : ''}</p>` : ''}
+      ${s.wikiNew?.length ? `<p class="wiki-new">NEW IN THE KNOWLEDGE BASE: ${s.wikiNew.slice(0, 6).map((n) => `<b>${n}</b>`).join(', ')}${s.wikiNew.length > 6 ? ` and ${s.wikiNew.length - 6} more` : ''}</p>` : ''}
       ${s.newMap ? `<p class="unlock">NEW MAP UNLOCKED: <b>${MAPS[s.newMap].name}</b> (pick it when you Clock In)</p>` : ''}
       ${s.newUnlocks?.length ? `<p class="unlock">NOW AVAILABLE: ${s.newUnlocks.map((u) => `<b>${unlockName(u)}</b>`).join(', ')}</p>` : ''}
       ${s.policiesOpened ? '<p class="unlock">SHIFT POLICIES UNLOCKED: optional twists for more pay and score. Pick them when you Clock In, after the map.</p>' : ''}

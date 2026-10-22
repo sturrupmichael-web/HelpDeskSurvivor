@@ -4,6 +4,14 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-22-kb',
+    date: 'Oct 22, 2026',
+    title: 'The Wiki is now the Knowledge Base',
+    items: [
+      'The Help Desk Wiki has been renamed the Knowledge Base. Same place on the title screen, same K key, and everything you have found is still there.',
+    ],
+  },
+  {
     id: '2026-10-22-jobtitles',
     date: 'Oct 22, 2026',
     title: 'Eleven new techs',

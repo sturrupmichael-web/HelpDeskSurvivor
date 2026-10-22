@@ -1,4 +1,4 @@
-// Help Desk Wiki: which users, bosses, tools and passives you've met, kept in the save
+// Knowledge Base: which users, bosses, tools and passives you've met, kept in the save
 // (meta.data.wiki). An entry unlocks the first time you close that user, face that boss,
 // or carry that tool or passive at the end of a shift.
 
