@@ -207,7 +207,10 @@ comes later. The Major Incident, Angry Caller, Night Janitor and Hostile Takeove
 longer have a separate `enrageAt`: the second phase replaced it.
 
 If you outlast 20:00 without closing The Executive, the clock keeps running as
-OVERTIME at the final timeline values.
+OVERTIME at the final timeline values. After a 5-minute grace period (`OVERTIME.grace` in
+`data/waves.js`, time to finish the fight) overtime gets harder every minute: each level
+gives newly spawned users +10% HP and +10% spawn rate and horde size (`hpPerLevel`,
+`spawnPerLevel`), and the HUD shows "OVERTIME x1", "x2"... See "Overtime ramp" below.
 
 ## Evolutions (`data/evolutions.js`)
 
@@ -538,3 +541,26 @@ of the tools (before = the job-title table above):
 | Asset Management Analyst (Asset Tag) | 3/6 | 5/6, 22:47 |
 
 23 of 30 wins before and after: within the bot's noise, so nothing else was changed.
+
+## Overtime ramp (idea 49), 2026-10-22
+
+`OVERTIME` in `data/waves.js`. Before, overtime stayed at the 20:00 values forever, and
+maxed-out bot builds lived to the 30:00 cut-off without closing The Executive. Bot wins
+(vet save and progression profiles) closed The Executive between 20:40 and 29:09, most
+by 24:00, so the ramp waits 5 minutes (`grace`) before it starts.
+
+Tougher users alone didn't end those shifts: even +50% HP a level, or +20% HP and +35%
+contact damage a level, left some shifts alive at 45:00 (builds users can't reach). So
+each level also drains `drainPerLevel` x level sanity a second.
+
+Bot, 8 shifts each, cap 45:00, with the final numbers:
+
+| Setup | Before (6 shifts, cap 30:00) | After |
+| --- | --- | --- |
+| Parking Garage, Tier 1, vet | 5 / 6 won, 1 burnout at 19:52 | 3 / 8 won (22:39-23:27), last shift over by 31:01 |
+| Open Office, SecOps, vet | 4 / 6 won (up to 29:09), 1 alive at 30:00 | 6 / 8 won (20:46-26:12), last over by 29:29 |
+| Merger Day, Tier 1, 100% shop | 3 / 6 won (up to 27:43) | 5 / 8 won (20:46-25:34) |
+| Call Center, Tier 1, 70% shop | 1 / 6 won | 0 / 8 won (all burned out by 21:08) |
+
+Every shift now ends, the latest at 31:01. Win counts moved both ways, within the bot's
+noise; fights that take more than about 8 minutes are the ones that now tend to be lost.

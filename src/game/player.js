@@ -4,6 +4,7 @@ import { moveAxis } from '../engine/input.js';
 import { PASSIVES, MAX_WEAPONS, MAX_PASSIVES } from '../../data/passives.js';
 import { NO_POLICY } from './policies.js';
 import { XP_CURVE } from '../../data/player.js';
+import { OVERTIME } from '../../data/waves.js';
 import { sfx } from '../engine/audio.js';
 
 const axis = { x: 0, y: 0 };
@@ -124,6 +125,10 @@ export function updatePlayer(game, dt) {
   if (p.hurtCooldown > 0) p.hurtCooldown -= dt;
   if (p.invuln > 0) p.invuln -= dt;
   if (p.regen) p.hp = Math.min(p.maxHp, p.hp + p.regen * dt);
+  // Overtime exhaustion: every overtime level drains a little more sanity per second, so
+  // even a build users can't touch burns out eventually.
+  const ot = game.spawner.overtimeLevel(game);
+  if (ot && !p.god && game.victoryT <= 0) p.hp -= OVERTIME.drainPerLevel * ot * dt;
   // Cloud Engineer: damage scales up with every full minute of the shift.
   if (p.def.damagePerMinute) {
     const mins = Math.floor(game.time / 60);

@@ -2,7 +2,7 @@
 // touched when something actually changes.
 
 import { icon } from './icons.js';
-import { SHIFT_LENGTH } from '../../data/waves.js';
+import { SHIFT_LENGTH, OVERTIME } from '../../data/waves.js';
 import { PASSIVES } from '../../data/passives.js';
 import { POLICIES } from '../../data/policies.js';
 import { fmtMult } from '../game/policies.js';
@@ -145,9 +145,14 @@ export class Hud {
     this.set('xp', Math.floor((p.xp / p.xpNeed) * 1000), (v) => e.xp.setAttribute('width', v));
     this.set('level', p.level, (v) => (e.level.textContent = 'LV ' + v));
     this.set('time', Math.floor(game.time), (v) => (e.timer.textContent = fmtTime(v)));
-    this.set('overtime', game.tutorial ? 'training' : game.time >= SHIFT_LENGTH, (v) => {
-      e.shift.textContent = v === 'training' ? 'TRAINING SHIFT' : v ? 'OVERTIME' : 'SHIFT ENDS ' + fmtTime(SHIFT_LENGTH);
-      e.shift.classList.toggle('over', v === true);
+    // Overtime: a countdown to the first ramp-up during the grace period, then the level.
+    const ot = game.spawner.overtimeLevel(game);
+    const graceLeft = Math.ceil(SHIFT_LENGTH + OVERTIME.grace - game.time);
+    const shift = game.tutorial ? 'training' : game.time < SHIFT_LENGTH ? 'shift' : ot ? 'ot' + ot : 'grace' + graceLeft;
+    this.set('overtime', shift, (v) => {
+      e.shift.textContent = v === 'training' ? 'TRAINING SHIFT' : v === 'shift' ? 'SHIFT ENDS ' + fmtTime(SHIFT_LENGTH)
+        : ot ? `OVERTIME x${ot}` : 'OVERTIME · HARDER IN ' + fmtTime(graceLeft);
+      e.shift.classList.toggle('over', v !== 'training' && v !== 'shift');
     });
     const boss = game.bossAlive() ? game.boss : null;
     this.set('bossOn', boss ? boss.uid : 0, () => {

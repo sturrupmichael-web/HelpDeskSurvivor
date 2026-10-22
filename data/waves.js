@@ -9,6 +9,20 @@
 
 export const SHIFT_LENGTH = 20 * 60; // seconds until the final boss shows up; beat it to clock out
 
+// Overtime (idea 49): past 20:00 the timeline stays at its last keyframe, so without this
+// a strong build could outlast The Executive forever. After `grace` seconds of overtime
+// (time to finish the fight; bot wins mostly land by 24:00) every `every` seconds adds
+// one overtime level. Per level, newly spawned users get +`hpPerLevel` HP, +`damagePerLevel`
+// contact damage and +`speedPerLevel` speed (at most +`maxSpeed`), and the spawn rate and
+// horde size grow by `spawnPerLevel`. Bosses already on the floor are not affected. You
+// also lose `drainPerLevel` x level sanity per second (exhaustion), so even a build users
+// can't reach burns out in the end.
+export const OVERTIME = {
+  grace: 5 * 60, every: 60,
+  hpPerLevel: 0.15, damagePerLevel: 0.2, speedPerLevel: 0.03, maxSpeed: 0.3, spawnPerLevel: 0.1,
+  drainPerLevel: 0.3,
+};
+
 export const TIMELINE = [
   { t: 0, rate: 1.2, minAlive: 10, hpMult: 1.0, speedMult: 0.98, mix: { pam: 1 } },
   { t: 60, rate: 2.0, minAlive: 20, hpMult: 1.0, speedMult: 0.98, mix: { pam: 6, quinn: 2 } },

@@ -1,7 +1,7 @@
 // Wave spawner: reads data/waves.js, spawns enemies on a ring just outside the
 // screen, keeps a minimum horde alive, runs scripted events, and recycles stragglers.
 
-import { TIMELINE, EVENTS, SPAWNER } from '../../data/waves.js';
+import { TIMELINE, EVENTS, SPAWNER, SHIFT_LENGTH, OVERTIME } from '../../data/waves.js';
 import { spawnEnemy } from './enemies.js';
 import { ENEMIES } from '../../data/enemies.js';
 import { sfx } from '../engine/audio.js';
@@ -87,6 +87,7 @@ export class Spawner {
     this.storm = null; // active storm: { ev, left, t }
     this.bossScale = 1; // spawn-rate multiplier while a boss is up (event's spawnScale)
     this.stopped = false; // the shift is over: no more spawns
+    this.otShown = 0; // overtime level the player has been warned about
   }
 
   // Linearly interpolated timeline value at time t.
@@ -114,18 +115,36 @@ export class Spawner {
     return Math.max(game.time, game.policy?.headStart ?? 0);
   }
 
+  // Overtime level (data/waves.js OVERTIME): 0 until the grace period after 20:00 runs out,
+  // then 1, 2, 3... one more each minute.
+  overtimeLevel(game) {
+    const t = game.time - SHIFT_LENGTH - OVERTIME.grace;
+    return t < 0 || game.tutorial ? 0 : 1 + Math.floor(t / OVERTIME.every);
+  }
+
   spawn(game, id, angle) {
     const t = game.time;
     const pt = this.ringPoint(game, angle);
     id ??= pick(policyMix(mapMix(mixAt(this.busyTime(game)), game.map, t), game.policy));
-    return spawnEnemy(game, id, pt.x, pt.y, this.sample(this.busyTime(game), 'hpMult'), this.sample(t, 'speedMult'));
+    const ot = this.overtimeLevel(game);
+    const hp = this.sample(this.busyTime(game), 'hpMult') * (1 + OVERTIME.hpPerLevel * ot);
+    const speed = this.sample(t, 'speedMult') * (1 + Math.min(OVERTIME.maxSpeed, OVERTIME.speedPerLevel * ot));
+    const e = spawnEnemy(game, id, pt.x, pt.y, hp, speed);
+    if (e && ot) e.damage *= 1 + OVERTIME.damagePerLevel * ot;
+    return e;
   }
 
   update(game, dt) {
     if (this.stopped) return;
     const t = game.time;
     this.events(game, dt);
-    const scale = game.bossAlive() ? this.bossScale : 1;
+    const ot = this.overtimeLevel(game);
+    if (ot > this.otShown) {
+      this.otShown = ot;
+      if (ot === 1) game.hud.banner('UNPAID OVERTIME', "Every minute you're still here, the users get tougher. Close The Executive's ticket!", 4);
+      sfx('warn');
+    }
+    const scale = (game.bossAlive() ? this.bossScale : 1) * (1 + OVERTIME.spawnPerLevel * this.overtimeLevel(game));
     const busy = this.busyTime(game);
     this.acc += this.sample(busy, 'rate') * scale * dt;
     const min = this.sample(busy, 'minAlive') * scale;
