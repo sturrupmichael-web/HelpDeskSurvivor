@@ -41,7 +41,7 @@ npm run build
 | Enter | Close the Change Approved (chest) screen |
 | R | Reroll the level-up cards (needs the Escalation Path upgrade) |
 | Enter (title screen) | Clock In: pick a tech, then a map (arrows or 1-9 to choose, Enter for next / confirm, Esc to go back). Starts on your last picks |
-| T / L / C / S / B / K / A / O | Training Shift / Office Maps / Characters / Overtime Shop / Leaderboard / Help Desk Wiki / Achievements / Settings (title screen) |
+| T / L / C / S / B / K / A / O | Training Shift / Office Maps / Characters / Overtime Shop / Leaderboard / Knowledge Base / Achievements / Settings (title screen) |
 | P / C | Post the shift to the online leaderboard / Change tech or map (end-of-shift screen) |
 | T / O | Shift Stats / Settings (pause menu) |
 | A | When everything is maxed, always take the pizza from then on (no more level-up screens) |
@@ -89,7 +89,7 @@ own users, shows a coach card at the bottom of the screen and waits for the play
 can't hit zero, and it pays nothing and never reaches the leaderboard. Brand-new players
 are offered it on their first Clock In; it's always on the title screen (T).
 
-**Help Desk Wiki** (`src/game/wiki.js` records, `src/ui/wiki.js` screen): a codex of
+**Knowledge Base** (`src/game/wiki.js` records, `src/ui/wiki.js` screen): a codex of
 users, bosses, tools and passives. An article unlocks the first time you close that
 user, face that boss, or finish a shift carrying that tool or passive; the end-of-shift
 screen lists new ones. Text comes from the `flavor` and `desc` fields in `data/`.
@@ -293,7 +293,7 @@ current `manifest.json` for the full list):
    Merger Day added The Hostile Takeover (and its Subsidiary).
 9. **Online leaderboard:** top CSAT per map (Supabase), posted from the end-of-shift screen.
 10. **Installable app:** add to the home screen, runs full screen and offline.
-11. **Help Desk Wiki:** a codex of users, bosses, tools and passives that fills in as you play.
+11. **Knowledge Base:** a codex of users, bosses, tools and passives that fills in as you play.
 12. **Performance review:** a funny HR review of every shift on the end-of-shift screen.
 13. **More tools (ideas 32-46):** Reply-All Storm, Zip Ties, Password Expired, Screen Share
     and Rubber Duck; the Spare Charger, Extended Warranty, Snack Drawer and Lucky Lanyard

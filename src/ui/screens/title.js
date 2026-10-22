@@ -65,7 +65,7 @@ export function title(scr) {
         <div class="tiles">
           ${tile('shop', 'laptop', 'Overtime Shop', PAY(m.pay), 'S')}
           ${tile('board', 'escalate', 'Leaderboard', 'Top 10 per map', 'B')}
-          ${tile('wiki', 'book', 'Wiki', `${wiki.found}/${wiki.total}`, 'K')}
+          ${tile('wiki', 'book', 'Knowledge Base', `${wiki.found}/${wiki.total}`, 'K')}
           ${tile('ach', 'cert', 'Achievements', `${Object.keys(m.achievements ?? {}).length}/${ACHIEVEMENTS.length}`, 'A')}
         </div>
         <div class="title-small">

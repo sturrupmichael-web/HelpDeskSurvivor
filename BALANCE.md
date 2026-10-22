@@ -186,7 +186,7 @@ shift). `params`:
 **Second phases** (idea 14, `params.phase2`, shared code in
 src/game/behaviors/phase2.js). Below `phase2.at` of its HP a boss switches once: the
 `title` / `text` banner, the `phase2` growl, a shockwave, then a red glow and embers on
-the boss and an orange boss bar marked ENRAGED. `wiki` is the line in the Help Desk Wiki.
+the boss and an orange boss bar marked ENRAGED. `wiki` is the line in the Knowledge Base.
 
 | Boss | When | What changes |
 | --- | --- | --- |
