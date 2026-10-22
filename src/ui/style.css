@@ -489,10 +489,12 @@ html.touch .board-table tr[data-name] td { padding-top: 10px; padding-bottom: 10
 .panel.title { max-width: 480px; }
 .title-head .title-char { margin-bottom: 10px; }
 .panel button.clock-in { padding: 14px; font-size: calc(18px * var(--fs)); }
-.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 8px; }
+/* minmax(0, 1fr): without it a long word (Achievements) widens its column past the panel edge on phones. */
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 10px 0 8px; }
 .panel button.tile { margin: 0; display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; align-items: center; column-gap: 8px; text-align: left; padding: 8px 10px; min-height: 56px; }
 .panel button.tile .icon { grid-row: 1 / 3; }
 .panel button.tile span { font-size: calc(14px * var(--fs)); }
+.panel button.tile span, .panel button.tile small { min-width: 0; overflow-wrap: anywhere; }
 .panel button.tile small { grid-column: 2; font-size: calc(12px * var(--fs)); font-weight: normal; color: var(--yellow); }
 .panel button.tile kbd { grid-row: 1 / 3; grid-column: 3; }
 .title-small { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
@@ -500,7 +502,15 @@ html.touch .board-table tr[data-name] td { padding-top: 10px; padding-bottom: 10
 .panel .title-small button { margin: 0; padding: 8px 6px; font-size: calc(13px * var(--fs)); min-height: 44px; }
 .title-records { font-size: calc(12px * var(--fs)); color: var(--gray); margin: 12px 0 0; line-height: 1.5; }
 .panel.title .controls { margin-top: 8px; line-height: 1.8; }
-@media (max-width: 380px) { .panel button.tile kbd { display: none; } }
+/* Phones: the icon sits above the name so the text gets the tile's full width, even with Larger text on. */
+@media (max-width: 440px) {
+  .panel button.tile { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; justify-items: center; text-align: center; row-gap: 2px; padding: 8px 4px; }
+  .panel button.tile .icon, .panel button.tile small { grid-row: auto; grid-column: 1; }
+  .panel button.tile kbd { display: none; }
+  .panel button.tile span { font-size: calc(13px * var(--fs)); }
+  .panel button.tile small { font-size: calc(11px * var(--fs)); }
+}
+@media (max-width: 340px) { .panel button.tile span { font-size: calc(12px * var(--fs)); } }
 
 /* Long menus: a fade at the bottom edge while there's more below (UX review 19). Panels with
    a sticky button bar put the fade just above the bar. */

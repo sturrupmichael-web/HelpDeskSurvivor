@@ -4,6 +4,14 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-22-phonetiles',
+    date: 'Oct 22, 2026',
+    title: 'Title screen fits on phones',
+    items: [
+      'Leaderboard and Achievements no longer run off the right edge of the title screen on phones. On narrow screens the icons sit above the names so everything fits, even with Larger text on.',
+    ],
+  },
+  {
     id: '2026-10-22-combofix',
     date: 'Oct 22, 2026',
     title: 'Long shifts post again',
