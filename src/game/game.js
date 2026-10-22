@@ -19,11 +19,11 @@ import { setHaptics } from '../engine/haptics.js';
 import { Achievements } from './achievements.js';
 import { Floor } from './floor.js';
 import { createPlayer, updatePlayer, addXp } from './player.js';
-import { makeEnemy, updateEnemies, resolveEnemies, drawEnemies, drawBossTelegraphs } from './enemies.js';
+import { makeEnemy, updateEnemies, resolveEnemies, drawEnemies, drawBossTelegraphs, spawnEnemy, stunEnemy } from './enemies.js';
 
 import { makeTicket, updateTickets, drawTickets, makeItem, dropItem, updateItems, drawItems } from './pickups.js';
 import { Hazards } from './hazards.js';
-import { createWeapon, updateWeapons, drawWeapons, drawWeaponsUnder } from './weapons/index.js';
+import { createWeapon, createCrew, updateWeapons, drawWeapons, drawWeaponsUnder } from './weapons/index.js';
 import { WEAPONS } from '../../data/weapons.js';
 import { ENEMIES } from '../../data/enemies.js';
 import { createProjectilePool, updateProjectiles, drawProjectiles } from './projectiles.js';
@@ -176,6 +176,8 @@ export class Game {
     this.policy = policy;
     this.player = createPlayer(def, this.assets.sprite(def.sprite), this.meta, policy);
     this.player.weapons.push(createWeapon(def.starter, 0));
+    if (def.crew) this.player.innate.push(createCrew(def.crew)); // Help Desk Supervisor
+    for (const id of def.alsoStarts ?? []) this.player.weapons.push(createWeapon(id, this.player.weapons.length)); // IT Director
     // Tools, passives and evolutions this save hasn't unlocked yet (data/unlocks.js), and
     // passives a policy keeps off the cards (No Pizza Policy: no Snack Drawer).
     this.player.locked = (kind, id) => !this.meta.itemUnlocked(kind, id) || (kind === 'passives' && policy.lockPassives.includes(id));
@@ -199,6 +201,8 @@ export class Game {
     this.bossPhase2 = false;
     this.victoryT = 0;
     this.beatT = 0; // low-sanity heartbeat timer
+    this.phishT = 0; // Security Manager: seconds since the last phishing test
+    this.boxT = 0; // Asset Management Analyst: seconds since the last moving box
     this.autoPizza = false; // everything maxed and the player chose "always take the pizza"
     this.tutorial = null; // the training shift's script, while one runs
     if (this.mapId !== this.meta.data.map) this.setMap(this.meta.data.map); // back from training
@@ -214,7 +218,7 @@ export class Game {
   startingTools(st) {
     if (!st) return;
     const p = this.player;
-    const pool = Object.keys(WEAPONS).filter((id) => !WEAPONS[id].evolved && id !== p.weapons[0].id && !p.locked('tools', id));
+    const pool = Object.keys(WEAPONS).filter((id) => !WEAPONS[id].evolved && !p.weapons.some((w) => w.id === id) && !p.locked('tools', id));
     for (let k = 0; k < st.random && pool.length && p.weapons.length < p.maxWeapons; k++) {
       const id = pool.splice((Math.random() * pool.length) | 0, 1)[0];
       const w = createWeapon(id, p.weapons.length);
@@ -268,7 +272,8 @@ export class Game {
       evolutions: this.achievements.run.evolutions,
       bestStreak: this.score.bestStreak,
       level: p.level,
-      tools: p.weapons
+      payMult: p.def.payMult ?? 1, // IT Director
+      tools: [...p.weapons, ...p.innate]
         .map((w) => ({ name: w.def.name, icon: w.def.icon, evolved: !!w.def.evolved, damage: Math.round(w.damageDone) }))
         .sort((a, b) => b.damage - a.damage),
       timeline: this.timeline.result(this),
@@ -500,6 +505,7 @@ export class Game {
     this.hash.build(this.enemies.items, this.enemies.count, p.x, p.y);
     resolveEnemies(this, dt);
     updateWeapons(this, dt);
+    this.techPerks(dt);
     updateProjectiles(this, dt);
     this.enemies.compact(); // hash indices are stale after this point
     this.zones.update(this, dt);
@@ -524,6 +530,40 @@ export class Game {
     else if (p.hp <= 0) this.endRun(false);
     else if (this.victoryT > 0 && (this.victoryT -= dt) <= 0) this.endRun(true);
     else if (this.state === 'run' && p.pendingLevels > 0) this.openLevelUp();
+  }
+
+  // Tech perks that act on the floor (data/player.js): the Security Manager's phishing
+  // test and the Asset Management Analyst's moving boxes. Not during training or the
+  // victory walk-off.
+  techPerks(dt) {
+    const p = this.player;
+    const d = p.def;
+    if (this.spawner.stopped || this.victoryT > 0) return;
+    if (d.phishTest && (this.phishT += dt) >= d.phishTest.every) {
+      this.phishT = 0;
+      // Everyone on screen stops to read the email.
+      const hw = this.view.w / 2 + 16;
+      const hh = this.view.h / 2 + 16;
+      const pool = this.enemies;
+      for (let i = 0; i < pool.count; i++) {
+        const e = pool.items[i];
+        if (!e.dead && Math.abs(e.x - this.camera.x) < hw && Math.abs(e.y - this.camera.y) < hh) stunEnemy(e, d.phishTest.stun);
+      }
+      this.fx.ring(p.x, p.y, Math.max(hw, hh), '#7a4ea0', 0.5);
+      this.fx.text(p.x, p.y - 30, 'PHISHING TEST', '#ffcd75');
+      sfx('error');
+    }
+    if (d.boxEvery && (this.boxT += dt) >= d.boxEvery) {
+      this.boxT = 0;
+      let boxes = 0;
+      const pool = this.enemies;
+      for (let i = 0; i < pool.count; i++) if (pool.items[i].def.anchored && !pool.items[i].dead) boxes++;
+      if (boxes < 3) {
+        const a = Math.random() * Math.PI * 2;
+        const r = 110 + Math.random() * 70;
+        spawnEnemy(this, 'moving_box', p.x + Math.cos(a) * r, p.y + Math.sin(a) * r, this.spawner.sample(this.time, 'hpMult'));
+      }
+    }
   }
 
   // Debug helpers (see ui/debug.js).

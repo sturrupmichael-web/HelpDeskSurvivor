@@ -80,6 +80,11 @@ Other per-enemy knobs: `onDeath: { spawn, count }` (Randy splitting), `explode: 
 | `chain` + `confuse` | Password Expired | as `chain`, but `confuse` seconds of walking the wrong way instead of `stun` |
 | `beam` | Screen Share | `damage`, `cooldown`, `duration`, `tick`, `length`, `width`, `knockback` (aims at the nearest user, sweeps ±0.6 rad) |
 | `duck` | Rubber Duck | `damage`, `cooldown`, `radius` (quack), `orbit`, `rotSpeed`, `mark` (s), `markAmp` (+damage taken) |
+| `rollout` | Patch Rollout | `damage`, `cooldown`, `radius`, `gap` (s between rings), `rings` (each ring's share of `radius`), `stun` (last ring), `knockback`, `speed` |
+| `cluster` | Dedupe | `damage`, `cooldown`, `radius` (blast), `range` (search), `crowdBonus` (+damage per other user in the blast), `crowdMax`; def `bonusVs` |
+| `boomerang` + `curlAlt` | Fairway Driver | as `boomerang`, plus `curl` (rad/s); every other disc bends the other way |
+| `grid` | Terraform Apply | `damage`, `cooldown`, `size` (tiles per side), `tile` (px), `plan` (s before it applies), `live` (s it stays hot), `knockback` |
+| `projectile` + `tagXp` | Asset Tag | as `projectile`; users it hits drop `tagXp` times the ticket |
 
 A flagged user (`mark`) takes `markAmp` extra damage from every tool; flags from the duck
 and the SIEM don't stack, the bigger one counts. Bosses shake off confusion like stuns
@@ -272,6 +277,17 @@ Each kill earns `pointsPerKill × multiplier`. The multiplier grows by 1 for eve
 | Help Desk Manager | $2,000 | Delegate | 110 | 67 | `summonBonus: 0.25` (Delegate helpers and PowerShell turrets) |
 | The Intern | $200 | Coffee Run | 70 | 78 | `bonus: { growth: 0.3 }` (+30% XP) |
 | Cloud Architect | $3,000 | Auto-Scaling | 90 | 74 | `extraCount: 1` (+1 shot, orbiting shield or helper on every tool) |
+| Help Desk Supervisor | $1,800 | Ticket Auto-Close | 100 | 74 | `crew` (2 built-in interns, +5% damage per player level), `bonus: { damage: -0.15 }` |
+| Systems Operations Manager | $2,500 | Patch Rollout | 85 | 74 | `toolSlots: 1` (7 tool slots) |
+| IT Director | Merger Day win + $4,000 | Out-of-Office Reply + Delegate | 110 | 70 | `alsoStarts: ['delegate']`, `payMult: 1.25`, `chestBonus: 1`, `bonus: { growth: -0.15 }` |
+| CRM Analyst | $1,200 | Dedupe | 90 | 74 | `bonus: { luck: 0.2 }` |
+| CRM Manager | $2,000 | Fairway Driver | 100 | 74 | `bonus: { area: 0.1 }`, `hurtBy: { walkup: 1.25 }` |
+| Cloud Engineer | $2,200 | Terraform Apply | 100 | 74 | `damagePerMinute: 0.02`, `bonus: { damage: -0.15 }` |
+| Systems Engineer | $1,600 | Group Policy Push | 105 | 67 | `auraArea: 0.2`, `slowedAmp: 0.1` |
+| EUC Engineer | $1,400 | Remote Desktop Session | 90 | 74 | `cardWeights: { reimage: 3 }`, `cooldownFor: { reimage: 0.75 }` |
+| Security Manager | $2,500 | Password Expired | 105 | 68 | `phishTest` (every 60 s, users on screen frozen 1 s) |
+| Security Engineer | $1,800 | Ping Sweep | 100 | 74 | `bonusVs: { phish: 2, malware: 2 }`, `bonus: { pickupRadius: -0.1 }` |
+| Asset Management Analyst | $1,000 | Asset Tag | 100 | 74 | `boxEvery: 45` (a moving box near you, any map), `bonus: { damage: -0.1 }` |
 
 `bonus` adds to the same stat multipliers passives use, before passives stack on top.
 
@@ -464,3 +480,27 @@ no-upgrades Open Office row moved by two minutes although its bosses were never 
 Shifts end a bit sooner on average, mostly in overtime, and every map still sits in the
 0-2 of 8 range, so no numbers were changed. The "before" lengths for Office (none), Server
 Room, Call Center and Merger Day were measured without the 30:00 cut-off.
+
+## Job-title techs (ideas 52-62), 2026-10-22
+
+Bot check, Open Office from a fresh save (8 shifts each) and Parking Garage with the
+veteran save (6 shifts each). The existing 8 techs set the range: Open Office 8:16
+(Help Desk Manager) to 18:51 (SecOps Analyst) on average, garage 2/6 to 5/6 wins.
+
+| Tech | Open Office lasted | Garage (vet) won |
+| --- | --- | --- |
+| Help Desk Supervisor | 14:27 | 6/6 |
+| Systems Operations Manager | 12:08 | 6/6 |
+| IT Director (with Delegate) | 8:45 | 2/6 (before Delegate) |
+| CRM Analyst | 11:34 | 4/6 |
+| CRM Manager (after the Fairway Driver buff) | 10:15 | 5/6 (before) |
+| Cloud Engineer | 9:02 | 5/6 |
+| Systems Engineer | 14:12 | 2/6 |
+| EUC Engineer | 8:23 | 4/6 |
+| Security Manager | 10:19 | 3/6 |
+| Security Engineer | 14:14 | 6/6 |
+| Asset Management Analyst | 17:25 (2/8 won) | 3/6 |
+
+Tuning on the way: the IT Director also starts with Delegate (Out-of-Office Reply alone
+closed almost nothing early on), and Fairway Driver got +20% damage and gentler curves
+(its discs were curling away from the crowd).

@@ -8,7 +8,7 @@ import { sfx } from '../engine/audio.js';
 
 const axis = { x: 0, y: 0 };
 
-const STAT_KEYS = ['moveSpeed', 'attackSpeed', 'area', 'damage', 'growth', 'damageTaken', 'cooldown', 'pickupRadius'];
+const STAT_KEYS = ['moveSpeed', 'attackSpeed', 'area', 'damage', 'growth', 'damageTaken', 'cooldown', 'pickupRadius', 'luck'];
 
 // `meta` (src/game/meta.js) supplies permanent shop bonuses; omit it for a bare player.
 // `policy` is the shift's combined Shift Policies (src/game/policies.js).
@@ -35,7 +35,7 @@ export function createPlayer(def, sprite, meta, policy = NO_POLICY) {
     revives: meta ? meta.bonus('revives') : 0, // Union Rep comebacks left this shift
     warranty: 0, // Extended Warranty comebacks left this shift
     longWeekend: policy.revives, // Long Weekend (policy) comebacks left this shift
-    maxWeapons: Math.min(MAX_WEAPONS, policy.maxWeapons), // tool slots (Budget Cuts, Vendor Lock-In)
+    maxWeapons: Math.min(MAX_WEAPONS, policy.maxWeapons) + (def.toolSlots ?? 0), // tool slots (Budget Cuts, Vendor Lock-In; Systems Operations Manager)
     maxPassives: Math.min(MAX_PASSIVES, policy.maxPassives), // passive slots (Hiring Freeze)
     noEvolve: policy.noEvolve, // Change Freeze: chests never evolve
     statMul: policy.statMul, // stat multipliers applied after passives (Audit Week, Glass Desk)
@@ -61,6 +61,8 @@ export function createPlayer(def, sprite, meta, policy = NO_POLICY) {
     xpNeed: xpForLevel(1),
     pendingLevels: 0,
     weapons: [], // weapon instances (see weapons/index.js)
+    innate: [], // built-in helpers that take no slot (Help Desk Supervisor's team)
+    rampMinutes: 0, // full minutes counted so far by the Cloud Engineer's damage ramp
     passives: {}, // passive id -> level
     // Stat multipliers, recomputed whenever passives change.
     stats: { moveSpeed: 1, attackSpeed: 1, area: 1, damage: 1, growth: 1, damageTaken: 1, cooldown: 1, pickupRadius: 1, maxHp: 1, luck: 1 },
@@ -122,6 +124,15 @@ export function updatePlayer(game, dt) {
   if (p.hurtCooldown > 0) p.hurtCooldown -= dt;
   if (p.invuln > 0) p.invuln -= dt;
   if (p.regen) p.hp = Math.min(p.maxHp, p.hp + p.regen * dt);
+  // Cloud Engineer: damage scales up with every full minute of the shift.
+  if (p.def.damagePerMinute) {
+    const mins = Math.floor(game.time / 60);
+    if (mins !== p.rampMinutes) {
+      p.bonus.damage += (mins - p.rampMinutes) * p.def.damagePerMinute;
+      p.rampMinutes = mins;
+      recomputeStats(p);
+    }
+  }
 }
 
 // Sanity damage. Returns true if any damage was applied.

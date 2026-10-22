@@ -31,6 +31,8 @@ export const PALETTE = {
   // Added for Merger Day: the parent company's brand colors (navy and gold, with 'y').
   a: '#1f2a5c', // deep navy (acquirer floor, suits)
   A: '#34488f', // light navy (acquirer highlights)
+  // Added for the job-title techs.
+  u: '#d49a6a', // skin medium
 };
 
 // Color used for the auto-generated hit-flash frames.

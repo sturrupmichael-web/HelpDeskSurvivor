@@ -1,5 +1,5 @@
 // "Nuke" behavior: long cooldown, hits everything in a large radius very hard.
-// Used by: Reimage.
+// Used by: Reimage (the EUC Engineer's `cooldownFor` recharges it faster).
 // stats: damage, cooldown, radius, knockback
 
 import { damageEnemy } from '../enemies.js';
@@ -14,7 +14,7 @@ export default {
     const s = w.stats;
     const p = game.player;
     if ((w.timer -= dt) > 0) return;
-    w.timer += s.cooldown * p.stats.cooldown;
+    w.timer += s.cooldown * p.stats.cooldown * (p.def.cooldownFor?.[w.id] ?? 1);
     sfx('wipe');
     const radius = s.radius * p.stats.area;
     const r2 = radius * radius;

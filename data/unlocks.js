@@ -17,4 +17,10 @@ export const UNLOCKS = {
     evolutions: ['confluence', 'passwordless', 'domainLockdown', 'remoteWipe', 'sabbatical', 'siem'],
     characters: ['cloud'],
   },
+  // Job-title pack: the new tools join everyone's level-up cards after a Merger Day win
+  // (the techs who start with them can always use them).
+  merger: {
+    tools: ['patchRollout', 'dedupe', 'fairwayDriver', 'terraform', 'assetTag'],
+    characters: ['director'],
+  },
 };

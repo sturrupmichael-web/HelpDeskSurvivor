@@ -285,6 +285,137 @@ const CLOUD = person({ hair: 'k', top: 'q', pants: 'k' }, ({ px }) => {
   patch(px, 2, 16, ['kkkkkkk', 'kBBBBBk', 'kBwBBBk', 'kBBBBBk', 'kkkkkkk', 'kgggggk', 'kkkkkkk']); // laptop
 });
 
+// --- Job-title techs (ideas 52-62) -----------------------------------------------------
+// tech() is person() with a few body options:
+//   style   hair: 'full' (default), 'bald', 'balding', 'buzz', 'shaved' (sides shaved, for
+//           a fo-hawk drawn by the props)
+//   beard   palette key of a short beard
+//   build   'chubby' or 'skinny'
+//   height  +2 (tall) or -2 (short): rows added to or taken from the torso
+// props() gets `dy`, the head's shift from the standard body (-2 tall, +2 short): add it to
+// anything drawn at head or chest height (padded y < 20). Hands and hips (y >= 20) stay put.
+const TECH_STYLE = {
+  bald: { 1: '.....kFFFFFFFFk.....', 2: '....kFFwFFFFFFFk....', 3: '...kFFFFFFFFFFFFk...', 4: '...kFFFFFFFFFFFFk...' },
+  balding: { 1: '.....kFFFFFFFFk.....', 2: '....kFFwFFFFFFFk....', 3: '...kHHFFFFFFFFHHk...' },
+  buzz: { 1: '.....kHHHHHHHHk.....', 2: '....kHHHHHHHHHHk....', 3: '...kHFFFFFFFFFFHk...' },
+  shaved: { 0: '......kkHHHHkk......', 1: '.....kFFHHHHFFk.....', 2: '....kFFFHHHHFFFk....', 3: '...kHFFFHHHHFFFHk...' },
+};
+const TECH_BEARD = { 8: '...kZFFFFFFFFFFZk...', 9: '...kZZZFMMMMFZZZk...', 10: '....kZZZZZZZZZZk....' };
+const TECH_BUILD = {
+  chubby: {
+    10: '...kFFFFFFFFFFFFk...',
+    12: '..kkkkTTTTTTTTkkkk..',
+    13: '.kTTTTTTTTTTTTTTTTk.', 14: '.kTTTTTTTTTTTTTTTTk.', 15: '.kTTTTTTTTTTTTTTTTk.', 16: '.kTTTTTTTTTTTTTTTTk.', 17: '.kTTTTTTTTTTTTTTTTk.',
+    18: '.kFTTTTTTTTTTTTTTFk.',
+    19: '..kPPPPPPPPPPPPPPk..', 20: '..kPPPPPPPPPPPPPPk..', 21: '..kPPPPPPkkPPPPPPk..',
+  },
+  skinny: {
+    12: '....kkTTTTTTTTkk....',
+    13: '...kTTTTTTTTTTTTk...', 14: '...kTTTTTTTTTTTTk...', 15: '...kTTTTTTTTTTTTk...', 16: '...kTTTTTTTTTTTTk...', 17: '...kTTTTTTTTTTTTk...',
+    18: '...kFTTTTTTTTTTFk...',
+    19: '....kPPPPPPPPPPk....', 20: '....kPPPPPPPPPPk....', 21: '....kPPPPkkPPPPk....',
+  },
+};
+// Skinny legs: each foot one pixel narrower.
+const thinLeg = (r) => '.' + r.slice(0, 5) + r.slice(6, 10) + r.slice(10, 13) + r.slice(14) + '.';
+
+function tech(o, props) {
+  const map = { H: o.hair, F: o.skin ?? 's', M: o.mouth ?? 'S', T: o.top, P: o.pants, Z: o.beard ?? o.hair };
+  const top = BODY_TOP.map((r, i) => TECH_BUILD[o.build]?.[i] ?? (o.beard && TECH_BEARD[i]) ?? TECH_STYLE[o.style]?.[i] ?? r);
+  if (o.height > 0) top.splice(15, 0, ...Array(o.height).fill(top[14]));
+  if (o.height < 0) top.splice(13, -o.height);
+  const legs = o.build === 'skinny' ? Object.fromEntries(Object.entries(BODY_LEGS).map(([k, rows]) => [k, rows.map(thinLeg)])) : BODY_LEGS;
+  const dy = -(o.height ?? 0);
+  const padY = PAD_Y + dy;
+  return walk(top, legs).map((frame, fi) => {
+    const g = Array.from({ length: 32 }, () => Array(20 + PAD_X * 2).fill('.'));
+    frame.forEach((row, y) => [...row].forEach((ch, x) => (g[y + padY][x + PAD_X] = map[ch] ?? ch)));
+    const px = (x, y, c) => {
+      if (y >= 0 && y < g.length && x >= 0 && x < g[0].length) g[y][x] = c;
+    };
+    const rect = (x, y, w, h, c) => {
+      for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) px(i, j, c);
+    };
+    if (props) props({ px, rect, frame: fi, dy });
+    return g.map((r) => r.join(''));
+  });
+}
+
+// Headset ear cups with a boom mic, at head offset dy.
+const headset = (px, rect, dy) => {
+  rect(7, 8 + dy, 2, 4, 'G');
+  rect(21, 8 + dy, 2, 4, 'G');
+  patch(px, 9, 12 + dy, ['G...', '.GGG']);
+};
+
+// Help Desk Supervisor: purple polo, headset, clipboard with the queue on it.
+const SUPERVISOR = tech({ hair: 'h', top: 'p', pants: 'k' }, ({ px, rect, dy }) => {
+  headset(px, rect, dy);
+  patch(px, 21, 15, ['.kkk.', 'kwwwk', 'kwBBk', 'kwwwk', 'kwBBk', 'kwwwk', 'kkkkk']); // clipboard
+});
+
+// Systems Operations Manager: navy polo, yellow lanyard, a tablet showing the fleet dashboard.
+const SYSOPS = tech({ hair: 'K', top: 'A', pants: 'K' }, ({ px, rect }) => {
+  rect(14, 16, 2, 4, 'y'); // lanyard
+  rect(14, 20, 2, 2, 'w'); // badge
+  patch(px, 1, 15, ['kkkkkkk', 'kneeenk', 'knrneek', 'kneeenk', 'knnnnnk', 'kkkkkkk']); // dashboard: all green but one
+});
+
+// IT Director: bald, short beard, navy blazer over a white shirt and red tie. No headset.
+const DIRECTOR = tech({ hair: 'h', style: 'bald', beard: 'h', top: 'a', pants: 'a' }, ({ px }) => {
+  patch(px, 12, 16, ['wwwwww', '.wrrw.', '..rr..', '..rr..', '..rr..', '...r..']); // collar + tie
+  patch(px, 21, 18, ['kkkkk', 'khhhk', 'kkhkk']); // leather portfolio
+});
+
+// CRM Analyst: blonde, chubby, black polo, two spreadsheets open on one tiny laptop.
+const CRM_ANALYST = tech({ hair: 'y', top: 'K', pants: 'n', build: 'chubby' }, ({ px }) => {
+  patch(px, 13, 16, ['wwww', '.ww.']); // polo collar
+  patch(px, 21, 16, ['kkkkkkkk', 'kwewkwek', 'kweekwek', 'kwewkwek', 'kkkkkkkk', 'kggggggk', 'kkkkkkkk']); // laptop, split screen
+});
+
+// CRM Manager: tall, white polo, khakis, an orange disc golf driver ready to throw.
+const CRM_MANAGER = tech({ hair: 'h', top: 'w', pants: 'd', height: 2 }, ({ px, dy }) => {
+  patch(px, 13, 16 + dy, ['gggg', '.gg.']); // collar
+  patch(px, 20, 17, ['.kkkkk.', 'kooooook', 'kowwwook', 'kooooook', '.kkkkk.']); // disc
+});
+
+// Cloud Engineer: navy hoodie with a cloud logo, black hair, a pager on his belt.
+const CLOUD_ENG = tech({ hair: 'K', skin: 'S', top: 'n', pants: 'k' }, ({ px, rect }) => {
+  rect(10, 16, 10, 1, 'A'); // hood rim
+  patch(px, 12, 18, ['.ww.', 'wwww']); // cloud logo
+  patch(px, 20, 21, ['kkkk', 'keek', 'kkkk']); // pager
+});
+
+// Systems Engineer: balding, skinny, light-blue shirt, khakis, a screwdriver in the pocket.
+const SYS_ENG = tech({ hair: 'h', style: 'balding', top: 'B', pants: 'd', build: 'skinny' }, ({ px }) => {
+  patch(px, 11, 15, ['r', 'r', 'g', 'g']); // screwdriver in the shirt pocket
+  patch(px, 10, 18, ['bbb']); // pocket
+});
+
+// EUC Engineer: short, skinny, green polo, a stack of fresh laptops under one arm.
+const EUC = tech({ hair: 'K', skin: 'u', top: 'e', pants: 'n', build: 'skinny', height: -2 }, ({ px }) => {
+  patch(px, 20, 16, ['kkkkkkkk', 'kggggggk', 'kkkkkkkk', 'kGGGGGGk', 'kkkkkkkk', 'kggggggk', 'kkkkkkkk']); // laptops
+});
+
+// Security Manager: red hoodie, short black hair, short beard, a gold padlock pin.
+const SEC_MGR = tech({ hair: 'K', beard: 'K', top: 'r', pants: 'k' }, ({ px, rect }) => {
+  rect(10, 16, 10, 1, 'k'); // hood rim
+  patch(px, 18, 18, ['.k.', 'kyk', 'yyy', 'yky']); // padlock pin
+});
+
+// Security Engineer: fo-hawk, Hawaiian shirt, a laptop full of green text.
+const SEC_ENG = tech({ hair: 'h', style: 'shaved', top: 'o', pants: 'n' }, ({ px, rect }) => {
+  patch(px, 12, 0, ['.kkkk.', 'khhhhk', 'khhhhk', 'khhhhk']); // the fo-hawk
+  for (const [x, y] of [[9, 18], [16, 17], [12, 20], [18, 21], [10, 22], [15, 20]]) patch(px, x, y, ['.y.', 'yey', '.y.']); // flowers
+  patch(px, 0, 17, ['kkkkkkk', 'kkekekk', 'kkkeekk', 'kekkkkk', 'kkkkkkk', 'kgggggk', 'kkkkkkk']); // terminal laptop
+});
+
+// Asset Management Analyst: buzzcut, khaki shirt, a label gun holstered at the hip.
+const ASSETS = tech({ hair: 'h', style: 'buzz', top: 'd', pants: 'n' }, ({ px }) => {
+  patch(px, 13, 16, ['wwww']); // collar
+  patch(px, 21, 19, ['kkkkk.', 'kyyyyk', 'kyywyk', 'kkkyyk', '..kkkk', '...kGk', '...kkk']); // label gun in a holster
+});
+
 // Delegate helpers (the Help Desk Manager's interns), 16x16: blue polo, yellow lanyard.
 // The evolved Outsourced Team wears orange.
 const HELPER = recolor(
@@ -419,6 +550,17 @@ export default {
     player_manager: { size: [32, 32], fps: 7, anims: { walk: MANAGER } },
     player_intern: { size: [32, 32], fps: 10, anims: { walk: INTERN } },
     player_cloud: { size: [32, 32], fps: 8, anims: { walk: CLOUD } },
+    player_supervisor: { size: [32, 32], fps: 8, anims: { walk: SUPERVISOR } },
+    player_sysops: { size: [32, 32], fps: 8, anims: { walk: SYSOPS } },
+    player_director: { size: [32, 32], fps: 6, anims: { walk: DIRECTOR } },
+    player_crmanalyst: { size: [32, 32], fps: 7, anims: { walk: CRM_ANALYST } },
+    player_crmmanager: { size: [32, 32], fps: 8, anims: { walk: CRM_MANAGER } },
+    player_cloudeng: { size: [32, 32], fps: 8, anims: { walk: CLOUD_ENG } },
+    player_syseng: { size: [32, 32], fps: 7, anims: { walk: SYS_ENG } },
+    player_euc: { size: [32, 32], fps: 10, anims: { walk: EUC } },
+    player_secmgr: { size: [32, 32], fps: 7, anims: { walk: SEC_MGR } },
+    player_seceng: { size: [32, 32], fps: 8, anims: { walk: SEC_ENG } },
+    player_assets: { size: [32, 32], fps: 8, anims: { walk: ASSETS } },
     helper: { size: [16, 16], fps: 10, anims: { walk: HELPER }, hitFlash: false },
     helper_evo: { size: [16, 16], fps: 10, anims: { walk: HELPER_EVO }, hitFlash: false },
     pam: { size: [32, 32], fps: 6, anims: { walk: walk(PAM_TOP, PAM_LEGS) } },

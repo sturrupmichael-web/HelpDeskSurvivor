@@ -1,7 +1,7 @@
 // "Aura" behavior: a persistent field around the player that slows enemies inside it
 // and damages them every `tick` seconds. Used by: Group Policy Push, Domain Lockdown
 // (evolved: users in the outer `edge` share of the field freeze solid for `freeze` s
-// on each tick).
+// on each tick). The Systems Engineer's `auraArea` makes every aura bigger.
 // stats: damage, tick, radius, slow, edge, freeze
 
 import { damageEnemy, stunEnemy } from '../enemies.js';
@@ -11,7 +11,7 @@ export default {
   update(w, game, dt) {
     const s = w.stats;
     const p = game.player;
-    const radius = s.radius * p.stats.area;
+    const radius = s.radius * p.stats.area * (1 + (p.def.auraArea ?? 0));
     const r2 = radius * radius;
     const now = game.time;
     const tick = s.tick * p.stats.cooldown;
@@ -37,7 +37,7 @@ export default {
   // Drawn under enemies so the field never covers them.
   drawUnder(w, game, ctx) {
     const p = game.player;
-    const radius = w.stats.radius * p.stats.area;
+    const radius = w.stats.radius * p.stats.area * (1 + (p.def.auraArea ?? 0));
     ctx.globalAlpha = 0.12;
     ctx.fillStyle = w.def.color;
     ctx.beginPath();

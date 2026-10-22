@@ -11,12 +11,14 @@ import { saveTests } from './saves.test.mjs';
 import { offlineTests } from './offline.test.mjs';
 import { simTests } from './sim.test.mjs';
 import { policyTests } from './policies.test.mjs';
+import { techTests } from './techs.test.mjs';
 
 const only = (flag) => process.argv.includes(flag);
 let failed = 0;
 console.log('Game logic in Node (no browser)');
 simTests();
 policyTests();
+techTests();
 failed += await run();
 if (!only('node')) {
   const server = await serve();

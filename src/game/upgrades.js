@@ -29,7 +29,7 @@ export function rollChoices(game, count = game.policy?.cards || LEVEL_UP_CHOICES
   if (p.weapons.length < p.maxWeapons) {
     for (const [id, d] of Object.entries(WEAPONS)) {
       if (owned.has(id) || d.evolved || p.weapons.some((w) => w.def.from === id) || p.locked?.('tools', id)) continue;
-      pool.push({ kind: 'weapon', id, level: 1, weight: lucky(d.weight, luck) });
+      pool.push({ kind: 'weapon', id, level: 1, weight: lucky(d.weight, luck) * (p.def.cardWeights?.[id] ?? 1) }); // EUC Engineer: Reimage
     }
   }
   const passiveCount = Object.keys(p.passives).length;
@@ -121,6 +121,7 @@ export function openChest(game) {
     n = r.upgrades;
     break;
   }
+  n += p.def.chestBonus ?? 0; // IT Director
   const upgrades = [];
   for (let k = 0; k < n; k++) {
     const c = rollChoices(game, 1)[0];

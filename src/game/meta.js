@@ -190,7 +190,7 @@ export class Meta {
   finishShift(s) {
     const map = MAPS[s.map] ?? MAPS.office;
     const pay = Math.floor(
-      ((s.time / 60) * PAYOUT.perMinute + s.kills * PAYOUT.perKill + s.csat * PAYOUT.perCsat + (s.won ? PAYOUT.winBonus : 0)) * map.pay * (s.policyMult ?? 1),
+      ((s.time / 60) * PAYOUT.perMinute + s.kills * PAYOUT.perKill + s.csat * PAYOUT.perCsat + (s.won ? PAYOUT.winBonus : 0)) * map.pay * (s.policyMult ?? 1) * (s.payMult ?? 1),
     );
     const d = this.data;
     const mb = (d.mapBest[s.map] ??= { time: 0, tickets: 0, wins: 0 });

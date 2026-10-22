@@ -65,6 +65,10 @@ export default {
     turret_evo: one(['kkkkkkkkkkkkkk', 'keeeeeeeeeeeek', 'kewEeeeeeeeeek', 'keewEeeeeeeeek', 'kewEewwweeeeek', 'keeeeeeeeeeeek', 'kkkkkkkkkkkkkk', '......kk......', '.....kGGk.....', '....kk..kk....', '...kk....kk...'].map((r) => r.replaceAll('E', 'e'))),
     proj_bolt_evo: one(['.kk.', 'keek', 'keek', '.kk.']),
     // Reply-All Storm and Sabbatical replies: an envelope.
+    // Fairway Driver: an orange disc golf driver, seen from above.
+    proj_disc: one(['...kkkkk...', '.kkoooookk.', 'kooowwwoook', 'koowoooowok', 'koooorooook', 'koowoooowok', 'kooowwwoook', '.kkoooookk.', '...kkkkk...']),
+    // Asset Tag: a white barcode sticker.
+    proj_tag: one(['kkkkkkkkk', 'kwwwwwwwk', 'kwkwkkwkk', 'kwkwkkwkk', 'kwkwkkwkk', 'kwwwwwwwk', 'kkkkkkkkk']),
     proj_email: one(['kkkkkkkkkk', 'kwkwwwwkwk', 'kwwkwwkwwk', 'kwwwkkwwwk', 'kwwwwwwwwk', 'kkkkkkkkkk']),
     // Rubber Duck.
     duck: one([

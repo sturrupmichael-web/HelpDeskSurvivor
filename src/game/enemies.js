@@ -27,6 +27,7 @@ export function makeEnemy() {
     stun: 0, life: -1,
     confuse: 0, // seconds left walking the wrong way (Password Expired)
     mark: 0, markAmp: 0, // seconds left flagged, and the extra damage it takes meanwhile (Rubber Duck, SIEM)
+    tagXp: 1, // Closed Ticket multiplier from an Asset Tag sticker
     flash: 0, animT: 0, flip: false, dead: false, noSep: false,
     t0: 0, t1: 0, n: 0, // scratch for regular users' behaviors (timers, a flag)
     ai: null, // a boss's own named state, made by its behavior's init() each fight
@@ -64,6 +65,7 @@ export function spawnEnemy(game, id, x, y, hpMult = 1, speedMult = 1, behaviorId
   e.slow = e.buff = 1;
   e.stun = 0;
   e.confuse = e.mark = e.markAmp = 0;
+  e.tagXp = 1;
   e.life = -1;
   e.flash = 0;
   e.animT = Math.random();
@@ -161,14 +163,15 @@ export function resolveEnemies(game, dt) {
     const dy = e.y - p.y;
     const min = e.r + p.r;
     if (dx * dx + dy * dy >= min * min) continue;
+    const hurtBy = p.def.hurtBy?.[e.def.sprite] ?? 1; // CRM Manager: walk-ups hurt more
     if (e.def.explode) {
       e.dead = true;
       game.fx.burst(e.x, e.y - 6, e.def.particle, 14);
       game.fx.ring(e.x, e.y, 28, '#ffcd75');
       game.camera.shake(4);
       sfx('boom', e.x);
-      if (hurtPlayer(game, e.def.explode.damage)) game.onPlayerHurt();
-    } else drain += e.damage;
+      if (hurtPlayer(game, e.def.explode.damage * hurtBy)) game.onPlayerHurt();
+    } else drain += e.damage * hurtBy;
   }
   if (drain > 0 && hurtPlayer(game, drain * dt)) game.onPlayerHurt();
 }
@@ -179,6 +182,13 @@ export function damageEnemy(game, e, amount, weapon, dx, dy, knockback) {
   if (weapon && e.def.resist) for (const tag of weapon.def.tags) amount *= e.def.resist[tag] ?? 1;
   if (weapon?.def.bossDamage && e.def.boss) amount *= weapon.def.bossDamage;
   if (e.mark > 0) amount *= 1 + e.markAmp;
+  // Per-user bonuses from the tool (Dedupe) and the tech (Security Engineer), and the
+  // Systems Engineer's extra damage to slowed users.
+  const pd = game.player.def;
+  if (weapon?.def.bonusVs) amount *= weapon.def.bonusVs[e.def.sprite] ?? 1;
+  if (pd.bonusVs) amount *= pd.bonusVs[e.def.sprite] ?? 1;
+  if (pd.slowedAmp && e.slow < 1) amount *= 1 + pd.slowedAmp;
+  if (weapon?.def.tagXp) e.tagXp = weapon.def.tagXp; // Asset Tag
   e.hp -= amount;
   // Bosses take hits constantly; flash them in short blinks so their art stays readable
   // (not at all with Reduce flashing, where a big sprite blinking white is the problem).
@@ -218,7 +228,7 @@ export function markEnemy(e, seconds, amp) {
 export function killEnemy(game, e, weapon) {
   e.dead = true;
   if (e.xp > 0) {
-    const t = dropTicket(game, e.x, e.y, e.xp * game.twist.xpMult(game, e.x, e.y) * game.policy.ticketXp);
+    const t = dropTicket(game, e.x, e.y, e.xp * e.tagXp * game.twist.xpMult(game, e.x, e.y) * game.policy.ticketXp);
     if (weapon?.def.vacuum) t.magnet = true;
   }
   game.fx.burst(e.x, e.y - 6, e.def.particle, 6);
@@ -327,6 +337,16 @@ export function drawEnemies(game, ctx, shadowImg, left, top, right, bottom) {
       ctx.fillStyle = '#ef7d57';
       ctx.fillRect(Math.round(e.x - 6), Math.round(fy - spr.h - 3), 1, 4);
       ctx.fillRect(Math.round(e.x - 5), Math.round(fy - spr.h - 3), 3, 2);
+    }
+    if (e.tagXp > 1) {
+      // Asset Tag: a little white barcode sticker.
+      const tx = Math.round(e.x + 3);
+      const ty = Math.round(fy - spr.h + 2);
+      ctx.fillStyle = '#f4f4f4';
+      ctx.fillRect(tx, ty, 5, 3);
+      ctx.fillStyle = '#1a1c2c';
+      ctx.fillRect(tx + 1, ty, 1, 3);
+      ctx.fillRect(tx + 3, ty, 1, 3);
     }
     if (e.def.elite) {
       const w = 24;

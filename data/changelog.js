@@ -4,6 +4,16 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-22-jobtitles',
+    date: 'Oct 22, 2026',
+    title: 'Eleven new techs',
+    items: [
+      'Hire eleven new techs, each with their own perk and weakness: Help Desk Supervisor, Systems Operations Manager, IT Director, CRM Analyst, CRM Manager, Cloud Engineer, Systems Engineer, EUC Engineer, Security Manager, Security Engineer and Asset Management Analyst.',
+      'Five new tools come with them: Patch Rollout, Dedupe, Fairway Driver (disc golf), Terraform Apply and Asset Tag. Win a shift on Merger Day, or hire the tech who uses one, to see them on everyone\'s level-up cards.',
+      'The IT Director joins after your first Merger Day win.',
+    ],
+  },
+  {
     id: '2026-10-21-timeline',
     date: 'Oct 21, 2026',
     title: 'Shift timeline and vibration',

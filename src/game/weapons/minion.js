@@ -1,6 +1,7 @@
 // "Minion" behavior: helpers who follow you around and tackle users near you.
 // Used by: Delegate, Outsourced Team (evolved: more, faster, harder-hitting helpers in
-// the def's own `sprite`).
+// the def's own `sprite`), the Help Desk Supervisor's built-in team (the def's `perLevel`:
+// extra damage for every level the player has reached).
 // stats: count, damage, speed, leash, hitInterval, knockback
 
 import { damageEnemy, nearestEnemy } from '../enemies.js';
@@ -21,7 +22,7 @@ export default {
     while (w.minions.length < count) w.minions.push({ x: p.x, y: p.y, target: null, uid: 0, flip: false, animT: 0, cd: 0 });
     w.minions.length = count;
     const leash = s.leash * p.stats.area;
-    const dmg = s.damage * p.stats.damage * (p.summonDamage ?? 1);
+    const dmg = s.damage * p.stats.damage * (p.summonDamage ?? 1) * (1 + (w.def.perLevel ?? 0) * (p.level - 1));
     const speed = s.speed * p.stats.moveSpeed;
     const now = game.time;
     const items = game.enemies.items;

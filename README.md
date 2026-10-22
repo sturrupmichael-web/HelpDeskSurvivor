@@ -299,3 +299,7 @@ current `manifest.json` for the full list):
     and Rubber Duck; the Spare Charger, Extended Warranty, Snack Drawer and Lucky Lanyard
     passives; and six more evolutions (Confluence Space, Passwordless, Domain Lockdown,
     Remote Wipe, Sabbatical, SIEM).
+14. **Job-title techs (ideas 52-62):** Help Desk Supervisor, Systems Operations Manager,
+    IT Director, CRM Analyst, CRM Manager, Cloud Engineer, Systems Engineer, EUC Engineer,
+    Security Manager, Security Engineer and Asset Management Analyst, with five new tools
+    (Patch Rollout, Dedupe, Fairway Driver, Terraform Apply, Asset Tag).
