@@ -13,6 +13,7 @@ import { simTests } from './sim.test.mjs';
 import { policyTests } from './policies.test.mjs';
 import { techTests } from './techs.test.mjs';
 import { evolution63Tests } from './evolutions63.test.mjs';
+import { comboTests } from './combos.test.mjs';
 
 const only = (flag) => process.argv.includes(flag);
 let failed = 0;
@@ -21,6 +22,7 @@ simTests();
 policyTests();
 techTests();
 evolution63Tests();
+comboTests();
 failed += await run();
 if (!only('node')) {
   const server = await serve();

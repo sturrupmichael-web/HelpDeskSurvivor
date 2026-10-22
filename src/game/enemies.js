@@ -238,7 +238,12 @@ export function killEnemy(game, e, weapon) {
     }
   }
   game.fx.burst(e.x, e.y - 6, e.def.particle, 6);
-  game.score.onKill();
+  const combo = game.score.onKill();
+  if (combo) {
+    const pl = game.player;
+    game.fx.text(pl.x, pl.y - 40, `RESOLVED x${combo}!`, combo >= 100 ? '#ef7d57' : '#a7f070');
+    sfx('combo');
+  }
   game.achievements.onKill(e.def.sprite);
   sfx('pop', e.x);
   rollItemDrops(game, e);

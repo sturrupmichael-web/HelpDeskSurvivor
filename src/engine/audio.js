@@ -282,6 +282,7 @@ const RECIPES = {
     tone('sine', 75, 28, t + 0.3, 0.6, 0.55, o);
   },
   // PowerShell Script: a terminal pops up (deploy), then types bolts (blip).
+  combo: (t, o) => arp('square', [784, 988, 1175, 1568], 0.045, 0.06, 0.12, o, t),
   deploy: (t, o) => arp('square', [880, 1318], 0.05, 0.07, 0.09, o, t),
   blip: (t, o) => tone('square', 1500, 1300, t, 0.025, 0.05, o),
   // Firewall: shields hum up.

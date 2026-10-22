@@ -4,6 +4,15 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-22-combos',
+    date: 'Oct 22, 2026',
+    title: 'Ticket combos',
+    items: [
+      'Close tickets fast enough to keep your CSAT streak going and you get a "RESOLVED x10!" pop at 10, 25, 50, 100, 250, 500 and 1,000 in a row, then every 1,000 after that.',
+      'Each combo pays bonus CSAT on top of the streak multiplier. Taking a hit still breaks the streak.',
+    ],
+  },
+  {
     id: '2026-10-22-bossoutlines',
     date: 'Oct 22, 2026',
     title: 'Boss attacks stand out',

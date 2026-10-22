@@ -1,0 +1,30 @@
+// Ticket combos (idea 15): streak milestones pop "RESOLVED xN!" and pay bonus CSAT.
+// Plain Node, no browser.
+
+import { test, assert } from './harness.mjs';
+import { Score } from '../src/game/score.js';
+import { CSAT } from '../data/scoring.js';
+
+export function comboTests() {
+  test('combos: milestones fire once each and pay bonus CSAT', async () => {
+    const s = new Score();
+    const hits = [];
+    for (let i = 0; i < 2000; i++) {
+      const n = s.onKill();
+      if (n) hits.push(n);
+    }
+    assert(hits.join() === '10,25,50,100,250,500,1000,2000', `milestones were ${hits.join()}`);
+    assert(s.combos === hits.length, `counted ${s.combos} combos`);
+    // Without combos the same 2000 kills score the plain streak total.
+    let plain = 0;
+    for (let k = 1; k <= 2000; k++) plain += Math.min(CSAT.maxMultiplier, 1 + Math.floor(k / CSAT.killsPerTier));
+    assert(s.csat > plain, `no bonus: ${s.csat} vs ${plain}`);
+  });
+  test('combos: a hit breaks the streak and the count starts again', async () => {
+    const s = new Score();
+    for (let i = 0; i < 9; i++) s.onKill();
+    s.onHurt();
+    for (let i = 0; i < 9; i++) assert(!s.onKill(), 'combo fired before 10 in a row');
+    assert(s.onKill() === 10, 'no combo at 10');
+  });
+}
