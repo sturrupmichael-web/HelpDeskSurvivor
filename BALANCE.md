@@ -564,3 +564,13 @@ Bot, 8 shifts each, cap 45:00, with the final numbers:
 
 Every shift now ends, the latest at 31:01. Win counts moved both ways, within the bot's
 noise; fights that take more than about 8 minutes are the ones that now tend to be lost.
+
+## Combo bonus cap and leaderboard CSAT limit, 2026-10-22
+
+A player's overtime shift (level 74, 51,977 closed) was refused by the leaderboard. The
+database's plausibility check allowed at most 300 CSAT a second, and the combo bonus grew
+with streak length (x2,000 paid 1,000 x multiplier, x20,000 paid 10,000 x multiplier), so
+one long streak added hundreds of thousands. Bot, vet saves, 45:00 cap: 4 of 12 shifts
+went over 300 a second (up to 873). Repeats past x1,000 now pay the x1,000 bonus, and the
+limit is 10,000 a second (`supabase/csat-limit.sql`). With the cap the same bot shifts
+score 178-287 a second, still close to the old limit, so both changes are needed.

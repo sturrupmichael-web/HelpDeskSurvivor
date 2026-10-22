@@ -8,7 +8,8 @@ export const CSAT = {
   resetOnHit: true, // taking sanity damage breaks the streak
   // Ticket combos: reaching one of these streak lengths pops "RESOLVED xN!" over your tech
   // and pays a one-off bonus of N x comboBonus CSAT (times the current multiplier).
-  // After the last one, every further `comboEvery` closes counts as another milestone.
+  // After the last one, every further `comboEvery` closes counts as another milestone,
+  // paying the same bonus as the last one.
   comboMilestones: [10, 25, 50, 100, 250, 500, 1000],
   comboEvery: 1000,
   comboBonus: 0.5,

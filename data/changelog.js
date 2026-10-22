@@ -4,6 +4,15 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-22-combofix',
+    date: 'Oct 22, 2026',
+    title: 'Long shifts post again',
+    items: [
+      'Very long shifts with big ticket combos could be turned away by the leaderboard. They post now.',
+      'After RESOLVED x1,000, each further combo (x2,000, x3,000 and so on) pays the same bonus as x1,000 instead of growing every time.',
+    ],
+  },
+  {
     id: '2026-10-22-overtime',
     date: 'Oct 22, 2026',
     title: 'Overtime gets harder',

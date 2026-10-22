@@ -26,7 +26,9 @@ export class Score {
     const n = this.streak;
     const last = CSAT.comboMilestones[CSAT.comboMilestones.length - 1];
     if (!CSAT.comboMilestones.includes(n) && !(n > last && n % CSAT.comboEvery === 0)) return 0;
-    this.csat += Math.round(n * CSAT.comboBonus) * this.mult;
+    // Past the last milestone every repeat pays the same as the last one, so one long
+    // streak can't grow the bonus without limit (and get the score refused by the board).
+    this.csat += Math.round(Math.min(n, last) * CSAT.comboBonus) * this.mult;
     this.combos++;
     return n;
   }
