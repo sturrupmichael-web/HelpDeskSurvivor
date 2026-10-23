@@ -612,3 +612,22 @@ walk round at full speed, and Open Office hpMult went back to 0.9. Bot after tha
 
 So for the bot the Open Office is now clearly harder than before walls (new tech about
 10:00 -> 5:45); Michael's call whether that's right for the first map.
+
+## Solid racks and pods: Server Room and Call Center (issue #65), 2026-10-23
+
+Same collision as the Open Office, now also on the Server Room (rack rows and CRAC units;
+the hot aisles stay walkable) and the Call Center (headset pod rows, with 32 px aisles
+between paired rows). Every map's furniture comes from one layout function
+(`Floor.layout`), which both paints a chunk and, with a do-nothing canvas, collects its
+solid rects, so walls always match the art. Wallboards stay walkable. No toughness changes.
+
+Balance bot, progression profiles (`node tests/tools/bot.mjs --profiles --profile 2|3`):
+
+| Map (profile)            | Runs | Before walls: average / past 10:00 / won | With walls: average / past 10:00 / won |
+|--------------------------|------|------------------------------------------|----------------------------------------|
+| Server Room (shop 50%)   | 24   | 21:07 / 24 / 1                           | 15:47 / 20 / 0                         |
+| Call Center (shop 70%)   | 24   | 17:13 / 24 / 1                           | 13:12 / 19 / 1                         |
+
+Like the Open Office, both got harder for the bot (shifts about 4-5 minutes shorter);
+Michael found the Open Office too easy at first, so no easing for now. If they turn out
+too hard, lower the map's `hpMult` in data/maps.js.

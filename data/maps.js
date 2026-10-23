@@ -19,8 +19,9 @@
 //                          on it get x`hpMult` HP and drop x`xpMult` tickets when closed
 //                          there. Every `boxEvery` s an Unclaimed Moving Box appears nearby
 //                          (at most `boxMax` at once).
-//   solid       cubicle rows are solid: nobody walks through them (users go round the
-//               end), boss bullets stop at them, pickups never land in them
+//   solid       the furniture rows are solid (cubicles, server racks, call-center pods; see
+//               src/game/floor.js): nobody walks through them (users go round the end,
+//               bosses barge through), boss bullets stop at them, pickups never land in them
 //   newUsers   map-only users added to the spawn mix from `from` seconds on, each at
 //              `share` of the timeline mix's total weight (list them in `from` order)
 
@@ -43,10 +44,11 @@ export const MAPS = {
     floor: 'server',
     unlockAfter: 'office',
     blurb: 'Raised floor, roaring fans and racks nobody has labeled since 2014.',
-    twistText: 'Hot aisles drain sanity but make you faster. More Shadow IT and phishers.',
+    twistText: 'Hot aisles drain sanity but make you faster. Rack rows are solid. More Shadow IT and phishers.',
     pay: 1.25,
     hpMult: 1.1,
     speedMult: 1,
+    solid: true,
     mixBoost: { steve: 1.6, phish: 1.6 },
     music: { transpose: -3, tempo: 1.06, lead: 'sawtooth', cutoff: 1100 },
     twist: { type: 'hotAisles', drain: 2, speed: 0.3 },
@@ -57,10 +59,11 @@ export const MAPS = {
     floor: 'callcenter',
     unlockAfter: 'server',
     blurb: 'Headsets on. The queue never empties and the wallboard is always red.',
-    twistText: 'All lines busy: desk phones go off around you. Reply-All storms everywhere.',
+    twistText: 'All lines busy: desk phones go off around you. The pod rows are solid and the aisles narrow. Reply-All storms everywhere.',
     pay: 1.25,
     hpMult: 1.15,
     speedMult: 1,
+    solid: true,
     mixBoost: { randy: 2, walkup: 1.4 },
     music: { transpose: 2, tempo: 1.1, lead: 'square', cutoff: 2000 },
     twist: { type: 'phones', every: 4.5, delay: 1.4, radius: 50, damage: 8, damagePerMin: 1.2 },

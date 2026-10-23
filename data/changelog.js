@@ -4,6 +4,16 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-23-solidmaps',
+    date: 'Oct 23, 2026',
+    title: 'Solid racks and pods',
+    items: [
+      "Server Room: the rack rows and the big cooling units are solid now, like the Open Office cubicles. The hot aisles in front of the racks are still open, if you can take the heat.",
+      "Call Center: the headset pod rows are solid too, and the aisles between them are narrow. Watch out for ringing desk phones when you're boxed in.",
+      'Users walk round, bosses barge straight through, and boss shots stop at the furniture.',
+    ],
+  },
+  {
     id: '2026-10-23-cubicles',
     date: 'Oct 23, 2026',
     title: 'Solid cubicles',

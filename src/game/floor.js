@@ -3,8 +3,9 @@
 // deterministically from its coordinates (floor tiles + a random furniture layout),
 // rendered once to an offscreen canvas and cached. The gameplay features are read back
 // from the same layout: the Server Room's hot aisles (isHot), Merger Day's acquired floor
-// (isAcquired) and, on maps with `solid` in data/maps.js, the cubicle rows nobody can walk
-// through (solidRects / collide).
+// (isAcquired) and, on maps with `solid` in data/maps.js, the furniture nobody can walk
+// through (solidRects / collide). The layout code runs both to paint a chunk and, with a
+// do-nothing canvas, to collect its solid rects (block()), so the two always agree.
 
 const CHUNK = 256;
 const TILE = 32;
@@ -57,6 +58,9 @@ const LEGACY_QUANTILES = [];
 for (let x = -8; x <= 8; x++) for (let y = -8; y <= 8; y++) if (Math.hypot(x, y) <= 8) LEGACY_QUANTILES.push(legacy(x, y));
 LEGACY_QUANTILES.sort((a, b) => a - b);
 
+// Stand-in canvas for laying out a chunk without painting it (solidRects).
+const NO_PAINT = { drawImage() {}, fillRect() {}, fillStyle: '' };
+
 function rng(seed) {
   return () => {
     seed = (seed + 0x6d2b79f5) | 0;
@@ -74,6 +78,7 @@ export class Floor {
     this.hot = new Map(); // chunk key -> hot-aisle rect [x, y, w, h] in world px, or null
     this.solids = new Map(); // chunk key -> solid rects [[x, y, w, h], ...] in world px
     this.solid = false; // furniture blocks movement (set from the map's `solid`)
+    this.sink = null; // while collecting solids: [rects, chunk left, chunk top]
     this.style = 'office';
     this.share = -1; // Merger Day: share of the floor the parent company owns (0..1)
     this.owned = -1; // ...as a threshold on legacy(): chunks below it are acquired
@@ -130,6 +135,7 @@ export class Floor {
 
   // Draws a sprite's first frame with its top-left corner at (x, y).
   put(ctx, id, x, y) {
+    if (ctx === NO_PAINT) return;
     const s = this.assets.sprite(id);
     const f = s.anims[Object.keys(s.anims)[0]].frames[0];
     ctx.drawImage(s.image, f[0], f[1], s.w, s.h, Math.round(x), Math.round(y), s.w, s.h);
@@ -144,6 +150,12 @@ export class Floor {
       this.put(ctx, 'chair', x + i * 64 + 25, y + 38);
     }
     for (let i = 0; i <= segments; i++) this.put(ctx, 'cubicle_post', x + i * 64 - 3, y);
+    this.block(x - 3, y, segments * 64 + 6, SOLID_DEPTH); // partition and desks, not chairs
+  }
+
+  // Marks a chunk-local rect as solid furniture (only while solidRects() collects them).
+  block(x, y, w, h) {
+    if (this.sink) this.sink[0].push([this.sink[1] + x, this.sink[2] + y, w, h]);
   }
 
   build(cx, cy) {
@@ -156,12 +168,16 @@ export class Floor {
     for (let ty = 0; ty < CHUNK / TILE; ty++) {
       for (let tx = 0; tx < CHUNK / TILE; tx++) this.put(ctx, tiles(cx * 8 + tx, cy * 8 + ty, acquired), tx * TILE, ty * TILE);
     }
-    // Furniture layout for this chunk.
+    this.layout(ctx, cx, cy);
+    return canvas;
+  }
+
+  // Furniture layout for a chunk, seeded by its coordinates.
+  layout(ctx, cx, cy) {
     const r = rng(hash2(cx * 7 + 3, cy * 13 + 5));
     const ox = 16 + Math.floor(r() * 40);
     const oy = 16 + Math.floor(r() * 40);
     this[this.style](ctx, r, ox, oy, r(), cx, cy);
-    return canvas;
   }
 
   office(ctx, r, ox, oy, roll) {
@@ -223,8 +239,10 @@ export class Floor {
       ctx.fillStyle = 'rgba(239, 125, 87, 0.5)';
       for (let i = 0; i < hot[2]; i += 12) ctx.fillRect(hot[0] - cx * CHUNK + i, hot[1] - cy * CHUNK + hot[3] / 2 - 1, 6, 2);
       for (let i = 0; i < n; i++) this.put(ctx, ['rack_a', 'rack_b', 'rack_c'][Math.floor(r() * 3)], x + i * 32, oy);
+      this.block(x, oy + 4, n * 32, 52); // the hot aisle in front stays walkable
     } else if (roll < 0.8) {
       this.put(ctx, 'crac', ox + 30, oy + 30);
+      this.block(ox + 30, oy + 34, 40, 44);
     }
   }
 
@@ -237,6 +255,7 @@ export class Floor {
         const y = oy + row * 64;
         for (let i = 0; i < n; i++) this.put(ctx, 'pod_divider', ox + i * 34 - 2, y);
         for (let i = 0; i < n; i++) this.put(ctx, 'pod_desk', ox + i * 34, y + 6);
+        this.block(ox - 2, y, n * 34, 32);
       }
     } else if (roll < 0.85) {
       this.put(ctx, 'wallboard', ox + 40, oy + 40);
@@ -283,21 +302,16 @@ export class Floor {
     return !!h && x >= h[0] && x < h[0] + h[2] && y >= h[1] && y < h[1] + h[3];
   }
 
-  // The solid furniture of an office chunk: one rect per cubicle row (partition, posts
-  // and desks; the chairs in front stay walkable). Same RNG sequence as build()/office().
+  // The solid furniture of a chunk as world-space rects [x, y, w, h]: cubicle rows (the
+  // chairs in front stay walkable), server racks and CRAC units, call-center pod rows.
   solidRects(cx, cy) {
     const k = this.key(cx, cy);
     let rects = this.solids.get(k);
     if (rects) return rects;
     rects = [];
-    const r = rng(hash2(cx * 7 + 3, cy * 13 + 5));
-    const ox = 16 + Math.floor(r() * 40);
-    const oy = 16 + Math.floor(r() * 40);
-    if (r() < 0.55) {
-      const segments = ox + 192 <= CHUNK - 8 && r() < 0.5 ? 3 : 2;
-      const rows = r() < 0.5 ? 2 : 1;
-      for (let row = 0; row < rows; row++) rects.push([cx * CHUNK + ox - 3, cy * CHUNK + oy + row * 96, segments * 64 + 6, SOLID_DEPTH]);
-    }
+    this.sink = [rects, cx * CHUNK, cy * CHUNK];
+    this.layout(NO_PAINT, cx, cy);
+    this.sink = null;
     if (this.solids.size > 512) this.solids.clear();
     this.solids.set(k, rects);
     return rects;
@@ -392,5 +406,6 @@ export class Floor {
   clear() {
     this.cache.clear();
     this.stale.clear();
+    this.solids.clear();
   }
 }
