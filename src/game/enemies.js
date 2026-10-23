@@ -11,7 +11,6 @@ import { sfx } from '../engine/audio.js';
 export const HIT_SLOTS = 8; // per-weapon "last hit" timestamps for damage-over-time weapons
 const DEFAULT_FOOT = 10;
 const NO_PARAMS = {};
-const WALL_SHUFFLE = 0.5; // users edge along a solid cubicle row at this x their speed
 const SHADOW_LIMIT = 400; // above this many enemies, skip drop shadows to halve draw calls
 
 let nextUid = 1;
@@ -22,6 +21,7 @@ export function makeEnemy() {
     uid: 0, x: 0, y: 0, r: 7, foot: DEFAULT_FOOT,
     kx: 0, ky: 0, // knockback velocity
     px: 0, py: 0, // position at the start of the tick (solid cubicles)
+    wall: null, wallX: 0, wallY: 0, // the cubicle row it's walking round, and which way (-1/1)
     dx: 0, dy: 0, // fixed direction (dashes, storm lines)
     hp: 1, maxHp: 1, speed: 0, damage: 0, xp: 1, kbMul: 1,
     slow: 1, // speed multiplier from slows; reset every tick, set by weapons
@@ -52,6 +52,7 @@ export function spawnEnemy(game, id, x, y, hpMult = 1, speedMult = 1, behaviorId
   e.uid = nextUid++;
   e.x = e.px = x;
   e.y = e.py = y;
+  e.wall = null;
   e.r = def.radius;
   e.foot = def.foot ?? DEFAULT_FOOT;
   e.kx = e.ky = e.dx = e.dy = 0;
@@ -183,9 +184,10 @@ export function resolveEnemies(game, dt) {
 }
 
 // Solid cubicles (maps with `solid`): push users out of them, and a user stuck on a
-// cubicle row with you on the far side shuffles along it (slower than walking, whatever
-// its behavior wanted this tick) toward the end that is the shorter way round, then down
-// the end of the row. Rows are straight bars with gaps between them, so that's all the
+// cubicle row with you on the far side walks along it (at its own speed, whatever its
+// behavior wanted this tick) toward the end that is the shorter way round, then down the
+// end of the row. It sticks with the end it picked until it leaves the row, so it doesn't
+// dither when you move. Rows are straight bars with gaps between them, so that's all the
 // pathing they need. Bosses (too big for the gaps between rows) barge straight through,
 // and so do event swarms (storm lines, which expire) and anchored boxes.
 function avoidSolids(game, dt) {
@@ -198,6 +200,10 @@ function avoidSolids(game, dt) {
     if (e.dead || e.life > 0 || e.heavy) continue;
     const r = Math.max(4, e.r * 0.6);
     const s = floor.collide(e, e.foot, r);
+    if (s !== e.wall) {
+      e.wall = s;
+      e.wallX = e.wallY = 0;
+    }
     if (!s || e.stun > 0) continue;
     const fy = e.y + e.foot;
     const inX = e.x >= s[0] && e.x <= s[0] + s[2];
@@ -209,20 +215,34 @@ function avoidSolids(game, dt) {
     else if (inY) along = pastX ? 'y' : null;
     else along = pastY ? 'y' : pastX ? 'x' : null; // at a corner: round it toward you
     if (!along) continue;
-    const step = e.speed * e.slow * e.buff * dt * WALL_SHUFFLE;
+    const step = e.speed * e.slow * e.buff * dt;
     e.x = e.px;
     e.y = e.py;
     if (along === 'x') {
       const a = s[0] - r - 2;
       const b = s[0] + s[2] + r + 2;
-      const end = inX ? (Math.abs(e.x - a) + Math.abs(a - p.x) <= Math.abs(e.x - b) + Math.abs(b - p.x) ? a : b) : p.x < s[0] ? a : b;
+      if (!e.wallX) e.wallX = (inX ? Math.abs(e.x - a) + Math.abs(a - p.x) <= Math.abs(e.x - b) + Math.abs(b - p.x) : p.x < s[0]) ? -1 : 1;
+      const end = e.wallX < 0 ? a : b;
       e.x += Math.sign(end - e.x) * Math.min(step, Math.abs(end - e.x));
     } else {
       const from = e.y + e.foot;
       const a = s[1] - r - 2;
       const b = s[1] + s[3] + r + 2;
-      const end = inY ? (Math.abs(from - a) + Math.abs(a - py) <= Math.abs(from - b) + Math.abs(b - py) ? a : b) : py < s[1] ? a : b;
+      if (!e.wallY) e.wallY = (inY ? Math.abs(from - a) + Math.abs(a - py) <= Math.abs(from - b) + Math.abs(b - py) : py < s[1]) ? -1 : 1;
+      const end = e.wallY < 0 ? a : b;
       e.y += Math.sign(end - from) * Math.min(step, Math.abs(end - from));
+    }
+    if (!inX && !inY) {
+      // Rounding a corner: also step clear of the face it's turning onto, or the corner
+      // keeps pushing it back where it came from.
+      if (along === 'y') {
+        const out = e.x < s[0] + s[2] / 2 ? s[0] - r - 2 : s[0] + s[2] + r + 2;
+        e.x += Math.sign(out - e.x) * Math.min(step, Math.abs(out - e.x));
+      } else {
+        const from = e.y + e.foot;
+        const out = from < s[1] + s[3] / 2 ? s[1] - r - 2 : s[1] + s[3] + r + 2;
+        e.y += Math.sign(out - from) * Math.min(step, Math.abs(out - from));
+      }
     }
     floor.collide(e, e.foot, r);
   }

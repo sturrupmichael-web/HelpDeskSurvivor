@@ -9,9 +9,8 @@ export const CHANGELOG = [
     title: 'Solid cubicles',
     items: [
       "On the Open Office you can't walk through the cubicles any more. Bump into a row and you slide along it.",
-      'Users have to go round them too, and they shuffle slowly along a row to get past it, so a row between you and the horde buys you a moment. Bosses are too big to bother and barge straight through, but their shots stop at the partitions, so a cubicle is cover.',
+      'Users have to go round them too, so a row between you and the horde buys you a moment. Bosses are too big to bother and barge straight through, but their shots stop at the partitions, so a cubicle is cover.',
       'Closed Tickets and pickups never land inside a cubicle.',
-      'Open Office users are a little less tough to make up for having less room to run.',
     ],
   },
   {

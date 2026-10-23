@@ -578,8 +578,8 @@ score 178-287 a second, still close to the old limit, so both changes are needed
 ## Solid cubicles on the Open Office (idea 51), 2026-10-23
 
 Cubicle rows on the Open Office block the tech and users (`solid: true` in data/maps.js,
-rects from `Floor.solidRects`). Users stuck on a row with you behind it shuffle along it
-at half speed toward the nearer end (`WALL_SHUFFLE` in src/game/enemies.js). Bosses barge
+rects from `Floor.solidRects`). Users stuck on a row with you behind it walk along it at
+full speed toward the nearer end and round the corner (`avoidSolids` in src/game/enemies.js). Bosses barge
 through rows (too big for the gaps between them). Boss bullets stop at rows; your tools
 pass over them. The bot keeps 30 px off rows.
 
@@ -599,3 +599,16 @@ pinned against a row (about 40% of damage taken in short shifts), which toughnes
 change. The bot's shift length swings a lot between batches (5:09 to 11:58 for 12 runs), so treat
 the gap as roughly 10:00 -> 8:30. A player who sees the walls should do better than the
 bot; Michael to judge on preview.
+
+Michael on preview (2026-10-23): too easy, users slowed right down at walls. Two causes:
+the half-speed shuffle, and a bug where users at a row's corner jittered on the spot
+(about 20% of users touching a row were nearly still; now about 1%). Fixed both, users
+walk round at full speed, and Open Office hpMult went back to 0.9. Bot after that:
+
+| Build                                        | Runs | Average shift | Reached 10:00 | Won   |
+|----------------------------------------------|------|---------------|---------------|-------|
+| Full-speed pathing, corner fix, hpMult 0.9   | 36   | 5:45          | 2 (6%)        | 0     |
+| Veteran (`--vet`), same                      | 12   | 21:37         | 12            | 10/12 |
+
+So for the bot the Open Office is now clearly harder than before walls (new tech about
+10:00 -> 5:45); Michael's call whether that's right for the first map.

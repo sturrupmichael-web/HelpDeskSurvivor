@@ -32,7 +32,7 @@ export const MAPS = {
     blurb: 'Cubicles, a water cooler and 847 unread tickets. Where every career starts.',
     twistText: 'Solid cubicles: nobody walks through them. Users have to go round, and boss shots stop at them.',
     pay: 1,
-    hpMult: 0.7, // 0.9 before solid cubicles (idea 51) made it harder to get away
+    hpMult: 0.9,
     speedMult: 1,
     solid: true,
     mixBoost: {},
