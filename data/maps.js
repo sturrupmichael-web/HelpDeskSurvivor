@@ -19,9 +19,10 @@
 //                          on it get x`hpMult` HP and drop x`xpMult` tickets when closed
 //                          there. Every `boxEvery` s an Unclaimed Moving Box appears nearby
 //                          (at most `boxMax` at once).
-//   solid       the furniture rows are solid (cubicles, server racks, call-center pods; see
-//               src/game/floor.js): nobody walks through them (users go round the end,
-//               bosses barge through), boss bullets stop at them, pickups never land in them
+//   solid       the furniture rows are solid (cubicles, server racks, call-center pods,
+//               Merger Day benches; see src/game/floor.js): nobody walks through them
+//               (users go round the end, bosses barge through), boss bullets stop at them,
+//               pickups never land in them
 //   newUsers   map-only users added to the spawn mix from `from` seconds on, each at
 //              `share` of the timeline mix's total weight (list them in `from` order)
 
@@ -88,10 +89,11 @@ export const MAPS = {
     floor: 'merger',
     unlockAfter: 'garage',
     blurb: "Congratulations, you've been acquired! Two logos, two badge systems, two ticketing systems.",
-    twistText: 'The new parent company takes more of the floor every minute. On their navy floor users are tougher but drop double tickets.',
+    twistText: 'The new parent company takes more of the floor every minute. On their navy floor users are tougher but drop double tickets. Cubicles and benches are solid.',
     pay: 1.5,
     hpMult: 1.2,
     speedMult: 1.06,
+    solid: true,
     mixBoost: { vip: 1.4 },
     newUsers: {
       dave: { from: 45, share: 0.1 },

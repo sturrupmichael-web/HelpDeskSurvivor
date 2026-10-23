@@ -631,3 +631,22 @@ Balance bot, progression profiles (`node tests/tools/bot.mjs --profiles --profil
 Like the Open Office, both got harder for the bot (shifts about 4-5 minutes shorter);
 Michael found the Open Office too easy at first, so no easing for now. If they turn out
 too hard, lower the map's `hpMult` in data/maps.js.
+
+## Solid furniture on Merger Day (issue #66), 2026-10-23
+
+Merger Day gets the same collision: the old company's cubicle rows and the parent
+company's hot-desk benches block; bean bags, banners, box piles and the moving boxes
+don't. When the parent company takes over chunks (`Floor.setOwned`), the solid cache is
+dropped and laid out again, so a taken chunk's cubicles give way to benches; anyone
+standing where a bench lands is pushed out by the usual collision. No toughness changes.
+
+Balance bot, progression profile (`node tests/tools/bot.mjs --profiles --profile 5`, shop 100%,
+every earlier map won):
+
+| Build         | Runs | Average shift | Reached 10:00 | Won   |
+|---------------|------|---------------|---------------|-------|
+| Before walls  | 32   | 19:15         | 32            | 14/32 |
+| With walls    | 32   | 16:54         | 32            | 9/32  |
+
+A smaller hit than the other maps (open navy floor has few benches), but still harder for
+the bot.

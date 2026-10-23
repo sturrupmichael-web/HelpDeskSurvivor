@@ -4,6 +4,16 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-23-solidmerger',
+    date: 'Oct 23, 2026',
+    title: 'Solid furniture on Merger Day',
+    items: [
+      "Merger Day's furniture is solid now: the old company's cubicles and the parent company's hot-desk benches. Bean bags, banners and moving boxes you can still walk over.",
+      'When the parent company takes over a part of the floor, its cubicles are cleared out for benches, so the walls move as the merger spreads. Get caught where a bench lands and you get nudged out of the way.',
+      'Users walk round, bosses barge straight through, and boss shots stop at the furniture.',
+    ],
+  },
+  {
     id: '2026-10-23-solidmaps',
     date: 'Oct 23, 2026',
     title: 'Solid racks and pods',

@@ -20,13 +20,13 @@ function quietShift(map = 'office') {
 }
 
 export function collisionTests() {
-  test('collision: Open Office, Server Room and Call Center are solid, the others not', async () => {
-    for (const map of ['office', 'server', 'callcenter']) {
+  test('collision: every map but the Parking Garage is solid', async () => {
+    for (const map of ['office', 'server', 'callcenter', 'merger']) {
       const { g, row } = quietShift(map);
       assert(g.floor.solid && row, map + ' not solid');
       assert(g.floor.blocked(row[0] + 2, row[1] + 2), map + ': inside a row is not blocked');
     }
-    for (const map of ['garage', 'merger']) assert(!quietShift(map).g.floor.solid, map + ' is solid');
+    assert(!quietShift('garage').g.floor.solid, 'garage is solid');
   });
 
   test('collision: the Server Room hot aisles stay walkable', async () => {
@@ -76,6 +76,26 @@ export function collisionTests() {
       assert(blockedAt >= 0, `user never got round the row (stuck at ${e.x.toFixed(0)}, ${e.y.toFixed(0)})`);
     });
   }
+
+  test('collision: Merger Day walls change when the parent company takes a chunk', async () => {
+    const { g } = quietShift('merger');
+    const f = g.floor;
+    f.setOwned(0.3);
+    const old = [];
+    for (let cx = -8; cx <= 8; cx++) for (let cy = -8; cy <= 8; cy++) if (!f.acquiredChunk(cx, cy) && f.solidRects(cx, cy).length) old.push([cx, cy, JSON.stringify(f.solidRects(cx, cy))]);
+    f.setOwned(0.92);
+    const taken = old.filter(([cx, cy]) => f.acquiredChunk(cx, cy));
+    assert(taken.length > 3, 'no old-office chunks got taken over');
+    for (const [cx, cy, before] of taken) assert(JSON.stringify(f.solidRects(cx, cy)) !== before, 'cubicles still solid after the takeover');
+    // Someone standing where a bench just appeared is pushed out.
+    for (let cx = -6; cx <= 6; cx++)
+      for (let cy = -6; cy <= 6; cy++)
+        for (const s of f.solidRects(cx, cy)) {
+          const o = { x: s[0] + s[2] / 2, y: s[1] + s[3] / 2 - 10 };
+          f.collide(o, 10, 5);
+          assert(!f.blocked(o.x, o.y + 10), 'still inside furniture after collide');
+        }
+  });
 
   test('collision: boss bullets stop at a row, pickups land outside it', async () => {
     const { g, row } = quietShift();

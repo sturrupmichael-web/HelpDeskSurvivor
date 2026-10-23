@@ -91,6 +91,7 @@ export class Floor {
     const before = this.owned;
     this.owned = LEGACY_QUANTILES[Math.min(LEGACY_QUANTILES.length - 1, Math.floor(share * LEGACY_QUANTILES.length))];
     if (this.style !== 'merger') return this.clear();
+    this.solids.clear(); // taken-over chunks swap cubicles for benches (laid out again on demand)
     // Repaint only the chunks whose floor changed hands, and their neighbours (whose
     // integration line moved). The old art shows until draw() gets round to them.
     const flipped = (cx, cy) => {
@@ -205,7 +206,10 @@ export class Floor {
       if (r() < 0.6) this.put(ctx, r() < 0.5 ? 'box_stack' : 'box_single', 200 - Math.floor(r() * 30), 190 + Math.floor(r() * 30));
     } else if (roll < 0.6) {
       const rows = r() < 0.5 ? 2 : 1;
-      for (let i = 0; i < rows; i++) this.put(ctx, 'bench_desk', ox + 20, oy + 20 + i * 70);
+      for (let i = 0; i < rows; i++) {
+        this.put(ctx, 'bench_desk', ox + 20, oy + 20 + i * 70);
+        this.block(ox + 20, oy + 24 + i * 70, 70, 20);
+      }
       if (r() < 0.5) this.put(ctx, 'bean_bag', ox + 110, oy + 50);
     } else if (roll < 0.85) {
       this.put(ctx, 'synergy_banner', ox + 30, oy + 30);
@@ -303,7 +307,8 @@ export class Floor {
   }
 
   // The solid furniture of a chunk as world-space rects [x, y, w, h]: cubicle rows (the
-  // chairs in front stay walkable), server racks and CRAC units, call-center pod rows.
+  // chairs in front stay walkable), server racks and CRAC units, call-center pod rows,
+  // Merger Day's hot-desk benches.
   solidRects(cx, cy) {
     const k = this.key(cx, cy);
     let rects = this.solids.get(k);
