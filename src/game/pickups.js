@@ -36,6 +36,7 @@ export function dropTicket(game, x, y, value) {
   }
   t.x = x;
   t.y = y;
+  game.floor.collide(t, 0, 7); // never inside a solid cubicle
   t.value = value;
   t.spr = tierSprite(game, value);
   t.magnet = false;
@@ -109,6 +110,7 @@ export function dropItem(game, id, x, y) {
   it.spr = game.assets.sprite(it.def.sprite);
   it.x = x;
   it.y = y;
+  game.floor.collide(it, 0, 9);
   it.t = 0;
   it.magnet = false;
   it.speed = 0;

@@ -22,6 +22,9 @@ import { POLICY_ORDER } from '../../data/policies.js';
 
 export const manifest = JSON.parse(readFileSync(new URL('../../sprites/out/manifest.json', import.meta.url)));
 
+const WALL_R = 30; // keep this far (px) off solid cubicles...
+const WALL_W = 1.5; // ...this hard
+
 // Steering: get away from users, boss bullets and bombs (closer = stronger), drift toward
 // tickets and pickups when it's safe, and close in on a boss while it can be outdamaged.
 export function botPilot(game, axis) {
@@ -67,6 +70,23 @@ export function botPilot(game, axis) {
     return true;
   };
   if (!pull(game.items, 400, 2)) pull(game.tickets, 220, 1);
+  // Solid cubicles: keep a little off them so it doesn't get pinned against a row.
+  if (game.floor.solid) {
+    const feet = p.y + 10;
+    const cx = Math.floor(p.x / 256);
+    const cy = Math.floor(feet / 256);
+    for (let y = cy - 1; y <= cy + 1; y++)
+      for (let x = cx - 1; x <= cx + 1; x++)
+        for (const s of game.floor.solidRects(x, y)) {
+          const dx = p.x - Math.max(s[0], Math.min(p.x, s[0] + s[2]));
+          const dy = feet - Math.max(s[1], Math.min(feet, s[1] + s[3]));
+          const d = Math.hypot(dx, dy);
+          if (d > 0 && d < WALL_R) {
+            fx += (dx / d) * WALL_W * (1 - d / WALL_R);
+            fy += (dy / d) * WALL_W * (1 - d / WALL_R);
+          }
+        }
+  }
   // Slow orbit so it doesn't sit still in an empty spot.
   const a = game.time * 0.4;
   fx += Math.cos(a) * 0.15;

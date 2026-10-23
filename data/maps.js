@@ -19,6 +19,8 @@
 //                          on it get x`hpMult` HP and drop x`xpMult` tickets when closed
 //                          there. Every `boxEvery` s an Unclaimed Moving Box appears nearby
 //                          (at most `boxMax` at once).
+//   solid       cubicle rows are solid: nobody walks through them (users go round the
+//               end), boss bullets stop at them, pickups never land in them
 //   newUsers   map-only users added to the spawn mix from `from` seconds on, each at
 //              `share` of the timeline mix's total weight (list them in `from` order)
 
@@ -28,10 +30,11 @@ export const MAPS = {
     floor: 'office',
     unlockAfter: null,
     blurb: 'Cubicles, a water cooler and 847 unread tickets. Where every career starts.',
-    twistText: 'No surprises. Just users.',
+    twistText: 'Solid cubicles: nobody walks through them. Users have to go round, and boss shots stop at them.',
     pay: 1,
-    hpMult: 0.9,
+    hpMult: 0.7, // 0.9 before solid cubicles (idea 51) made it harder to get away
     speedMult: 1,
+    solid: true,
     mixBoost: {},
     music: { transpose: 0, tempo: 1, lead: 'square', cutoff: 1400 },
   },

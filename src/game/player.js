@@ -96,6 +96,8 @@ export function recomputeStats(p) {
 }
 
 const SLIP_GRIP = 1.6; // how fast you change direction on a wet floor (1/s)
+const FOOT = 10; // px from the player's center down to their feet
+const FOOT_RADIUS = 5; // size of the feet against solid furniture
 const SHOVE_DAMP = 7; // how fast a shove from a boss dies down (1/s)
 
 export function updatePlayer(game, dt) {
@@ -115,6 +117,7 @@ export function updatePlayer(game, dt) {
   }
   p.x += (p.vx + p.kx) * dt;
   p.y += (p.vy + p.ky) * dt;
+  game.floor.collide(p, FOOT, FOOT_RADIUS); // solid cubicles: stop and slide along them
   const damp = Math.exp(-SHOVE_DAMP * dt);
   p.kx *= damp;
   p.ky *= damp;

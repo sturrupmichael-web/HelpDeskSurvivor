@@ -165,6 +165,7 @@ export class Game {
     this.mapId = id;
     this.map = MAPS[id];
     this.floor.setStyle(this.map.floor);
+    this.floor.solid = !!this.map.solid;
     this.dirty = true;
     setMusicStyle(this.map.music);
   }

@@ -11,6 +11,7 @@ import { sfx } from '../engine/audio.js';
 export const HIT_SLOTS = 8; // per-weapon "last hit" timestamps for damage-over-time weapons
 const DEFAULT_FOOT = 10;
 const NO_PARAMS = {};
+const WALL_SHUFFLE = 0.5; // users edge along a solid cubicle row at this x their speed
 const SHADOW_LIMIT = 400; // above this many enemies, skip drop shadows to halve draw calls
 
 let nextUid = 1;
@@ -20,6 +21,7 @@ export function makeEnemy() {
     def: null, spr: null, behavior: null, params: NO_PARAMS,
     uid: 0, x: 0, y: 0, r: 7, foot: DEFAULT_FOOT,
     kx: 0, ky: 0, // knockback velocity
+    px: 0, py: 0, // position at the start of the tick (solid cubicles)
     dx: 0, dy: 0, // fixed direction (dashes, storm lines)
     hp: 1, maxHp: 1, speed: 0, damage: 0, xp: 1, kbMul: 1,
     slow: 1, // speed multiplier from slows; reset every tick, set by weapons
@@ -48,8 +50,8 @@ export function spawnEnemy(game, id, x, y, hpMult = 1, speedMult = 1, behaviorId
   e.behavior = BEHAVIORS[behaviorId ?? def.behavior];
   e.params = def.params ?? NO_PARAMS;
   e.uid = nextUid++;
-  e.x = x;
-  e.y = y;
+  e.x = e.px = x;
+  e.y = e.py = y;
   e.r = def.radius;
   e.foot = def.foot ?? DEFAULT_FOOT;
   e.kx = e.ky = e.dx = e.dy = 0;
@@ -95,6 +97,8 @@ export function updateEnemies(game, dt) {
       e.dead = true;
       continue;
     }
+    e.px = e.x;
+    e.py = e.y;
     if (e.mark > 0) e.mark -= dt;
     if (e.stun > 0) e.stun -= dt;
     else if (e.confuse > 0) {
@@ -152,6 +156,8 @@ export function resolveEnemies(game, dt) {
     }
   }
 
+  if (game.floor.solid) avoidSolids(game, dt);
+
   // Contact: touching enemies drain sanity continuously; exploders go off once.
   const p = game.player;
   const n = hash.query(p.x, p.y, p.r + 16, buf);
@@ -174,6 +180,52 @@ export function resolveEnemies(game, dt) {
     } else drain += e.damage * hurtBy;
   }
   if (drain > 0 && hurtPlayer(game, drain * dt)) game.onPlayerHurt();
+}
+
+// Solid cubicles (maps with `solid`): push users out of them, and a user stuck on a
+// cubicle row with you on the far side shuffles along it (slower than walking, whatever
+// its behavior wanted this tick) toward the end that is the shorter way round, then down
+// the end of the row. Rows are straight bars with gaps between them, so that's all the
+// pathing they need. Bosses (too big for the gaps between rows) barge straight through,
+// and so do event swarms (storm lines, which expire) and anchored boxes.
+function avoidSolids(game, dt) {
+  const floor = game.floor;
+  const p = game.player;
+  const py = p.y + 10; // the player's feet
+  const items = game.enemies.items;
+  for (let i = 0; i < game.enemies.count; i++) {
+    const e = items[i];
+    if (e.dead || e.life > 0 || e.heavy) continue;
+    const r = Math.max(4, e.r * 0.6);
+    const s = floor.collide(e, e.foot, r);
+    if (!s || e.stun > 0) continue;
+    const fy = e.y + e.foot;
+    const inX = e.x >= s[0] && e.x <= s[0] + s[2];
+    const inY = fy >= s[1] && fy <= s[1] + s[3];
+    const pastY = fy < s[1] ? py > s[1] + s[3] : fy > s[1] + s[3] && py < s[1];
+    const pastX = e.x < s[0] ? p.x > s[0] + s[2] : e.x > s[0] + s[2] && p.x < s[0];
+    let along; // 'x': walk along the top/bottom face, 'y': along a side face
+    if (inX) along = pastY ? 'x' : null;
+    else if (inY) along = pastX ? 'y' : null;
+    else along = pastY ? 'y' : pastX ? 'x' : null; // at a corner: round it toward you
+    if (!along) continue;
+    const step = e.speed * e.slow * e.buff * dt * WALL_SHUFFLE;
+    e.x = e.px;
+    e.y = e.py;
+    if (along === 'x') {
+      const a = s[0] - r - 2;
+      const b = s[0] + s[2] + r + 2;
+      const end = inX ? (Math.abs(e.x - a) + Math.abs(a - p.x) <= Math.abs(e.x - b) + Math.abs(b - p.x) ? a : b) : p.x < s[0] ? a : b;
+      e.x += Math.sign(end - e.x) * Math.min(step, Math.abs(end - e.x));
+    } else {
+      const from = e.y + e.foot;
+      const a = s[1] - r - 2;
+      const b = s[1] + s[3] + r + 2;
+      const end = inY ? (Math.abs(from - a) + Math.abs(a - py) <= Math.abs(from - b) + Math.abs(b - py) ? a : b) : py < s[1] ? a : b;
+      e.y += Math.sign(end - from) * Math.min(step, Math.abs(end - from));
+    }
+    floor.collide(e, e.foot, r);
+  }
 }
 
 // Applies weapon damage. (dx, dy) is the knockback direction (need not be normalized).

@@ -1,13 +1,15 @@
 // Endless floor in one of the map styles from data/maps.js (office, server, callcenter,
 // garage, merger). The world is split into 256x256 chunks; each chunk is generated
 // deterministically from its coordinates (floor tiles + a random furniture layout),
-// rendered once to an offscreen canvas and cached. Decoration only: nothing here
-// collides with anything. The gameplay features are read back from the same layout:
-// the Server Room's hot aisles (isHot) and Merger Day's acquired floor (isAcquired).
+// rendered once to an offscreen canvas and cached. The gameplay features are read back
+// from the same layout: the Server Room's hot aisles (isHot), Merger Day's acquired floor
+// (isAcquired) and, on maps with `solid` in data/maps.js, the cubicle rows nobody can walk
+// through (solidRects / collide).
 
 const CHUNK = 256;
 const TILE = 32;
 const MAX_CACHED = 64;
+const SOLID_DEPTH = 38; // px of a cubicle row that blocks: partition and desks, not chairs
 const REBUILDS_PER_FRAME = 2; // outdated chunks repainted per frame (new ones always are)
 
 // Floor tile sprite per style, from global tile coordinates.
@@ -70,6 +72,8 @@ export class Floor {
     this.cache = new Map();
     this.stale = new Set(); // cached chunk keys whose art is out of date (Merger Day borders)
     this.hot = new Map(); // chunk key -> hot-aisle rect [x, y, w, h] in world px, or null
+    this.solids = new Map(); // chunk key -> solid rects [[x, y, w, h], ...] in world px
+    this.solid = false; // furniture blocks movement (set from the map's `solid`)
     this.style = 'office';
     this.share = -1; // Merger Day: share of the floor the parent company owns (0..1)
     this.owned = -1; // ...as a threshold on legacy(): chunks below it are acquired
@@ -277,6 +281,79 @@ export class Floor {
     if (this.style !== 'server') return false;
     const h = this.hotRect(Math.floor(x / CHUNK), Math.floor(y / CHUNK));
     return !!h && x >= h[0] && x < h[0] + h[2] && y >= h[1] && y < h[1] + h[3];
+  }
+
+  // The solid furniture of an office chunk: one rect per cubicle row (partition, posts
+  // and desks; the chairs in front stay walkable). Same RNG sequence as build()/office().
+  solidRects(cx, cy) {
+    const k = this.key(cx, cy);
+    let rects = this.solids.get(k);
+    if (rects) return rects;
+    rects = [];
+    const r = rng(hash2(cx * 7 + 3, cy * 13 + 5));
+    const ox = 16 + Math.floor(r() * 40);
+    const oy = 16 + Math.floor(r() * 40);
+    if (r() < 0.55) {
+      const segments = ox + 192 <= CHUNK - 8 && r() < 0.5 ? 3 : 2;
+      const rows = r() < 0.5 ? 2 : 1;
+      for (let row = 0; row < rows; row++) rects.push([cx * CHUNK + ox - 3, cy * CHUNK + oy + row * 96, segments * 64 + 6, SOLID_DEPTH]);
+    }
+    if (this.solids.size > 512) this.solids.clear();
+    this.solids.set(k, rects);
+    return rects;
+  }
+
+  // Is the point (x, y) inside solid furniture?
+  blocked(x, y) {
+    if (!this.solid) return false;
+    for (const s of this.solidRects(Math.floor(x / CHUNK), Math.floor(y / CHUNK)))
+      if (x >= s[0] && x < s[0] + s[2] && y >= s[1] && y < s[1] + s[3]) return true;
+    return false;
+  }
+
+  // Pushes `o` (anything with x, y) out of solid furniture, treating it as a circle of
+  // radius `r` at its feet (`foot` px below o.y). Returns the last rect it touched (or
+  // null); `this.hitSide` says which face: true for left/right, false for top/bottom.
+  collide(o, foot, r) {
+    if (!this.solid) return null;
+    let hit = null;
+    const fy = o.y + foot;
+    const cx0 = Math.floor((o.x - r) / CHUNK);
+    const cx1 = Math.floor((o.x + r) / CHUNK);
+    const cy0 = Math.floor((fy - r) / CHUNK);
+    const cy1 = Math.floor((fy + r) / CHUNK);
+    for (let cy = cy0; cy <= cy1; cy++)
+      for (let cx = cx0; cx <= cx1; cx++)
+        for (const s of this.solidRects(cx, cy)) {
+          const y = o.y + foot;
+          const nx = Math.max(s[0], Math.min(o.x, s[0] + s[2]));
+          const ny = Math.max(s[1], Math.min(y, s[1] + s[3]));
+          const dx = o.x - nx;
+          const dy = y - ny;
+          const d2 = dx * dx + dy * dy;
+          if (d2 >= r * r) continue;
+          hit = s;
+          if (d2 > 1e-6) {
+            // Outside the rect: back off along the line from the closest point.
+            const d = Math.sqrt(d2);
+            o.x += (dx / d) * (r - d);
+            o.y += (dy / d) * (r - d);
+            this.hitSide = dx !== 0 && Math.abs(dx) >= Math.abs(dy);
+          } else {
+            // Feet inside the rect: leave by the nearest face.
+            const left = o.x - s[0] + r;
+            const right = s[0] + s[2] - o.x + r;
+            const top = y - s[1] + r;
+            const bottom = s[1] + s[3] - y + r;
+            const m = Math.min(left, right, top, bottom);
+            this.hitSide = m === left || m === right;
+            if (m === left) o.x -= left;
+            else if (m === right) o.x += right;
+            else if (m === top) o.y -= top;
+            else o.y += bottom;
+          }
+        }
+    return hit;
   }
 
   chunk(cx, cy) {

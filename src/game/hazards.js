@@ -120,6 +120,10 @@ export class Hazards {
         if (hurtPlayer(game, b.damage)) game.onPlayerHurt();
         game.fx.burst(b.x, b.y, ['#f4f4f4', '#b13e53'], 4);
         bl.removeAt(i);
+      } else if (game.floor.blocked(b.x, b.y)) {
+        // Solid cubicles are cover: the shot hits the partition.
+        game.fx.burst(b.x, b.y, ['#f4f4f4', '#8b9bb4'], 3);
+        bl.removeAt(i);
       } else if ((b.life -= dt) <= 0) bl.removeAt(i);
     }
     const bm = this.bombs;

@@ -574,3 +574,28 @@ one long streak added hundreds of thousands. Bot, vet saves, 45:00 cap: 4 of 12 
 went over 300 a second (up to 873). Repeats past x1,000 now pay the x1,000 bonus, and the
 limit is 10,000 a second (`supabase/csat-limit.sql`). With the cap the same bot shifts
 score 178-287 a second, still close to the old limit, so both changes are needed.
+
+## Solid cubicles on the Open Office (idea 51), 2026-10-23
+
+Cubicle rows on the Open Office block the tech and users (`solid: true` in data/maps.js,
+rects from `Floor.solidRects`). Users stuck on a row with you behind it shuffle along it
+at half speed toward the nearer end (`WALL_SHUFFLE` in src/game/enemies.js). Bosses barge
+through rows (too big for the gaps between them). Boss bullets stop at rows; your tools
+pass over them. The bot keeps 30 px off rows.
+
+Balance bot, Tier 1 Tech on the Open Office (`node tests/tools/bot.mjs --map office`):
+
+| Build                                        | Runs | Average shift | Reached 10:00 | Won   |
+|----------------------------------------------|------|---------------|---------------|-------|
+| Before (no walls, hpMult 0.9)                | 52   | about 10:00   | 21 (40%)      | 0     |
+| Walls, hpMult 0.9                            | 20   | about 6:30    | 5 (25%)       | 0     |
+| Walls, hpMult 0.7, users shuffle at 0.5x     | 36   | 7:41          | 7 (19%)       | 0     |
+| Same, bosses barge through (shipped)         | 24   | 9:50          | 9 (38%)       | 2     |
+| Veteran (`--vet`), before                    | 12   | 25:21         | 12            | 8/12  |
+| Veteran (`--vet`), shipped                    | 12   | 22:30         | 12            | 8/12  |
+
+Lowering hpMult further (0.6) didn't help the new tech: most extra deaths happen while
+pinned against a row (about 40% of damage taken in short shifts), which toughness doesn't
+change. The bot's shift length swings a lot between batches (5:09 to 11:58 for 12 runs), so treat
+the gap as roughly 10:00 -> 8:30. A player who sees the walls should do better than the
+bot; Michael to judge on preview.
