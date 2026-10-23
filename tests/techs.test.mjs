@@ -88,6 +88,7 @@ export function techTests() {
     // Cloud Engineer: +2% damage a minute.
     g.startShift('office', 'cloudEng');
     g.player.god = true;
+    g.openLevelUp = () => (g.player.pendingLevels = 0); // no damage cards in the way
     const d0 = g.player.stats.damage;
     g.playShift(121);
     assert(Math.abs(g.player.stats.damage - d0 - 0.04) < 1e-9, `cloud damage ${d0} -> ${g.player.stats.damage}`);
