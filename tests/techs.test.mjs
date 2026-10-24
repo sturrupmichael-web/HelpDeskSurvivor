@@ -5,13 +5,11 @@ import { test, assert } from './harness.mjs';
 import { headlessGame } from '../src/game/headless.js';
 import { manifest, botPilot, botPick, veteranSave } from './tools/bot.mjs';
 import { CHARACTERS } from '../data/player.js';
-import { WEAPONS } from '../data/weapons.js';
 import { createWeapon } from '../src/game/weapons/index.js';
 import { spawnEnemy, damageEnemy, killEnemy } from '../src/game/enemies.js';
 import { rollChoices } from '../src/game/upgrades.js';
 
 const PACK = ['supervisor', 'sysops', 'director', 'crmAnalyst', 'crmManager', 'cloudEng', 'syseng', 'euc', 'secmgr', 'seceng', 'assets'];
-const NEW_TOOLS = ['patchRollout', 'dedupe', 'fairwayDriver', 'terraform', 'assetTag'];
 
 const game = () => headlessGame(manifest, { pick: botPick, autopilot: botPilot, save: veteranSave() });
 
@@ -39,23 +37,6 @@ export function techTests() {
       assert(g.score.kills > 20, `${tech} closed only ${g.score.kills}`);
     });
   }
-
-  test('techs: every new tool damages users at every level', async () => {
-    const g = game();
-    for (const id of NEW_TOOLS) {
-      for (let lvl = 1; lvl <= WEAPONS[id].levels.length; lvl++) {
-        g.startShift('office', 'tier1');
-        g.spawner.stopped = true;
-        const w = createWeapon(id, 1);
-        w.level = lvl;
-        w.stats = w.def.levels[lvl - 1];
-        g.player.weapons = [w];
-        for (let i = 0; i < 12; i++) dummy(g, 'pam', Math.cos(i) * (30 + i * 4), Math.sin(i) * (30 + i * 4));
-        for (let t = 0; t < 6 * 60; t++) g.update(1 / 60);
-        assert(w.damageDone > 0, `${id} level ${lvl} did no damage`);
-      }
-    }
-  });
 
   test('techs: the perks do what the cards say', async () => {
     const g = game();

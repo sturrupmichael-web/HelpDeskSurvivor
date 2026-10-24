@@ -2,8 +2,8 @@
 
 The leaderboard, accounts, cloud saves, player profiles and bug reports live in one
 Supabase project (settings in `data/leaderboard.js`). These files set up its database.
-They are numbered in the order they were run on the live project, and **all of them have
-already been run there**. Nothing here needs running again unless a new file is added.
+They are numbered in the order they were run on the live project, and **all of them up
+to `009` have already been run there** (`010` is new on 2026-10-24). Nothing here needs running again unless a new file is added.
 
 To run one: Supabase, SQL Editor, New query, paste the whole file, Run. Every file is safe
 to run again.
@@ -19,6 +19,7 @@ to run again.
 | `007_policies.sql` | Shift Policies: `mods`, `mult` and the database-worked-out `score` (CSAT x mult) that the board ranks by; profiles show the best score. | 004 |
 | `008_csat-limit.sql` | Raises the CSAT-per-second limit so long overtime shifts with combos aren't refused. | 002 |
 | `009_hardcore.sql` | Hardcore shifts (tagged `hardcore` in `mods`) may go up to x6. | 007 |
+| `010_security.sql` | Second security review: no invisible characters in names, a rename takes your scores with you, at most 5 scores a minute per player. | 003 |
 
 **Fresh project:** run them all in number order. Later files change limits that earlier
 ones set (for example `009` loosens the multiplier check from `007`), so the order matters.

@@ -8,6 +8,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Tests only read the code. (A pull request from someone else's copy of the repository
+# runs here too, so its code gets no write access.)
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest

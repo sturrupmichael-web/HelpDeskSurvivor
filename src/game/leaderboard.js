@@ -27,10 +27,12 @@ async function call(path, opts = {}) {
   }
 }
 
-// Trims a typed name to something safe to store: printable characters only.
+// Trims a typed name to something safe to store: printable characters only. The Hangul
+// fillers count as letters but show as blanks, so they go too (the database refuses them,
+// supabase/010_security.sql).
 export function cleanName(name) {
   return String(name ?? '')
-    .replace(/[^\p{L}\p{N} ._\-'!?]/gu, '')
+    .replace(/[^\p{L}\p{N} ._\-'!?]|[\u115f\u1160\u3164\uffa0]/gu, '')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, LB.nameMax);

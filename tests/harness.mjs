@@ -43,11 +43,13 @@ export async function closeBrowser() {
 
 // Opens `page` (dev.html, index.html, ...) with debug mode on and waits for the game.
 // Returns { page, errors, close() }; `errors` collects page errors and console errors.
-export async function openGame(base, page = 'dev.html', { width = 1280, height = 720, dpr = 1, query = '?debug' } = {}) {
+// `supabase` (tests/tools/fakebase.mjs) answers the online calls instead of blocking them.
+export async function openGame(base, page = 'dev.html', { width = 1280, height = 720, dpr = 1, query = '?debug', supabase = null } = {}) {
   const ctx = await (await getBrowser()).newContext({ viewport: { width, height }, deviceScaleFactor: dpr });
   const p = await ctx.newPage();
   const errors = [];
-  await p.route(/supabase\.co/, (r) => r.abort());
+  if (supabase) await supabase.attach(p);
+  else await p.route(/supabase\.co/, (r) => r.abort());
   p.on('pageerror', (e) => errors.push(e.message));
   p.on('console', (m) => {
     if (m.type() === 'error' && !/supabase|Failed to load resource|ERR_FAILED/.test(m.text())) errors.push(m.text());

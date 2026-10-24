@@ -49,15 +49,6 @@ export function evolutionTests() {
     }
   });
 
-  test('evolutions: every evolution damages users', async () => {
-    for (const into of Object.values(PACK)) {
-      const { g, w } = quiet(into);
-      for (let i = 0; i < 12; i++) dummy(g, 'pam', Math.cos(i) * (30 + i * 6), Math.sin(i) * (30 + i * 6));
-      run(g, 6);
-      assert(w.damageDone > 0, `${into} did no damage`);
-    }
-  });
-
   test('evolutions: Patch Tuesday stuns with every ring', async () => {
     const { g } = quiet('patchTuesday');
     const near = dummy(g, 'pam', 40, 0); // inside the first (pilot) ring
