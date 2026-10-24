@@ -2,8 +2,8 @@
 
 The leaderboard, accounts, cloud saves, player profiles and bug reports live in one
 Supabase project (settings in `data/leaderboard.js`). These files set up its database.
-They are numbered in the order they were run on the live project, and **all of them up
-to `009` have already been run there** (`010` is new on 2026-10-24). Nothing here needs running again unless a new file is added.
+They are numbered in the order they were run on the live project, and **all of them have
+already been run there**. Nothing here needs running again unless a new file is added.
 
 To run one: Supabase, SQL Editor, New query, paste the whole file, Run. Every file is safe
 to run again.

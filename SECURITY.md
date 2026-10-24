@@ -36,8 +36,7 @@ follows the same rules (`tests/online.test.mjs`, now part of `npm test`).
 
 ## For the owner to do
 
-1. **Run `supabase/010_security.sql`** in Supabase: SQL Editor, New query, paste the whole
-   file, Run. It was tested on a local Postgres copy of the database: normal names and
+1. ~~Run `supabase/010_security.sql`~~ Done 2026-10-24. It was tested on a local Postgres copy of the database: normal names and
    scores still work, and running it twice is fine. Names already taken are left alone.
 2. **Supabase, Authentication, Rate Limits:** check that the limit for anonymous sign-ins
    is on (Supabase's default is 30 an hour per address). That is what stops a script
