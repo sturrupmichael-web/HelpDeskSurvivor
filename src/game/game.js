@@ -7,7 +7,7 @@ import { Pool } from '../engine/pool.js';
 import { SpatialHash } from '../engine/spatialHash.js';
 import { onKeyPress, drawTouchStick } from '../engine/input.js';
 import { shadow, blitFeet } from '../engine/renderer.js';
-import { CHARACTERS } from '../../data/player.js';
+import { CHARACTERS, COMEBACKS } from '../../data/player.js';
 import { SPAWNER, EVENTS } from '../../data/waves.js';
 import { TICKETS, MAX_ITEMS } from '../../data/pickups.js';
 import { EVOLUTIONS } from '../../data/evolutions.js';
@@ -18,7 +18,7 @@ import { setHaptics } from '../engine/haptics.js';
 import { Achievements } from './achievements.js';
 import { Floor } from './floor.js';
 import { createPlayer, updatePlayer, addXp, recomputeStats } from './player.js';
-import { makeEnemy, updateEnemies, resolveEnemies, drawEnemies, drawBossTelegraphs, spawnEnemy, stunEnemy } from './enemies.js';
+import { makeEnemy, updateEnemies, resolveEnemies, drawEnemies, drawBossTelegraphs } from './enemies.js';
 import { makeTicket, updateTickets, drawTickets, makeItem, dropItem, updateItems, drawItems } from './pickups.js';
 import { Hazards } from './hazards.js';
 import { createWeapon, createCrew, updateWeapons, drawWeapons, drawWeaponsUnder, setWeaponLevel } from './weapons/index.js';
@@ -39,6 +39,7 @@ import { Tutorial } from './tutorial.js';
 import { performanceReview } from './review.js';
 import { CloudSave } from './cloudsave.js';
 import { combinePolicies, NO_POLICY } from './policies.js';
+import { FLOOR_PERKS } from './perks.js';
 
 const TARGET_VIEW_HEIGHT = 480; // world px visible vertically, before integer rounding
 const TARGET_VIEW_WIDTH_MIN = 300; // narrow (portrait) screens zoom in to about this width
@@ -46,6 +47,8 @@ const PLAYER_FOOT = 10; // px from the player's collision center down to their f
 const VICTORY_DELAY = 3.5; // seconds between closing the final boss and the summary screen
 
 const HEADLESS_VIEW = [854, 480]; // world px "on screen" when there is no canvas
+
+const nextComeback = (p) => COMEBACKS.find((c) => p[c.counter] > 0);
 
 // The game itself knows nothing about the page: `ui(game)` returns its HUD, menus and
 // debug overlay (src/ui/index.js in the browser, src/game/headless.js in Node), and
@@ -200,8 +203,7 @@ export class Game {
     this.bossPhase2 = false;
     this.victoryT = 0;
     this.beatT = 0; // low-sanity heartbeat timer
-    this.phishT = 0; // Security Manager: seconds since the last phishing test
-    this.boxT = 0; // Asset Management Analyst: seconds since the last moving box
+    this.perkT = {}; // floor perks (src/game/perks.js): seconds since each last fired
     this.autoPizza = false; // everything maxed and the player chose "always take the pizza"
     this.tutorial = null; // the training shift's script, while one runs
     if (this.mapId !== this.meta.data.map) this.setMap(this.meta.data.map); // back from training
@@ -297,15 +299,11 @@ export class Game {
     this.screens.gameOver({ ...stats, pay, records, newMap, newUnlocks, newPolicies, policiesOpened, hardcoreOpened, wikiNew, review, balance: this.meta.data.pay });
   }
 
-  // Extended Warranty (passive), Long Weekend (policy) or Union Rep (shop): come back from
-  // burnout, clearing some space. Claimed in that order.
-  revive() {
+  // Comes back from burnout with the first comeback left (COMEBACKS in data/player.js),
+  // clearing some space.
+  revive(c = nextComeback(this.player)) {
     const p = this.player;
-    const warranty = p.warranty > 0;
-    const weekend = !warranty && p.longWeekend > 0;
-    if (warranty) p.warranty--;
-    else if (weekend) p.longWeekend--;
-    else p.revives--;
+    p[c.counter]--;
     this.achievements.run.revived = true;
     this.timeline.mark(this, 'revive', 'Back from burnout');
     p.hp = p.maxHp * 0.5;
@@ -323,9 +321,7 @@ export class Game {
     }
     this.fx.ring(p.x, p.y, 160, '#ffcd75', 0.6, true);
     this.camera.shake(6);
-    if (warranty) this.hud.banner('WARRANTY CLAIM APPROVED', 'Covered under your Extended Warranty. Back at half sanity.', 3);
-    else if (weekend) this.hud.banner('LONG WEEKEND', 'You remembered Friday is off. Back at half sanity.', 3);
-    else this.hud.banner('UNION REP INTERVENED', 'Mandatory 15-minute break. You are back, at half sanity.', 3);
+    this.hud.banner(c.title, c.text, 3);
     sfx('pto');
   }
 
@@ -533,43 +529,21 @@ export class Game {
       sfx('heartbeat');
     }
 
-    if (p.hp <= 0 && (p.warranty > 0 || p.longWeekend > 0 || p.revives > 0)) this.revive();
+    if (p.hp <= 0 && nextComeback(p)) this.revive();
     else if (p.hp <= 0) this.endRun(false);
     else if (this.victoryT > 0 && (this.victoryT -= dt) <= 0) this.endRun(true);
     else if (this.state === 'run' && p.pendingLevels > 0) this.openLevelUp();
   }
 
-  // Tech perks that act on the floor (data/player.js): the Security Manager's phishing
-  // test and the Asset Management Analyst's moving boxes. Not during training or the
-  // victory walk-off.
+  // Tech perks that act on the floor on a timer (FLOOR_PERKS in src/game/perks.js). Not
+  // during training or the victory walk-off.
   techPerks(dt) {
-    const p = this.player;
-    const d = p.def;
+    const d = this.player.def;
     if (this.spawner.stopped || this.victoryT > 0) return;
-    if (d.phishTest && (this.phishT += dt) >= d.phishTest.every) {
-      this.phishT = 0;
-      // Everyone on screen stops to read the email.
-      const hw = this.view.w / 2 + 16;
-      const hh = this.view.h / 2 + 16;
-      const pool = this.enemies;
-      for (let i = 0; i < pool.count; i++) {
-        const e = pool.items[i];
-        if (!e.dead && Math.abs(e.x - this.camera.x) < hw && Math.abs(e.y - this.camera.y) < hh) stunEnemy(e, d.phishTest.stun);
-      }
-      this.fx.ring(p.x, p.y, Math.max(hw, hh), '#7a4ea0', 0.5);
-      this.fx.text(p.x, p.y - 30, 'PHISHING TEST', '#ffcd75');
-      sfx('error');
-    }
-    if (d.boxEvery && (this.boxT += dt) >= d.boxEvery) {
-      this.boxT = 0;
-      let boxes = 0;
-      const pool = this.enemies;
-      for (let i = 0; i < pool.count; i++) if (pool.items[i].def.anchored && !pool.items[i].dead) boxes++;
-      if (boxes < 3) {
-        const a = Math.random() * Math.PI * 2;
-        const r = 110 + Math.random() * 70;
-        spawnEnemy(this, 'moving_box', p.x + Math.cos(a) * r, p.y + Math.sin(a) * r, this.spawner.sample(this.time, 'hpMult'));
-      }
+    for (const key in FLOOR_PERKS) {
+      if (d[key] === undefined) continue;
+      this.perkT[key] = (this.perkT[key] ?? 0) + dt;
+      if (FLOOR_PERKS[key](this, d[key], this.perkT[key])) this.perkT[key] = 0;
     }
   }
 

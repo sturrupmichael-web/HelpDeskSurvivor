@@ -9,7 +9,8 @@ import { manifest } from './tools/bot.mjs';
 import { WEAPONS } from '../data/weapons.js';
 import { PASSIVES } from '../data/passives.js';
 import { EVOLUTIONS } from '../data/evolutions.js';
-import { CHARACTERS } from '../data/player.js';
+import { CHARACTERS, TECH_PERKS, COMEBACKS } from '../data/player.js';
+import { headlessGame } from '../src/game/headless.js';
 import { ENEMIES } from '../data/enemies.js';
 import { MAPS, MAP_ORDER } from '../data/maps.js';
 import { TIMELINE, EVENTS, MAP_BOSS_EVENT } from '../data/waves.js';
@@ -22,6 +23,7 @@ import { CHANGELOG } from '../data/changelog.js';
 import { BEHAVIORS } from '../src/game/behaviors/index.js';
 import { WEAPON_BEHAVIORS } from '../src/game/weapons/index.js';
 import { TWISTS } from '../src/game/maps.js';
+import { FLOOR_PERKS } from '../src/game/perks.js';
 import { ITEM_EFFECTS } from '../src/game/pickups.js';
 import { ICONS } from '../src/ui/icons.js';
 
@@ -70,7 +72,10 @@ export function dataTests() {
 
   test('data: techs', () =>
     expectNone((need) => {
+      const fields = new Set(['name', 'sprite', 'starter', 'maxHp', 'speed', 'radius', 'pickupRadius', 'regen', 'cost', 'bonus', 'perk', 'blurb', ...TECH_PERKS]);
+      for (const key in FLOOR_PERKS) need(TECH_PERKS.includes(key), `floor perk '${key}' (src/game/perks.js) isn't listed in TECH_PERKS`);
       for (const [id, c] of Object.entries(CHARACTERS)) {
+        for (const key of Object.keys(c)) need(fields.has(key), `tech ${id}: unknown field '${key}' (a perk must be listed in TECH_PERKS in data/player.js)`);
         need(c.sprite in sprites, `tech ${id}: sprite '${c.sprite}' isn't in the sprite sheets`);
         need(WEAPONS[c.starter] && !WEAPONS[c.starter].evolved, `tech ${id}: starter '${c.starter}' isn't a base tool`);
         for (const t of c.alsoStarts ?? []) need(t in WEAPONS, `tech ${id}: alsoStarts unknown tool '${t}'`);
@@ -78,6 +83,14 @@ export function dataTests() {
         for (const s of Object.keys({ ...c.hurtBy, ...c.bonusVs })) need(enemySprites.has(s), `tech ${id}: perk names unknown user '${s}'`);
       }
     }));
+
+  test('data: every comeback counter is on the player', () => {
+    const g = headlessGame(manifest);
+    g.startShift('office', 'tier1');
+    expectNone((need) => {
+      for (const c of COMEBACKS) need(typeof g.player[c.counter] === 'number', `comeback '${c.counter}' isn't a counter on the player (src/game/player.js)`);
+    });
+  });
 
   test('data: users and bosses', () =>
     expectNone((need) => {

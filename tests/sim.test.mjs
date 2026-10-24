@@ -5,7 +5,7 @@ import { test, assert } from './harness.mjs';
 import { headlessGame } from '../src/game/headless.js';
 import { manifest, botPilot, botPick, veteranSave } from './tools/bot.mjs';
 import { MAPS } from '../data/maps.js';
-import { CHARACTERS } from '../data/player.js';
+import { CHARACTERS, COMEBACKS } from '../data/player.js';
 
 export function simTests() {
   for (const map of Object.keys(MAPS)) {
@@ -99,5 +99,24 @@ export function simTests() {
       assert(game.bossPhase2, `${id}: never reached its second phase`);
       assert(used, `${id}: second-phase attack never seen in 120 s`);
     }
+  });
+
+  test('node: comebacks are claimed in order, one per burnout', () => {
+    const g = headlessGame(manifest);
+    g.startShift('office', 'tier1');
+    const p = g.player;
+    for (const c of COMEBACKS) p[c.counter] = 1;
+    g.spawner.stopped = true;
+    for (const c of COMEBACKS) {
+      p.hp = 0;
+      g.update(1 / 60);
+      assert(p[c.counter] === 0, `${c.counter} wasn't claimed next`);
+      assert(p.hp >= p.maxHp * 0.49 && p.invuln > 2.9, `${c.counter}: not back at half sanity`);
+      assert(COMEBACKS.every((o) => o === c || COMEBACKS.indexOf(o) < COMEBACKS.indexOf(c) || p[o.counter] === 1), `${c.counter}: another comeback was used`);
+      p.invuln = 0;
+    }
+    p.hp = 0;
+    g.update(1 / 60);
+    assert(g.state !== 'run', 'no comebacks left, but the shift went on');
   });
 }

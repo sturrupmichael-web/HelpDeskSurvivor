@@ -10,7 +10,7 @@ rates, what was tuned and why) are in [docs/balance-log.md](docs/balance-log.md)
 | --- | --- |
 | `data/player.js` | Character base stats (`maxHp` = Sanity, `speed`, `pickupRadius`, `regen`) and the XP curve |
 | `data/enemies.js` | Per end-user `hp`, `speed`, `damage` (sanity/second on contact), `radius`, `xp`, `knockback`, `resist`, plus behavior `params` |
-| `data/weapons.js` | One full stat row per weapon level (1–8); the stats depend on the weapon's behavior (see below) |
+| `data/weapons.js` (tools in `data/weapons/`) | One full stat row per weapon level (1–8); the stats depend on the weapon's behavior (see below) |
 | `data/passives.js` | `perLevel` stat bonus, `maxLevel`, offer `weight`, slot caps |
 | `data/waves.js` | Shift length and the spawn timeline |
 | `data/pickups.js` | Ticket tiers and magnet behavior |
@@ -227,7 +227,7 @@ drains `drainPerLevel` x level sanity a second. The HUD shows "OVERTIME x1", "x2
 A weapon at max level plus its paired passive (any level) evolves when you open a
 Change Approved chest. If several qualify, the first in your weapon slots evolves. The
 evolved weapon keeps its slot and the damage it has already done. Evolved weapons are
-in `data/weapons.js` (`evolved: true`, one level row):
+in `data/weapons/evolved.js` (`evolved: true`, one level row):
 
 | Evolution | From | Passive | What changes |
 | --- | --- | --- | --- |

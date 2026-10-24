@@ -234,8 +234,40 @@ supabase/      database scripts for the leaderboard, accounts and bug reports (s
 docs/          balance-log.md (dated balance results) and history/ (the original plan)
 ```
 
+Words in the code vs in the game (the code keeps its older names; use these in new code):
+
+| In the code | In the game |
+| --- | --- |
+| weapon (`WEAPONS`, `p.weapons`) | tool |
+| enemy (`ENEMIES`, `game.enemies`) | user (end-user) |
+| character / `charId` / tech | tech (`CHARACTERS`; the save's `selected` is the chosen tech) |
+| kill | ticket closed |
+| `hp` / `maxHp` on the player | Sanity |
+| XP, tickets on the floor | Closed Tickets |
+| chest | Change Approved |
+| revive | comeback from burnout (`COMEBACKS` in `data/player.js`) |
+| meta, pay | progress between shifts, Overtime Pay |
+| wiki (`src/game/wiki.js`, the K key) | Knowledge Base |
+| twist | the map's special rule (hot aisles, phones, darkness...) |
+| policy, mods | Shift Policies |
+
+Unlocks come in four kinds, each checked in `src/game/meta.js`:
+- **Maps** unlock by winning the map before (`unlockAfter` in `data/maps.js`, `Meta.mapUnlocked`).
+- **Map-win content:** tools, passives, evolutions and techs listed under a map in
+  `data/unlocks.js` join the game once that map is won (`Meta.itemUnlocked`). Anything not
+  listed there is in from the start.
+- **Techs** also cost Overtime Pay (`cost` in `data/player.js`, `Meta.unlock`).
+- **Shift Policies** have their own `unlock` (null, a map id, or `noEvolveWin`), and
+  **Hardcore** opens once every map is won (`Meta.hardcoreOpen`).
+Preview builds unlock every map, all map-win content and Hardcore, so testers can reach everything.
+
 Adding content without touching the engine:
 - Pickups (`data/pickups.js`) list their `effects`, from `ITEM_EFFECTS` in `src/game/pickups.js`.
+- Tools live in `data/weapons/` (`tools.js`, `jobtitle.js`, `evolved.js`), joined in order in `data/weapons.js`.
+- Tech perks are fields on the tech, listed in `TECH_PERKS` in `data/player.js`; a perk
+  that acts on a timer is an entry in `FLOOR_PERKS` (`src/game/perks.js`).
+- A new comeback from burnout is a row in `COMEBACKS` (`data/player.js`) plus its counter
+  on the player.
 - Map twists (`data/maps.js` `twist.type`) are entries in `TWISTS` in `src/game/maps.js`.
 - The 10:00 event marked `mapBoss: true` in `data/waves.js` becomes the map's own boss;
   a boss's `downBanner` (data/enemies.js) is shown when it's closed (The Executive's ends the shift).

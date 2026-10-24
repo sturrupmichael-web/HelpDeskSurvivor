@@ -105,13 +105,13 @@ export function techTests() {
     g.spawner.stopped = true;
     const victim = dummy(g, 'pam', 80, 0);
     g.spawner.stopped = false;
-    g.phishT = 59.99;
+    g.perkT.phishTest = 59.99;
     g.update(1 / 30);
     assert(victim.stun > 0.5, 'phishing test did not freeze');
     // Asset Management Analyst: a moving box turns up.
     g.startShift('office', 'assets');
     g.player.god = true;
-    g.boxT = 44.99;
+    g.perkT.boxEvery = 44.99;
     g.update(1 / 30);
     let boxes = 0;
     for (let i = 0; i < g.enemies.count; i++) if (g.enemies.items[i].def.sprite === 'moving_box') boxes++;

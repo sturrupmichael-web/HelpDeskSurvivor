@@ -4,6 +4,31 @@
 // `cost` is the Overtime Pay needed to unlock (0 = available from the start).
 // `bonus` adds to the stat multipliers passives use (see BALANCE.md, "Player power"),
 // e.g. { damage: 0.1 } = +10% damage, { damageTaken: -0.1 } = 10% less damage taken.
+//
+// Perks: optional fields a tech can have on top of the usual stats. Each one is read in
+// one place, listed here; tests/data.test.mjs fails on a field that isn't in TECH_PERKS,
+// so a misspelled perk can't silently do nothing.
+//   summonBonus      + damage for turrets and helpers (src/game/player.js summonDamage)
+//   extraCount       + shots / shields / helpers on every tool (player.js, the weapons)
+//   crew             built-in helpers { count, damage, perLevel } (Game.newRun, createCrew)
+//   toolSlots        extra tool slots (player.js maxWeapons)
+//   alsoStarts       more starting tools, by id (Game.newRun)
+//   payMult          x Overtime Pay (Game.endRun)
+//   chestBonus       + upgrades in every Change Approved chest (upgrades.js openChest)
+//   hurtBy           x sanity lost to a user, by user sprite (enemies.js resolveEnemies)
+//   damagePerMinute  + damage for every minute of the shift (player.js updatePlayer)
+//   auraArea         + area for aura tools (weapons/aura.js)
+//   slowedAmp        + damage to slowed users (enemies.js damageEnemy)
+//   cardWeights      x chance a tool is offered on level-up, by id (upgrades.js rollChoices)
+//   cooldownFor      x cooldown of one tool, by id (weapons/nuke.js)
+//   bonusVs          x damage against a user, by user sprite (enemies.js damageEnemy)
+//   phishTest        floor perk { every, stun } (src/game/perks.js)
+//   boxEvery         floor perk: seconds between moving boxes (src/game/perks.js)
+export const TECH_PERKS = [
+  'summonBonus', 'extraCount', 'crew', 'toolSlots', 'alsoStarts', 'payMult', 'chestBonus', 'hurtBy',
+  'damagePerMinute', 'auraArea', 'slowedAmp', 'cardWeights', 'cooldownFor', 'bonusVs', 'phishTest', 'boxEvery',
+];
+
 export const CHARACTERS = {
   tier1: {
     name: 'Tier 1 Tech',
@@ -303,3 +328,13 @@ export const XP_CURVE = {
   ],
 };
 
+
+// Comebacks from burnout (sanity 0), claimed in this order while their counter on the
+// player is above 0: back at half sanity, 3 s untouchable, nearby users shoved away, and
+// this banner. Counters are set in src/game/player.js createPlayer (and the Extended
+// Warranty card in src/game/upgrades.js).
+export const COMEBACKS = [
+  { counter: 'warranty', title: 'WARRANTY CLAIM APPROVED', text: 'Covered under your Extended Warranty. Back at half sanity.' }, // passive
+  { counter: 'longWeekend', title: 'LONG WEEKEND', text: 'You remembered Friday is off. Back at half sanity.' }, // Shift Policy
+  { counter: 'revives', title: 'UNION REP INTERVENED', text: 'Mandatory 15-minute break. You are back, at half sanity.' }, // shop
+];
