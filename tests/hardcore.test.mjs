@@ -41,8 +41,10 @@ export function hardcoreTests() {
     const a = plain.spawner.spawn(plain, 'pam');
     const b = hc.spawner.spawn(hc, 'pam');
     assert(Math.abs(b.maxHp / a.maxHp - HARDCORE.fx.enemyHp) < 0.01, `user HP x${(b.maxHp / a.maxHp).toFixed(2)}`);
+    assert(Math.abs(b.damage / a.damage - HARDCORE.fx.enemyDamage) < 0.01, `user damage x${(b.damage / a.damage).toFixed(2)}`);
     for (const g of [plain, hc]) {
       g.player.god = true;
+      g.player.weapons.length = 0; // nobody gets closed, so only the spawner counts
       g.playShift(30);
     }
     assert(hc.enemies.count >= plain.enemies.count * 1.3, `users ${plain.enemies.count} -> ${hc.enemies.count}`);

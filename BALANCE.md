@@ -680,4 +680,13 @@ Bot, veteran save (shop maxed), tier1, 8 shifts per map, `node tests/tools/bot.m
 | Merger Day | 4/8 | 3/8 |
 | Total | 18/40 | 14/40 |
 
-Hardcore is harder but winnable: the extra users also mean extra XP, so builds come together sooner, which offsets part of the pressure. Shifts that lose end earlier (no Union Rep comeback, faster overtime ramp). Left as is.
+First version (users +25% HP). The extra users also mean extra XP, so builds come together sooner, which offsets part of the pressure. Michael asked for "harder but not impossible", so users also hit harder now:
+
+| Users' HP / contact damage | Bot Hardcore wins |
+|---|---|
+| +25% / +0% (first version) | 14/40 (35%) |
+| +50% / +30% | 3/40 (8%), too hard |
+| +35% / +15% | 5/40 (13%) |
+| **+30% / +10% (shipped)** | **16/60 (27%)**: office 7/12, merger 4/12, garage 3/12, callcenter 1/12, server 1/12 |
+
+Normal shifts with the same save win 18/40 (45%). Contact damage is the strongest knob: small steps make a big difference.

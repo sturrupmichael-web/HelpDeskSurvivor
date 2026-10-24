@@ -9,7 +9,7 @@ export const CHANGELOG = [
     title: 'Hardcore mode',
     items: [
       'Win a shift on every map to unlock Hardcore: a switch under the maps when you Clock In.',
-      'A Hardcore shift has 50% more users with 25% more HP, angrier bosses, and overtime that gets harder after 2 minutes instead of 5. No comebacks: Union Rep stays home and Extended Warranty never shows up.',
+      'A Hardcore shift has 50% more users with 30% more HP who hit 10% harder, angrier bosses, and overtime that gets harder after 2 minutes instead of 5. No comebacks: Union Rep stays home and Extended Warranty never shows up.',
       'Double Overtime Pay and double leaderboard score. Bad and mixed policies stack on top; perks are off.',
       'Hardcore shifts are tagged HC on the leaderboard, with a new "Hardcore only" filter. Two new achievements to go with it.',
     ],

@@ -62,7 +62,7 @@ export function spawnEnemy(game, id, x, y, hpMult = 1, speedMult = 1, behaviorId
   const pol = game.policy;
   e.hp = e.maxHp = def.hp * hpMult * (map?.hpMult ?? 1) * (map ? game.twist.hpMult(game, x, y) : 1) * (def.boss ? pol.bossHp : pol.enemyHp);
   e.speed = def.speed * speedMult * (map?.speedMult ?? 1) * (def.boss ? 1 : pol.enemySpeed);
-  e.damage = def.damage;
+  e.damage = def.damage * (def.boss ? 1 : pol.enemyDamage); // Hardcore: users hit harder
   e.xp = def.xp;
   e.kbMul = def.knockback;
   e.slow = e.buff = 1;

@@ -36,7 +36,7 @@ const NONE = Object.freeze({
   items: Object.freeze({}), lockPassives: Object.freeze([]), headStart: 0,
   mixBoost: Object.freeze({}), splits: Object.freeze({}), summons: Object.freeze({}),
   ticketXp: 1, ticketLife: 0, startTools: null, revives: 0,
-  hardcore: false, spawns: 1, otGrace: null, noRevive: false,
+  hardcore: false, spawns: 1, otGrace: null, noRevive: false, enemyDamage: 1,
 });
 
 // No policies: what the training shift and a plain shift use.
@@ -62,6 +62,7 @@ export function combinePolicies(ids, reorg = false, hardcore = false) {
     const f = HARDCORE.fx;
     Object.assign(c, { hardcore: true, spawns: f.spawns, otGrace: f.otGrace, noRevive: true });
     c.enemyHp *= f.enemyHp;
+    c.enemyDamage *= f.enemyDamage;
     c.phase2Sooner += f.phase2Sooner;
     c.lockPassives.push(...f.lockPassives);
   }
