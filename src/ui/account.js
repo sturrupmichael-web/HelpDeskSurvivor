@@ -8,10 +8,9 @@ import { modsString } from '../game/policies.js';
 import { LEADERBOARD } from '../../data/leaderboard.js';
 import { profileScreen } from './profile.js';
 import { VERSION } from '../version.js';
+import { esc, PAY } from './screens/common.js';
 
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-const PAY = (n) => `<span class="pay">$${n.toLocaleString()}</span>`;
 
 function syncLine(cloud) {
   if (cloud.status === 'synced') return 'Progress backed up to your account.';

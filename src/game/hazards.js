@@ -7,6 +7,7 @@
 import { Pool } from '../engine/pool.js';
 import { hurtPlayer } from './player.js';
 import { sfx } from '../engine/audio.js';
+import { blit } from '../engine/renderer.js';
 
 const EDGE = '#ffcd75'; // the bright outline
 const RIM = '#1a1c2c'; // dark rim outside it, for light floors and white flashes
@@ -46,7 +47,7 @@ function outlinedFrame(s) {
     t.width = w;
     t.height = h;
     const g = t.getContext('2d');
-    g.drawImage(s.image, f[0], f[1], s.w, s.h, 2, 2, s.w, s.h);
+    blit(g, s, f, 2, 2);
     g.globalCompositeOperation = 'source-in';
     g.fillStyle = color;
     g.fillRect(0, 0, w, h);
@@ -60,7 +61,7 @@ function outlinedFrame(s) {
   const edge = tint(EDGE);
   for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) if (Math.abs(dx) + Math.abs(dy) <= 3) g.drawImage(rim, dx, dy);
   for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) g.drawImage(edge, dx, dy);
-  g.drawImage(s.image, f[0], f[1], s.w, s.h, 2, 2, s.w, s.h);
+  blit(g, s, f, 2, 2);
   outlined.set(s, c);
   return c;
 }

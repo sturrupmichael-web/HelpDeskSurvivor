@@ -87,6 +87,6 @@ together.
   character, shifts worked and unlocked achievements. Served by the `player_profile`
   function in `supabase/profiles.sql`; it never returns an email address, and banned
   players have no profile. Scores from before accounts show "no profile".
-- Every build is stamped with a version, the build time in UTC (e.g. `2026.10.20-2117`).
+- Every build is stamped with a version, the time of its last commit in UTC (e.g. `2026.10.20-2117`).
   It shows at the bottom of the title and Settings screens, in the browser console, and
   in the `version` column of each posted score (Table Editor, `scores`).

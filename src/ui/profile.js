@@ -8,8 +8,8 @@ import { playerProfile } from '../game/leaderboard.js';
 import { ACHIEVEMENTS } from '../../data/achievements.js';
 import { CHARACTERS } from '../../data/player.js';
 import { MAPS, MAP_ORDER } from '../../data/maps.js';
+import { esc } from './screens/common.js';
 
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const num = (n) => (Number.isFinite(Number(n)) ? Number(n).toLocaleString() : '—');
 
 function body(p) {

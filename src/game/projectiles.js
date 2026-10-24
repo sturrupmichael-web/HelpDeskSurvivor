@@ -12,6 +12,7 @@ import { Pool } from '../engine/pool.js';
 import { damageEnemy, nearestEnemy } from './enemies.js';
 import { hitBuf as buf } from '../engine/spatialHash.js';
 import { dropItem } from './pickups.js';
+import { blitCentered } from '../engine/renderer.js';
 
 const MAX_HITS = 32;
 
@@ -184,7 +185,7 @@ export function drawProjectiles(game, ctx) {
       ctx.drawImage(s.image, f[0], f[1], s.w, s.h, (-s.w / 2) * p.scale, (-s.h / 2) * p.scale, s.w * p.scale, s.h * p.scale);
       ctx.restore();
     } else {
-      ctx.drawImage(s.image, f[0], f[1], s.w, s.h, Math.round(p.x - s.w / 2), Math.round(p.y - s.h / 2), s.w, s.h);
+      blitCentered(ctx, s, f, p.x, p.y);
     }
   }
 }

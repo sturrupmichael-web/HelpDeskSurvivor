@@ -7,6 +7,8 @@
 // through (solidRects / collide). The layout code runs both to paint a chunk and, with a
 // do-nothing canvas, to collect its solid rects (block()), so the two always agree.
 
+import { blit } from '../engine/renderer.js';
+
 const CHUNK = 256;
 const TILE = 32;
 const MAX_CACHED = 64;
@@ -139,7 +141,7 @@ export class Floor {
     if (ctx === NO_PAINT) return;
     const s = this.assets.sprite(id);
     const f = s.anims[Object.keys(s.anims)[0]].frames[0];
-    ctx.drawImage(s.image, f[0], f[1], s.w, s.h, Math.round(x), Math.round(y), s.w, s.h);
+    blit(ctx, s, f, x, y);
   }
 
   // A row of cubicles: partition panels along the top, a desk pushed against each

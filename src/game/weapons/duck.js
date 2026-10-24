@@ -6,6 +6,7 @@
 import { damageEnemy, markEnemy } from '../enemies.js';
 import { sfx } from '../../engine/audio.js';
 import { hitBuf as buf } from '../../engine/spatialHash.js';
+import { blit } from '../../engine/renderer.js';
 
 export default {
   init(w) {
@@ -60,8 +61,7 @@ export default {
       const flip = Math.cos(a + Math.PI / 2) < 0; // faces the way it's swimming
       const dx = Math.round(x - spr.w / 2);
       const dy = Math.round(y - spr.h / 2 - 4 + bob - squash * 2);
-      if (flip) ctx.drawImage(spr.imageFlipped, spr.sheetWidth - f[0] - spr.w, f[1], spr.w, spr.h, dx, dy, spr.w, spr.h);
-      else ctx.drawImage(spr.image, f[0], f[1], spr.w, spr.h, dx, dy, spr.w, spr.h);
+      blit(ctx, spr, f, dx, dy, flip);
     }
   },
 };

@@ -2,6 +2,8 @@
 
 import { test, assert, openGame } from './harness.mjs';
 
+export const pages = ['dev.html'];
+
 export function saveTests(base) {
   test('saves: old, partial, broken and newer saves upgrade safely', async () => {
     const { page, errors, close } = await openGame(base, 'dev.html');

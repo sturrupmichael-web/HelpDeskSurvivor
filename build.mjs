@@ -10,12 +10,15 @@
 import { build } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { LEADERBOARD } from './data/leaderboard.js';
 
-// Version = build time in UTC, e.g. 2026.10.20-2131 (see src/version.js).
+// Version = time of the last commit in UTC, e.g. 2026.10.20-2131 (see src/version.js), so
+// the same code always gets the same version, however often it's rebuilt. Falls back to
+// the build time when git isn't available.
 const PREVIEW = process.argv.includes('--preview');
 const VERSION =
-  new Date().toISOString().replace(/^(\d+)-(\d+)-(\d+)T(\d+):(\d+).*/, '$1.$2.$3-$4$5') + (PREVIEW ? '-pre' : '');
+  commitTime().toISOString().replace(/^(\d+)-(\d+)-(\d+)T(\d+):(\d+).*/, '$1.$2.$3-$4$5') + (PREVIEW ? '-pre' : '');
 const js = await build({
   entryPoints: ['src/main.js'],
   bundle: true,
@@ -73,4 +76,12 @@ function withCsp(page) {
     '<meta charset="utf-8">',
     `<meta charset="utf-8">\n  <meta http-equiv="Content-Security-Policy" content="${csp}">`,
   );
+}
+
+function commitTime() {
+  try {
+    return new Date(Number(execFileSync('git', ['log', '-1', '--format=%ct'], { encoding: 'utf8' }).trim()) * 1000);
+  } catch {
+    return new Date();
+  }
 }

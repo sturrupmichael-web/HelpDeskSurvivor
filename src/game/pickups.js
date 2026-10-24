@@ -5,6 +5,7 @@
 import { TICKET_TIERS, TICKETS, ITEMS, ITEM_PICKUP_RADIUS, MAX_ITEMS } from '../../data/pickups.js';
 import { addXp } from './player.js';
 import { sfx } from '../engine/audio.js';
+import { blitCentered } from '../engine/renderer.js';
 
 export function makeTicket() {
   return { x: 0, y: 0, value: 0, spr: null, magnet: false, speed: 0, t: 0, age: 0, dead: false };
@@ -92,7 +93,7 @@ export function drawTickets(game, ctx, left, top, right, bottom) {
     const s = t.spr;
     const f = s.anims.idle.frames[0];
     const bob = Math.round(Math.sin(t.t * 4) * 1.5);
-    ctx.drawImage(s.image, f[0], f[1], s.w, s.h, Math.round(t.x - s.w / 2), Math.round(t.y - s.h / 2) + bob, s.w, s.h);
+    blitCentered(ctx, s, f, t.x, t.y + bob);
   }
 }
 
@@ -226,7 +227,7 @@ export function drawItems(game, ctx, left, top, right, bottom) {
       ctx.fill();
       ctx.globalAlpha = 1;
     }
-    ctx.drawImage(s.image, f[0], f[1], s.w, s.h, Math.round(it.x - s.w / 2), Math.round(it.y - s.h / 2) + bob, s.w, s.h);
+    blitCentered(ctx, s, f, it.x, it.y + bob);
   }
 }
 

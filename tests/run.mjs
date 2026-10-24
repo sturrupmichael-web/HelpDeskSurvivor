@@ -3,46 +3,37 @@
 //   npm test             everything
 //   npm test -- quick    skip the published page (index.html)
 //   npm test -- node     only the game logic in Node (no browser needed)
+//
+// Every tests/*.test.mjs file is picked up by itself; its exported ...Tests() function
+// registers the tests. A file that exports `pages` (e.g. ['dev.html', 'index.html']) needs
+// the browser and is called as fn(serverUrl, page) once per page; any other file is plain
+// Node and is called with no arguments.
 
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { serve, closeBrowser, run, ROOT } from './harness.mjs';
-import { gameTests } from './game.test.mjs';
-import { saveTests } from './saves.test.mjs';
-import { offlineTests } from './offline.test.mjs';
-import { simTests } from './sim.test.mjs';
-import { policyTests } from './policies.test.mjs';
-import { techTests } from './techs.test.mjs';
-import { evolution63Tests } from './evolutions63.test.mjs';
-import { comboTests } from './combos.test.mjs';
-import { overtimeTests } from './overtime.test.mjs';
-import { collisionTests } from './collision.test.mjs';
-import { hardcoreTests } from './hardcore.test.mjs';
-import { evoPairTests } from './evopair.test.mjs';
 
 const only = (flag) => process.argv.includes(flag);
+const files = readdirSync(ROOT + 'tests').filter((f) => f.endsWith('.test.mjs')).sort();
+const suites = [];
+for (const f of files) {
+  const mod = await import(`./${f}`);
+  const fns = Object.entries(mod).filter(([name, v]) => typeof v === 'function' && name.endsWith('Tests'));
+  if (!fns.length) throw new Error(`tests/${f} exports no ...Tests() function`);
+  for (const [, fn] of fns) suites.push({ fn, pages: mod.pages ?? null });
+}
+
 let failed = 0;
 console.log('Game logic in Node (no browser)');
-simTests();
-policyTests();
-techTests();
-evolution63Tests();
-comboTests();
-overtimeTests();
-collisionTests();
-hardcoreTests();
-evoPairTests();
+for (const s of suites) if (!s.pages) s.fn();
 failed += await run();
 if (!only('node')) {
   const server = await serve();
   try {
-    console.log('Source (dev.html)');
-    gameTests(server.url, 'dev.html');
-    saveTests(server.url);
-    failed += await run();
-    if (existsSync(ROOT + 'index.html') && !only('quick')) {
-      console.log('Published page (index.html)');
-      gameTests(server.url, 'index.html');
-      offlineTests(server.url);
+    const pages = [['dev.html', 'Source (dev.html)']];
+    if (existsSync(ROOT + 'index.html') && !only('quick')) pages.push(['index.html', 'Published page (index.html)']);
+    for (const [page, title] of pages) {
+      console.log(title);
+      for (const s of suites) if (s.pages?.includes(page)) s.fn(server.url, page);
       failed += await run();
     }
   } finally {

@@ -7,6 +7,7 @@ import { angryTick, drawAngryGlow } from './behaviors/phase2.js';
 import { hurtPlayer } from './player.js';
 import { dropTicket, rollItemDrops } from './pickups.js';
 import { sfx } from '../engine/audio.js';
+import { blitFeet } from '../engine/renderer.js';
 
 export const HIT_SLOTS = 8; // per-weapon "last hit" timestamps for damage-over-time weapons
 const DEFAULT_FOOT = 10;
@@ -394,11 +395,7 @@ export function drawEnemies(game, ctx, shadowImg, left, top, right, bottom) {
       const k = e.scale;
       const ax = e.flip ? spr.w - spr.anchor[0] : spr.anchor[0];
       ctx.drawImage(e.flip ? spr.imageFlipped : spr.image, e.flip ? spr.sheetWidth - f[0] - spr.w : f[0], f[1], spr.w, spr.h, Math.round(e.x - ax * k), Math.round(fy - spr.anchor[1] * k), Math.round(spr.w * k), Math.round(spr.h * k));
-    } else if (e.flip) {
-      ctx.drawImage(spr.imageFlipped, spr.sheetWidth - f[0] - spr.w, f[1], spr.w, spr.h, Math.round(e.x - (spr.w - spr.anchor[0])), Math.round(fy - spr.anchor[1]), spr.w, spr.h);
-    } else {
-      ctx.drawImage(spr.image, f[0], f[1], spr.w, spr.h, Math.round(e.x - spr.anchor[0]), Math.round(fy - spr.anchor[1]), spr.w, spr.h);
-    }
+    } else blitFeet(ctx, spr, f, e.x, fy, e.flip);
     if (e.stun > 0) {
       // Little "awaiting approval" sparkle while stunned.
       ctx.fillStyle = (e.animT * 8) & 1 ? '#ffcd75' : '#f4f4f4';

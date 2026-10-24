@@ -6,6 +6,7 @@
 import { fireProjectile } from '../projectiles.js';
 import { nearestEnemy } from '../enemies.js';
 import { sfx } from '../../engine/audio.js';
+import { blit } from '../../engine/renderer.js';
 
 const MAX_TURRETS = 8;
 const SPREAD_ANGLE = 0.22; // radians between bolts of one shot
@@ -72,7 +73,7 @@ export default {
     for (const t of w.turrets) {
       if (!t.on) continue;
       ctx.globalAlpha = t.life < 1 ? ((t.life * 8) & 1 ? 0.4 : 1) : 1; // blink before expiring
-      ctx.drawImage(spr.image, f[0], f[1], spr.w, spr.h, Math.round(t.x - spr.w / 2), Math.round(t.y - spr.h), spr.w, spr.h);
+      blit(ctx, spr, f, t.x - spr.w / 2, t.y - spr.h);
     }
     ctx.globalAlpha = 1;
   },

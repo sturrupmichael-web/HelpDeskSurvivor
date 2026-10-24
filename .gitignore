@@ -1,2 +1,5 @@
 node_modules
 _site/
+# Built by `npm run build` / `npm run build:preview` (GitHub Actions builds its own copy).
+/index.html
+/preview/

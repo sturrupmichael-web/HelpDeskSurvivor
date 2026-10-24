@@ -6,6 +6,7 @@
 
 import { damageEnemy, nearestEnemy } from '../enemies.js';
 import { hitBuf as buf } from '../../engine/spatialHash.js';
+import { blit } from '../../engine/renderer.js';
 
 export default {
   init(w) {
@@ -82,8 +83,7 @@ export default {
       const f = frames[m.animT > 0 ? Math.floor(m.animT * spr.fps) % frames.length : 0];
       const x = Math.round(m.x - spr.anchor[0]);
       const y = Math.round(m.y + 6 - spr.anchor[1]);
-      if (m.flip) ctx.drawImage(spr.imageFlipped, spr.sheetWidth - f[0] - spr.w, f[1], spr.w, spr.h, x, y, spr.w, spr.h);
-      else ctx.drawImage(spr.image, f[0], f[1], spr.w, spr.h, x, y, spr.w, spr.h);
+      blit(ctx, spr, f, x, y, m.flip);
     }
   },
 };

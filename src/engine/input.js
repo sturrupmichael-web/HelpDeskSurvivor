@@ -131,7 +131,6 @@ export function pollGamepad(dt) {
 }
 
 export const onKeyPress = (fn) => listeners.push(fn);
-export const isDown = (code) => down.has(code);
 export const touchState = touch;
 export const gamepadConnected = () => pad.connected;
 

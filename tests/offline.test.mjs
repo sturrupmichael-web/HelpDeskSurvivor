@@ -2,6 +2,8 @@
 
 import { test, assert, getBrowser } from './harness.mjs';
 
+export const pages = ['index.html'];
+
 export function offlineTests(base) {
   test('index.html: starts offline after one visit', async () => {
     const ctx = await (await getBrowser()).newContext();

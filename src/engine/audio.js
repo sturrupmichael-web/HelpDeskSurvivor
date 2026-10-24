@@ -573,6 +573,3 @@ export function duckMusic(on) {
   ducked = on;
   if (musicBus && musicTimer) musicBus.gain.setTargetAtTime(musicGain(), ctx.currentTime, 0.1);
 }
-
-// For tests: the live context and master node (null before the first input).
-export const audioGraph = () => ({ ctx, master });

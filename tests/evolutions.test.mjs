@@ -36,8 +36,8 @@ const run = (g, s) => {
   for (let t = 0; t < s * 60; t++) g.update(1 / 60);
 };
 
-export function evolution63Tests() {
-  test('evolutions 63: each tool evolves in a chest with its passive', async () => {
+export function evolutionTests() {
+  test('evolutions: each tool evolves in a chest with its passive', async () => {
     for (const [from, into] of Object.entries(PACK)) {
       assert(EVOLUTIONS[from]?.into === into, `${from} does not evolve into ${into}`);
       const { g, w } = quiet(from);
@@ -49,7 +49,7 @@ export function evolution63Tests() {
     }
   });
 
-  test('evolutions 63: every evolution damages users', async () => {
+  test('evolutions: every evolution damages users', async () => {
     for (const into of Object.values(PACK)) {
       const { g, w } = quiet(into);
       for (let i = 0; i < 12; i++) dummy(g, 'pam', Math.cos(i) * (30 + i * 6), Math.sin(i) * (30 + i * 6));
@@ -58,14 +58,14 @@ export function evolution63Tests() {
     }
   });
 
-  test('evolutions 63: Patch Tuesday stuns with every ring', async () => {
+  test('evolutions: Patch Tuesday stuns with every ring', async () => {
     const { g } = quiet('patchTuesday');
     const near = dummy(g, 'pam', 40, 0); // inside the first (pilot) ring
     run(g, 0.6);
     assert(near.stun > 0, 'the first ring did not stun');
   });
 
-  test('evolutions 63: Golden Record merges a bunch into one ticket', async () => {
+  test('evolutions: Golden Record merges a bunch into one ticket', async () => {
     const { g } = quiet('goldenRecord');
     const bunch = [];
     for (let i = 0; i < 6; i++) bunch.push(dummy(g, 'pam', 80 + (i % 3) * 6, (i - 3) * 5, 1));
@@ -78,7 +78,7 @@ export function evolution63Tests() {
     assert(Math.abs(t.value - want) < 1e-6, `merged ticket worth ${t.value}, wanted ${want}`);
   });
 
-  test('evolutions 63: The 19th Hole bounces, aces drop gummies, +1 bounce at 80% sanity', async () => {
+  test('evolutions: The 19th Hole bounces, aces drop gummies, +1 bounce at 80% sanity', async () => {
     const { g, w } = quiet('nineteenthHole');
     const p = g.player;
     w.throws = w.stats.aceEvery - 1; // the next throw is an ace
@@ -105,7 +105,7 @@ export function evolution63Tests() {
     assert(g.projectiles.count > n0 && d.bounce === (d.ace ? w.stats.aceBounces : w.stats.bounces), `low-sanity disc bounces ${d.bounce}`);
   });
 
-  test('evolutions 63: gummies heal a little', async () => {
+  test('evolutions: gummies heal a little', async () => {
     const g = game();
     g.startShift('office', 'tier1');
     g.spawner.stopped = true;
@@ -119,7 +119,7 @@ export function evolution63Tests() {
     assert(p.hp > 57 && p.hp <= 58.5, `sanity ${p.hp} after gummies`);
   });
 
-  test('evolutions 63: RFID Inventory flags users and triples their ticket', async () => {
+  test('evolutions: RFID Inventory flags users and triples their ticket', async () => {
     const { g, w } = quiet('rfidInventory');
     const e = dummy(g, 'pam', 50, 0, 5);
     damageEnemy(g, e, 1, w, 0, 0, 0);
@@ -133,7 +133,7 @@ export function evolution63Tests() {
     assert(g.tickets.count === before + 1 && t.value === e.def.xp * 3, `tagged ticket worth ${t.value}`);
   });
 
-  test('evolutions 63: Terraform Destroy keeps hitting users on live tiles', async () => {
+  test('evolutions: Terraform Destroy keeps hitting users on live tiles', async () => {
     const { g, w } = quiet('terraformDestroy');
     const e = dummy(g, 'pam', 30, 0);
     e.kbMul = 0;

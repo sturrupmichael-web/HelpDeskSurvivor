@@ -14,8 +14,8 @@ function cards(g) {
   return seen;
 }
 
-export function evoPairTests() {
-  test('evolution pair: badge only when you own the other half', () => {
+export function levelUpTests() {
+  test('level-up: evolution pair badge only when you own the other half', () => {
     const g = headlessGame(manifest, { pick: botPick, save: veteranSave() });
     g.startShift('office', 'tier1');
     const p = g.player;

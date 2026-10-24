@@ -9,6 +9,7 @@ const INNER = 0.6; // inner ring radius, relative to the outer one
 import { damageEnemy } from '../enemies.js';
 import { sfx } from '../../engine/audio.js';
 import { hitBuf as buf } from '../../engine/spatialHash.js';
+import { blitCentered } from '../../engine/renderer.js';
 
 export default {
   init(w) {
@@ -67,7 +68,7 @@ export default {
       const inner = i >= count;
       const a = (inner ? -w.angle : w.angle) + (i / count) * Math.PI * 2;
       const r = inner ? radius * INNER : radius;
-      ctx.drawImage(spr.image, f[0], f[1], spr.w, spr.h, Math.round(p.x + Math.cos(a) * r - spr.w / 2), Math.round(p.y + Math.sin(a) * r - spr.h / 2 - 2), spr.w, spr.h);
+      blitCentered(ctx, spr, f, p.x + Math.cos(a) * r, p.y + Math.sin(a) * r - 2);
     }
     ctx.globalAlpha = 1;
   },

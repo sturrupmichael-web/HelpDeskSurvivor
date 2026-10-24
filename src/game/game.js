@@ -5,25 +5,23 @@
 import { Camera } from '../engine/camera.js';
 import { Pool } from '../engine/pool.js';
 import { SpatialHash } from '../engine/spatialHash.js';
-import { onKeyPress } from '../engine/input.js';
-import { shadow } from '../engine/renderer.js';
+import { onKeyPress, drawTouchStick } from '../engine/input.js';
+import { shadow, blitFeet } from '../engine/renderer.js';
 import { CHARACTERS } from '../../data/player.js';
 import { SPAWNER, EVENTS } from '../../data/waves.js';
 import { TICKETS, MAX_ITEMS } from '../../data/pickups.js';
 import { EVOLUTIONS } from '../../data/evolutions.js';
 import { sfx, toggleMute, isMuted, startMusic, stopMusic, duckMusic, setVolumes, setMusicStyle, setListener } from '../engine/audio.js';
-import { drawTouchStick } from '../engine/input.js';
 import { loadSettings, saveSettings } from './settings.js';
 import { Timeline } from './timeline.js';
 import { setHaptics } from '../engine/haptics.js';
 import { Achievements } from './achievements.js';
 import { Floor } from './floor.js';
-import { createPlayer, updatePlayer, addXp } from './player.js';
+import { createPlayer, updatePlayer, addXp, recomputeStats } from './player.js';
 import { makeEnemy, updateEnemies, resolveEnemies, drawEnemies, drawBossTelegraphs, spawnEnemy, stunEnemy } from './enemies.js';
-
 import { makeTicket, updateTickets, drawTickets, makeItem, dropItem, updateItems, drawItems } from './pickups.js';
 import { Hazards } from './hazards.js';
-import { createWeapon, createCrew, updateWeapons, drawWeapons, drawWeaponsUnder } from './weapons/index.js';
+import { createWeapon, createCrew, updateWeapons, drawWeapons, drawWeaponsUnder, setWeaponLevel } from './weapons/index.js';
 import { WEAPONS } from '../../data/weapons.js';
 import { PASSIVES } from '../../data/passives.js';
 import { ENEMIES } from '../../data/enemies.js';
@@ -32,8 +30,6 @@ import { Zones } from './zones.js';
 import { MapTwist } from './maps.js';
 import { MAPS } from '../../data/maps.js';
 import { rollChoices, applyChoice, openChest } from './upgrades.js';
-import { setWeaponLevel } from './weapons/index.js';
-import { recomputeStats } from './player.js';
 import { Spawner, mapEvent } from './spawner.js';
 import { Meta } from './meta.js';
 import { Score } from './score.js';
@@ -666,8 +662,7 @@ export class Game {
     const frames = p.flash > 0 && a.hit ? a.hit : a.frames;
     const f = frames[p.moving ? Math.floor(p.animT * p.spr.fps) % frames.length : 0];
     const spr = p.spr;
-    if (p.flip) ctx.drawImage(spr.imageFlipped, spr.sheetWidth - f[0] - spr.w, f[1], spr.w, spr.h, Math.round(p.x - (spr.w - spr.anchor[0])), Math.round(fy - spr.anchor[1]), spr.w, spr.h);
-    else ctx.drawImage(spr.image, f[0], f[1], spr.w, spr.h, Math.round(p.x - spr.anchor[0]), Math.round(fy - spr.anchor[1]), spr.w, spr.h);
+    blitFeet(ctx, spr, f, p.x, fy, p.flip);
     ctx.globalAlpha = 1;
 
     drawWeapons(this, ctx);

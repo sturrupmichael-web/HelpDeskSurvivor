@@ -24,10 +24,11 @@ edits show up on reload.
 
 `index.html` is the published page: a generated, single-file build with all the CSS and
 JavaScript inlined, because ad blockers such as uBlock Origin block some of the game's
-module file names. After changing anything in `src/` or `data/`, rebuild it:
+module file names. It isn't kept in git: GitHub Actions builds it on every deploy. To
+build it locally (for example to test the published page):
 
 ```sh
-npm install      # once, installs esbuild
+npm install      # once, installs esbuild and Playwright
 npm run build
 ```
 
@@ -184,6 +185,11 @@ saves upgrade, and the built page starts offline. `npm test -- quick` skips the 
 page. Every push runs them on GitHub (`.github/workflows/test.yml`); a red X on a commit
 means a test failed. First time: `npm install` and `npx playwright install chromium`.
 Tests live in `tests/`; `tests/harness.mjs` has helpers (`T.start(map)`, `T.step(seconds)`).
+Every `tests/*.test.mjs` file runs by itself (`tests/run.mjs` finds them); one that
+exports `pages` runs in the browser on those pages, the rest run in plain Node.
+`tests/data.test.mjs` checks that the content in `data/` fits together (every tool,
+passive, user, sprite, icon, unlock and map named somewhere exists, and the leaderboard's
+map list in `supabase/` matches `data/maps.js`).
 
 The game logic also runs in plain Node with no browser (`src/game/headless.js`): no
 canvas, HUD, menus or sound, just the simulation, about 40x faster than real time.

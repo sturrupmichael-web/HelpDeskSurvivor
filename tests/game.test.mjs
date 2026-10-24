@@ -7,6 +7,9 @@ import { test, assert, openGame, SETUP } from './harness.mjs';
 const MAPS = ['office', 'server', 'callcenter', 'garage', 'merger'];
 const MAP_BOSS = { office: 'Major Incident', server: "The Rat's Nest", callcenter: 'The Angry Caller', garage: 'The Night Janitor', merger: 'The Hostile Takeover' };
 
+// Run against the source and the built page (tests/run.mjs).
+export const pages = ['dev.html', 'index.html'];
+
 export function gameTests(base, page) {
   const open = async (opts) => {
     const g = await openGame(base, page, opts);

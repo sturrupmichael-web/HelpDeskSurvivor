@@ -2,6 +2,7 @@
 // Nest cable loops) or make the floor slippery (`slip`: Night Janitor wet floor).
 
 import { Pool } from '../engine/pool.js';
+import { blitCentered } from '../engine/renderer.js';
 
 export class Zones {
   constructor(assets) {
@@ -51,7 +52,7 @@ export class Zones {
       const f = s.anims.idle.frames[0];
       // Drawn at native size (crisp pixels); the slow radius is tuned to roughly match.
       ctx.globalAlpha = 0.8 * Math.min(1, z.life / 0.6, (z.max - z.life) / 0.2);
-      ctx.drawImage(s.image, f[0], f[1], s.w, s.h, Math.round(z.x - s.w / 2), Math.round(z.y - s.h / 2), s.w, s.h);
+      blitCentered(ctx, s, f, z.x, z.y);
     }
     ctx.globalAlpha = 1;
   }
