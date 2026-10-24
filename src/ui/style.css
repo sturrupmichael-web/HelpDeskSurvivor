@@ -148,15 +148,17 @@ kbd { font-family: var(--font); font-size: 0.8em; padding: 1px 5px; border: 1px 
 .tool-bar { flex: 1; height: 8px; background: var(--ink); }
 .tool-bar i { display: block; height: 100%; background: var(--blue); }
 .tool-dmg { width: 64px; text-align: right; color: var(--yellow); }
-.summary .tool-row[data-item] { cursor: help; padding: 2px 4px; margin: 0 -4px; outline: none; }
-.summary .tool-row[data-item].selected, .summary .tool-row[data-item]:focus-visible { background: var(--ink); }
-.summary .tool-row[data-item]:focus-visible { box-shadow: 0 0 0 2px var(--yellow); }
+.tool-row[data-item] { cursor: help; padding: 2px 4px; margin: 0 -4px; outline: none; }
+.tool-row[data-item].selected, .tool-row[data-item]:focus-visible { background: var(--ink); }
+.tool-row[data-item]:focus-visible { box-shadow: 0 0 0 2px var(--yellow); }
 .passives-head { margin-top: 8px; }
 .passive-row .tool-name { flex: 1; width: auto; }
 .tool-lvl { color: var(--gray); font-size: calc(11px * var(--fs)); }
 .item-info { margin: 6px 0 0; padding: 8px 10px; min-height: 3.4em; background: var(--ink); border: 2px dashed var(--slate); color: var(--gray); text-align: left; font-size: calc(12px * var(--fs)); line-height: 1.4; }
 .item-info.on { border-style: solid; border-color: var(--yellow); color: var(--paper); }
 .item-info b { color: var(--yellow); }
+.item-list { text-align: left; }
+.stats-page .item-info { max-width: 400px; }
 .summary-buttons { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
 .summary-buttons button { flex: 1; min-width: 150px; }
 @media (prefers-reduced-motion: reduce) { .record { animation: none; } }

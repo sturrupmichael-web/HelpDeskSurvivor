@@ -5,6 +5,7 @@ import { icon } from '../icons.js';
 import { fmtTime } from '../hud.js';
 import { PASSIVES } from '../../../data/passives.js';
 import { ACHIEVEMENTS } from '../../../data/achievements.js';
+import { ITEM_HINT, itemLevel, wireItems } from './common.js';
 
 export function achievementsScreen(scr) {
   const got = scr.game.meta.data.achievements ?? {};
@@ -31,15 +32,27 @@ export function stats(scr) {
   const t = Math.max(1, g.time);
   const pct = (v) => `${v >= 1 ? '+' : ''}${Math.round((v - 1) * 100)}%`;
   const top = Math.max(1, ...p.weapons.map((w) => w.damageDone));
-  const tools = [...p.weapons]
-    .sort((a, b) => b.damageDone - a.damageDone)
+  const weapons = [...p.weapons].sort((a, b) => b.damageDone - a.damageDone);
+  const owned = Object.entries(p.passives);
+  // What each row describes on hover or tap (wireItems): tools, then passives.
+  const items = [
+    ...weapons.map((w) => ({ name: w.def.name, desc: w.def.desc, level: w.level, maxLevel: w.def.levels.length })),
+    ...owned.map(([id, level]) => ({ name: PASSIVES[id].name, desc: PASSIVES[id].desc, level, maxLevel: PASSIVES[id].maxLevel })),
+  ];
+  const tools = weapons
     .map(
-      (w) => `<div class="tool-row ${w.def.evolved ? 'evolved' : ''}">${icon(w.def.icon, 20)}<span class="tool-name">${w.def.name} ${w.def.evolved ? '' : 'Lv' + w.level}</span>
+      (w, i) => `<div class="tool-row ${w.def.evolved ? 'evolved' : ''}" data-item="${i}" tabindex="0">${icon(w.def.icon, 20)}<span class="tool-name">${w.def.name} ${w.def.evolved ? '' : 'Lv' + w.level}</span>
         <span class="tool-bar"><i style="width:${Math.round((w.damageDone / top) * 100)}%"></i></span>
         <span class="tool-dmg">${Math.round(w.damageDone).toLocaleString()}</span><span class="tool-dps">${Math.round(w.damageDone / t)}/s</span></div>`,
     )
     .join('');
-  const passives = Object.entries(p.passives).map(([id, lvl]) => `<div>${PASSIVES[id].name} <b>Lv${lvl}</b></div>`).join('') || '<div>None yet</div>';
+  const passives =
+    owned
+      .map(
+        ([id], i) => `<div class="tool-row passive-row" data-item="${weapons.length + i}" tabindex="0">${icon(PASSIVES[id].icon, 20)}<span class="tool-name">${PASSIVES[id].name}</span>
+          <span class="tool-lvl">${itemLevel(items[weapons.length + i])}</span></div>`,
+      )
+      .join('') || '<div class="tool-row tiny">None yet</div>';
   const s = p.stats;
   scr.show(
     `<div class="panel wide stats-page">
@@ -69,10 +82,13 @@ export function stats(scr) {
         ${p.regen ? `<div>Sanity regen <b>${p.regen.toFixed(2)}/s</b></div>` : ''}
         ${p.extraCount ? `<div>Extra projectiles <b>+${p.extraCount}</b></div>` : ''}
       </div>
-      <div class="section-head">TOOLS (damage, average per second)</div>
-      <div class="tools">${tools}</div>
-      <div class="section-head">PASSIVES</div>
-      <div class="stat-grid">${passives}</div>
+      <div class="item-list">
+        <div class="section-head">TOOLS (damage, average per second)</div>
+        <div class="tools">${tools}</div>
+        <div class="section-head">PASSIVES</div>
+        <div class="tools">${passives}</div>
+        <p class="item-info" aria-live="polite">${ITEM_HINT}</p>
+      </div>
       <button class="back" data-act="back">Back <kbd>Esc</kbd></button>
     </div>`,
     (code) => {
@@ -81,4 +97,5 @@ export function stats(scr) {
     },
   );
   scr.bind('[data-act=back]', () => scr.pause());
+  wireItems(scr.root, items);
 }

@@ -238,6 +238,26 @@ export function gameTests(base, page) {
     await close();
   });
 
+  test(`${page}: Shift Stats shows tool and passive descriptions on hover`, async () => {
+    const { page: p, errors, close } = await open();
+    await p.evaluate(() => {
+      const g = window.game;
+      T.start('office');
+      T.step(2);
+      g.pause();
+      g.screens.stats();
+    });
+    const info = () => p.locator('.stats-page .item-info').innerText();
+    assert(await p.locator('.stats-page .passive-row').count(), 'no passives listed');
+    await p.locator('.stats-page [data-item]').first().hover();
+    const tool = await info();
+    assert(tool.length > 30 && !/Hover or tap/.test(tool), 'hovering a tool showed no description: ' + tool);
+    await p.locator('.stats-page .passive-row').first().hover();
+    assert((await info()) !== tool, 'hovering a passive showed no description');
+    noErrors(errors);
+    await close();
+  });
+
   test(`${page}: phone screen draws at world size and menus stop redrawing`, async () => {
     const { page: p, errors, close } = await open({ width: 390, height: 844, dpr: 3 });
     const r = await p.evaluate(async () => {

@@ -8,8 +8,8 @@ export const CHANGELOG = [
     date: 'Oct 24, 2026',
     title: 'What did that tool do?',
     items: [
+      'Shift Stats (in the On Hold menu) and the end-of-shift summary: hover over a tool or passive, or tap it on a phone, to see its full description. Tap it again to hide it.',
       'The end-of-shift summary now lists the passives you picked, with their levels, under Damage by tool.',
-      "Hover over a tool or passive (or tap it on a phone) to see what it does. Tap it again to hide it.",
     ],
   },
   {
