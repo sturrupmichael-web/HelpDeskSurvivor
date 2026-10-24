@@ -666,3 +666,18 @@ Balance bot, progression profile (`node tests/tools/bot.mjs --profiles --profile
 
 Wins didn't move; the shorter average comes from shifts that ran deep into overtime ending
 sooner (the bot's shifts are capped at 30:00).
+
+## Hardcore (idea 6, 2026-10-24)
+
+Bot, veteran save (shop maxed), tier1, 8 shifts per map, `node tests/tools/bot.mjs --map <id> --vet --runs 8 [--hardcore]`:
+
+| Map | Normal won | Hardcore won |
+|---|---|---|
+| Open Office | 3/8 | 4/8 |
+| Server Room | 4/8 | 2/8 |
+| Call Center | 2/8 | 2/8 |
+| Parking Garage | 5/8 | 3/8 |
+| Merger Day | 4/8 | 3/8 |
+| Total | 18/40 | 14/40 |
+
+Hardcore is harder but winnable: the extra users also mean extra XP, so builds come together sooner, which offsets part of the pressure. Shifts that lose end earlier (no Union Rep comeback, faster overtime ramp). Left as is.
