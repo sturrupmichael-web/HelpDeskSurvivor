@@ -1,5 +1,5 @@
 -- Public player profiles (what anyone sees after tapping a leaderboard name) and the
--- game version on posted scores. Run once in Supabase after accounts.sql: SQL Editor -> New query -> paste -> Run.
+-- game version on posted scores. Run once in Supabase after 003_accounts.sql: SQL Editor -> New query -> paste -> Run.
 -- Safe to run again.
 --
 -- One read-only function that returns, for a leaderboard name: when they joined, their

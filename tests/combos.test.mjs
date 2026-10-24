@@ -29,7 +29,7 @@ export function comboTests() {
     const flat = Math.round(last * CSAT.comboBonus) * CSAT.maxMultiplier;
     assert(s.csat - before === CSAT.maxMultiplier + flat, `the ${2 * last} combo paid ${s.csat - before}`);
   });
-  test('combos: a long streak stays under the leaderboard limit (supabase/hardening.sql)', async () => {
+  test('combos: a long streak stays under the leaderboard limit (supabase/002_hardening.sql)', async () => {
     // 200 closes a second for 30 minutes without a hit, far past any real shift.
     const s = new Score();
     for (let i = 0; i < 200 * 1800; i++) s.onKill();

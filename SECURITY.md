@@ -10,8 +10,8 @@ code and the full git history.
 | --- | --- | --- | --- | --- |
 | 1 | Secrets | No secrets anywhere in the repository or its history. The only key is Supabase's publishable key, which is meant to be public. | None | OK |
 | 2 | Leaderboard display | Names and character names from other players are HTML-escaped. Tested with `<img onerror>` and `<script>` rows: shown as text, nothing runs. The time column is now forced to a number too. | None | OK, hardened |
-| 3 | Leaderboard permissions | Row level security allows reading and adding rows only, so nobody can edit or delete scores through the API. But visitors could also set `created_at` (backdate rows). | Low | Fixed by `supabase/hardening.sql` |
-| 4 | Leaderboard abuse | `map` and `character` had no length limit (junk or huge rows), there was no flood limit, and impossible scores were accepted (e.g. 999,999 CSAT in 10 seconds, or a "win" before 20:00). | Medium | Fixed by `supabase/hardening.sql` |
+| 3 | Leaderboard permissions | Row level security allows reading and adding rows only, so nobody can edit or delete scores through the API. But visitors could also set `created_at` (backdate rows). | Low | Fixed by `supabase/002_hardening.sql` |
+| 4 | Leaderboard abuse | `map` and `character` had no length limit (junk or huge rows), there was no flood limit, and impossible scores were accepted (e.g. 999,999 CSAT in 10 seconds, or a "win" before 20:00). | Medium | Fixed by `supabase/002_hardening.sql` |
 | 5 | Content Security Policy | The page had none. It now allows only its own scripts (inline ones by hash) and connections only to this site and the leaderboard, so injected script can't run or send data elsewhere. | Low (defence in depth) | Fixed |
 | 6 | Offline cache | The service worker only caches this site's own files and never the leaderboard. | None | OK |
 | 7 | Score integrity | Scores are computed in the browser, so a determined cheater can post a plausible fake score. A server-checked score would need a game server. | Low | Accepted. Delete fakes in Table Editor |
@@ -21,7 +21,7 @@ code and the full git history.
 
 ## For the owner to do
 
-1. **Run `supabase/hardening.sql`** in Supabase: SQL Editor, New query, paste, Run. It
+1. **Run `supabase/002_hardening.sql`** in Supabase: SQL Editor, New query, paste, Run. It
    was tested on a local Postgres copy of the table:
    - normal posts still work;
    - backdating, updates, deletes and emptying the table are refused;

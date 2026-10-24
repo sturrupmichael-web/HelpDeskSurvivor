@@ -1,3 +1,6 @@
+> **History.** This is the original build plan from 2026-10-20, kept for reference. Much of
+> it (file layout, palette size, "no repo") no longer matches the game; see the README.
+
 # Helpdesk Survivors: Build Plan
 
 Working title: **Helpdesk Survivors**. Plain HTML5 Canvas + vanilla ES modules, no dependencies, no external assets.

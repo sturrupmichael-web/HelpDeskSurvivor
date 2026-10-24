@@ -1,5 +1,5 @@
 // Player profile: opened by tapping a name on the leaderboard (or "My profile" on the
-// Account screen). Data comes from the player_profile function (supabase/profiles.sql).
+// Account screen). Data comes from the player_profile function (supabase/004_profiles.sql).
 // Everything in it was typed or saved by that player: escape before showing.
 
 import { icon } from './icons.js';

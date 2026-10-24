@@ -1,6 +1,6 @@
 // Online leaderboard: reads the top scores per map and posts a finished shift, through
 // Supabase's REST API (data/leaderboard.js). Ranked by score: CSAT x the Shift Policies'
-// multiplier (`score` is worked out by the database, supabase/policies.sql; `mods` lists
+// multiplier (`score` is worked out by the database, supabase/007_policies.sql; `mods` lists
 // the policies, empty for a clean shift). Every call resolves to
 // { ok, ... } instead of throwing, so the screens can just show a message when offline.
 
@@ -75,7 +75,7 @@ export async function postScore(row) {
   return { ok: true, rank: Number.isFinite(total) ? total + 1 : null };
 }
 
-// A player's public profile by leaderboard name (supabase/profiles.sql), or null when
+// A player's public profile by leaderboard name (supabase/004_profiles.sql), or null when
 // that name has no account (scores posted before accounts) or the player is banned.
 export async function playerProfile(name) {
   const ctl = new AbortController();

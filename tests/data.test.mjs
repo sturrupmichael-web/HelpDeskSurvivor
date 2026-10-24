@@ -141,15 +141,19 @@ export function dataTests() {
       });
     }));
 
-  // The leaderboard refuses scores from maps it doesn't know (supabase/merger.sql shows how
-  // to add one), so a new map needs its SQL as well.
+  // The leaderboard refuses scores from maps it doesn't know, so a new map needs SQL too
+  // (supabase/README.md): the newest file that sets the list, and 002_hardening.sql for a
+  // fresh setup, must both list every map.
   test('data: every map is allowed on the leaderboard', () => {
     const dir = ROOT + 'supabase/';
     const lists = readdirSync(dir)
+      .filter((f) => f.endsWith('.sql'))
+      .sort()
       .flatMap((f) => [...readFileSync(dir + f, 'utf8').matchAll(/scores_map_known\s+check \(map in \(([^)]*)\)\)/g)].map((m) => [f, m[1]]));
     assert(lists.length, 'no scores_map_known check found in supabase/');
+    const check = [lists.at(-1), ...lists.filter(([f]) => f === '002_hardening.sql')];
     expectNone((need) => {
-      for (const [f, list] of lists) {
+      for (const [f, list] of check) {
         const maps = [...list.matchAll(/'([^']+)'/g)].map((m) => m[1]).sort();
         need(maps.join() === [...MAP_ORDER].sort().join(), `${f}: map list (${maps.join(', ')}) doesn't match data/maps.js`);
       }

@@ -21,7 +21,7 @@ grant insert (name, map, character, seconds, csat, won) on table public.scores t
 -- 3: plausibility checks. CSAT is at most 5 points a close plus combo bonuses (about
 -- 10 points a close in all), and even a huge overtime shift closes well under 200 users
 -- a second, so 10,000 CSAT a second is plenty. (It was 300 until 2026-10-22, which long
--- overtime shifts with ticket combos went past; supabase/csat-limit.sql raises it.)
+-- overtime shifts with ticket combos went past; supabase/008_csat-limit.sql raises it.)
 alter table public.scores drop constraint if exists scores_map_known;
 alter table public.scores add constraint scores_map_known
   check (map in ('office', 'server', 'callcenter', 'garage', 'merger')) not valid;

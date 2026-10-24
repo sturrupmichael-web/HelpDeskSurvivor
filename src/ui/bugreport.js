@@ -1,5 +1,5 @@
 // "Report a Bug" (title screen and pause menu). Sends the player's description plus what
-// the game was doing to Supabase's `bug_reports` table (supabase/bugreports.sql), where
+// the game was doing to Supabase's `bug_reports` table (supabase/005_bugreports.sql), where
 // only the owner can read it. Sending needs an account, so a guest is made if needed.
 
 import { sfx } from '../engine/audio.js';

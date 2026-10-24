@@ -8,7 +8,8 @@ Plain HTML5 Canvas and vanilla JavaScript (ES modules), with no dependencies and
 external assets. All art is generated from code and all sound, including the
 hold-music-style background track, is synthesized with WebAudio.
 
-**Play it online:** <https://sturrupmichael-web.github.io/HelpDeskSurvivor/>
+**Play it online:** <https://game.michaelsturrup.com/> (the next version to try out is at
+<https://game.michaelsturrup.com/preview/>, see Previews below)
 
 ## Run it
 
@@ -38,13 +39,16 @@ npm run build
 | --- | --- |
 | WASD / Arrow keys | Move |
 | Esc (or P) | Pause |
-| 1 / 2 / 3 or click | Pick a level-up card |
+| 1 to 4 or click | Pick a level-up card |
 | Enter | Close the Change Approved (chest) screen |
 | R | Reroll the level-up cards (needs the Escalation Path upgrade) |
 | Enter (title screen) | Clock In: pick a tech, then a map (arrows or 1-9 to choose, Enter for next / confirm, Esc to go back). Starts on your last picks |
-| T / L / C / S / B / K / A / O | Training Shift / Office Maps / Characters / Overtime Shop / Leaderboard / Knowledge Base / Achievements / Settings (title screen) |
-| P / C | Post the shift to the online leaderboard / Change tech or map (end-of-shift screen) |
-| T / O | Shift Stats / Settings (pause menu) |
+| T / L / C / S / B / K / A / U / O | Training Shift / Office Maps / Characters / Overtime Shop / Leaderboard / Knowledge Base / Achievements / Account / Settings (title screen) |
+| H | Hardcore on or off (Clock In, once every map is won); Hardcore-only filter (leaderboard) |
+| R / N | Reorg (2 random bad policies) / no policies (Shift Policies step of Clock In) |
+| C | Clean shifts only (leaderboard) |
+| P / S / C | Post the shift to the online leaderboard / Overtime Shop / Change tech or map (end-of-shift screen) |
+| T / O / R / B | Shift Stats / Settings / Restart / Report a Bug (pause menu) |
 | A | When everything is maxed, always take the pizza from then on (no more level-up screens) |
 | M | Mute / unmute (remembered between visits) |
 | ` (backtick) | Toggle debug mode (only on localhost, or with `?debug` added to the address) |
@@ -57,15 +61,20 @@ goes back, Start pauses, X rerolls, Y takes the always-pizza option.
 button sits at the top left. The view zooms in on narrow portrait screens.
 
 **Settings** (title or pause menu, saved between visits): music volume and sound
-effects volume separately, screen shake, damage numbers, and the touch joystick.
+effects volume separately, screen shake, damage numbers, the touch joystick, reduce
+flashing (on by default when the device asks for reduced motion), bigger text, and phone
+vibration (Android only; iPhones don't allow it).
 
 **Office maps** (`data/maps.js`): Open Office, Server Room, Call Center, Night Shift:
 Parking Garage and Merger Day. Each one unlocks when you win a shift on the one before
 it, and has its own floor art, music remix, Overtime Pay bonus, best times and a twist
 (hot aisles, ringing desk phones, darkness, the parent company's spreading floor).
 Merger Day also has its own users (`newUsers`) and pickups (Unclaimed Moving Boxes, the
-Welcome Swag Bag). New maps need their id added to the leaderboard's map check in
-Supabase (`supabase/merger.sql` shows how).
+Welcome Swag Bag). On every map the furniture is solid (`solid: true`): desks, racks,
+pods and parked cars block the tech, users and boss bullets; bosses barge through.
+Winning a map also unlocks content (`data/unlocks.js`): newer tools, passives,
+evolutions and techs. New maps need their id added to the leaderboard's map check in
+Supabase (see `supabase/README.md`); `npm test` fails until it is.
 
 **Shift Policies** (`data/policies.js`, combined in `src/game/policies.js`): 23 optional
 twists picked as step 3 of Clock In (tech, map, policies), up to 3 at once. Bad ones make
@@ -79,7 +88,20 @@ speed, slots, stats, drop odds, spawn mix...), so a new policy is usually data o
 game reads them from `game.policy` (`NO_POLICY` when none). Balance each one with
 `node tests/tools/bot.mjs --each-policy`.
 
-**Achievements:** 28 of them in `data/achievements.js`; each is a name, icon, text and a
+**Hardcore** (`HARDCORE` in `data/policies.js`): a switch on the Clock In screen once
+every map is won. 50% more users with 30% more HP who hit 10% harder, bosses' second
+phases come sooner, overtime gets harder after 2 minutes, no comebacks from burnout and
+no tech perks, for double pay and score. Hardcore shifts have their own leaderboard filter.
+
+**Overtime** (`OVERTIME` in `data/waves.js`): if The Executive is still open at 20:00 the
+clock keeps going. After 5 minutes of grace it gets harder every minute (users spawn
+tougher, faster and more often, and you lose a little sanity a second), so every shift
+ends. The HUD counts down the grace, then shows OVERTIME x1, x2...
+
+**Ticket combos** (`comboMilestones` in `data/scoring.js`): closing tickets in a quick
+streak pops "RESOLVED xN!" at 10, 25, 50... and pays bonus CSAT.
+
+**Achievements:** 30 of them in `data/achievements.js`; each is a name, icon, text and a
 `check(run, meta)` test. Unlocks pop a toast and are listed under Achievements on the
 title screen.
 
@@ -109,37 +131,24 @@ a Change Approved chest next to you, `-` evolution kit (every evolvable weapon a
 level plus its passive, so the next chests evolve them), `=` start the next boss fight
 now, `]` add $1,000 Overtime Pay. The panel also shows FPS, worst frame time and entity counts. In the browser console, `game` is the live game object.
 
-## Online leaderboard
+## Online leaderboard, accounts and bug reports
 
-Top 10 scores per map (CSAT x the shift's policies; "No policies only" filters to clean
-shifts), stored in a free Supabase project (settings in
-`data/leaderboard.js`, requests in `src/game/leaderboard.js`). After a shift you can post
-it under a name; shifts where debug mode was on can't be posted. The page only holds the
-publishable key, and the table's row level security allows reading and adding rows,
-nothing else. To set up a fresh project, run this in Supabase's SQL Editor:
+Top 10 scores per map (CSAT x the shift's policies; filters for clean shifts and
+Hardcore), stored in a free Supabase project (settings in `data/leaderboard.js`, requests
+in `src/game/leaderboard.js`). After a shift you can post it; shifts where debug mode was
+on can't be posted. Tap a name to see that player's profile. The page only holds the
+publishable key; the database decides what visitors may read and add.
 
-```sql
-create table scores (
-  id bigint generated always as identity primary key,
-  name text not null check (char_length(name) between 1 and 16),
-  map text not null,
-  character text not null,
-  seconds int not null check (seconds between 0 and 3600),
-  csat int not null check (csat >= 0),
-  won boolean not null default false,
-  created_at timestamptz not null default now()
-);
-alter table scores enable row level security;
-create policy "anyone can read" on scores for select using (true);
-create policy "anyone can add" on scores for insert with check (true);
-```
+Players get a guest account automatically the first time they post, and can sign in with
+Google to keep their progress across devices (cloud saves). See `ACCOUNTS.md`. The Report
+a Bug button (title screen and pause menu) sends a message plus what the game was doing to
+the `bug_reports` table; read them in Supabase's Table Editor.
 
-Then run `supabase/hardening.sql` the same way: visitors may only fill in the score
-columns, can't update, delete or empty the table, impossible scores are rejected, and at
-most 30 scores a minute are accepted. `supabase/policies.sql` adds the Shift Policies
-columns (`mods`, `mult`, and `score`, which the database works out as CSAT x mult) and
-the profile's best score. Scores are still not verified, so a determined
-cheater can post a plausible fake; delete those rows in the Supabase Table Editor.
+The database is set up by the numbered scripts in `supabase/` (all already run on the
+live project); `supabase/README.md` lists what each does and the order for a fresh
+project. Scores are still worked out in the browser, so a determined cheater can post a
+plausible fake; delete those rows in the Supabase Table Editor. Privacy and terms pages:
+`privacy.html`, `terms.html`.
 
 ## Security
 
@@ -214,7 +223,9 @@ src/game/      gameplay: player, enemies + behaviors/ (incl. bosses), weapons/, 
                (boss bullets and bombs), pickups, upgrades + evolutions, spawner, floor
 src/ui/        SVG HUD, icons, debug overlay; menus in screens.js + screens/ (one file per screen);
                index.js hands them to the game
-tests/         automated tests (npm test)
+tests/         automated tests (npm test); tests/tools/bot.mjs is the balance bot
+supabase/      database scripts for the leaderboard, accounts and bug reports (see its README)
+docs/          balance-log.md (dated balance results) and history/ (the original plan)
 ```
 
 Adding content without touching the engine:
@@ -311,3 +322,14 @@ current `manifest.json` for the full list):
     (Patch Rollout, Dedupe, Fairway Driver, Terraform Apply, Asset Tag).
 15. **Evolutions for the job-title tools (idea 63):** Patch Tuesday, Golden Record, The
     19th Hole (its ace disc drops fruit gummies), Terraform Destroy and RFID Inventory.
+16. **Accounts and online extras:** guest accounts, Sign in with Google and cloud saves;
+    player profiles; the build version on screen; "What's new" notes; the Report a Bug
+    button.
+17. **New players and shift setup:** the Training Shift, the Clock In picker (tech, map,
+    policies) and Shift Policies.
+18. **Bosses and pressure:** second phases for every boss, the overtime ramp after 20:00,
+    ticket combos, and Hardcore.
+19. **Comfort and reading the game:** accessibility settings (reduce flashing, bigger
+    text), phone vibration, the shift timeline chart, tool and passive descriptions on the
+    shift summary, EVO PAIR badges on level-up cards, and outlines on boss attacks.
+20. **Solid offices:** furniture on every map blocks the tech, users and boss bullets.

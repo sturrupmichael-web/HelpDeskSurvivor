@@ -11,7 +11,7 @@
 // --map / --tech take ids from data/maps.js and data/player.js, or "all".
 // --vet starts from a save with the whole shop maxed and everything unlocked.
 // --hardcore plays Hardcore shifts (data/policies.js HARDCORE; needs every map won, so --vet).
-// --profiles plays the progression table in BALANCE.md: each map with the shop share and
+// --profiles plays the progression table in docs/balance-log.md: each map with the shop share and
 // map wins a player usually has when they get there (PROFILES below).
 
 import { readFileSync } from 'node:fs';
@@ -123,7 +123,7 @@ export function veteranSave() {
 }
 
 // Where players usually are when they reach each map: [map, share of the shop bought,
-// maps already won] (see "Map-win unlocks and the full rebalance" in BALANCE.md).
+// maps already won] (see "Map-win unlocks and the full rebalance" in docs/balance-log.md).
 // --policies plays with those Shift Policies (data/policies.js); --each-policy plays one
 // profile (default 1) once with no policy and then once per policy, for tuning `mult`.
 export const PROFILES = [
