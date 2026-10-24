@@ -199,6 +199,45 @@ export function gameTests(base, page) {
     await close();
   });
 
+  test(`${page}: shift summary shows tool and passive descriptions on hover and tap`, async () => {
+    const { page: p, errors, close } = await open();
+    await p.evaluate(() => {
+      const g = window.game;
+      g.newRun();
+      g.debugEvolveKit();
+      g.endRun(false);
+    });
+    await p.waitForTimeout(700);
+    const info = () => p.locator('.summary .item-info').innerText();
+    const rows = p.locator('.summary [data-item]');
+    const passives = await p.locator('.summary .passive-row').count();
+    assert(passives > 0, 'no passives listed');
+    assert(/Hover or tap/.test(await info()), 'no hint before hovering');
+    await rows.first().hover();
+    const tool = await info();
+    assert(tool.length > 30 && !/Hover or tap/.test(tool), 'hovering a tool showed no description: ' + tool);
+    await p.locator('.summary .passive-row').first().hover();
+    const passive = await info();
+    assert(passive !== tool && /\S/.test(passive), 'hovering a passive showed no description: ' + passive);
+    await p.mouse.move(5, 5);
+    assert(/Hover or tap/.test(await info()), 'description stayed after the mouse left');
+    // A tap shows it, a second tap on the same row hides it.
+    const tap = (i) =>
+      p.evaluate((i) => {
+        const el = document.querySelectorAll('.summary [data-item]')[i];
+        el.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch', bubbles: true }));
+        el.click();
+      }, i);
+    await tap(0);
+    assert((await info()) === tool, 'tapping a tool did not show its description');
+    assert(await p.evaluate(() => document.querySelector('.summary [data-item]').nextElementSibling.classList.contains('item-info')), 'tapped description is not under the row');
+    await tap(0);
+    assert(/Hover or tap/.test(await info()), 'second tap did not hide it');
+    assert(await p.locator('.summary').count(), 'tapping left the summary');
+    noErrors(errors);
+    await close();
+  });
+
   test(`${page}: phone screen draws at world size and menus stop redrawing`, async () => {
     const { page: p, errors, close } = await open({ width: 390, height: 844, dpr: 3 });
     const r = await p.evaluate(async () => {

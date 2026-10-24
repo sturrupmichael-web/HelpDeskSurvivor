@@ -4,6 +4,15 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-24-summaryinfo',
+    date: 'Oct 24, 2026',
+    title: 'What did that tool do?',
+    items: [
+      'The end-of-shift summary now lists the passives you picked, with their levels, under Damage by tool.',
+      "Hover over a tool or passive (or tap it on a phone) to see what it does. Tap it again to hide it.",
+    ],
+  },
+  {
     id: '2026-10-24-hardcore',
     date: 'Oct 24, 2026',
     title: 'Hardcore mode',

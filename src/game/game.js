@@ -25,6 +25,7 @@ import { makeTicket, updateTickets, drawTickets, makeItem, dropItem, updateItems
 import { Hazards } from './hazards.js';
 import { createWeapon, createCrew, updateWeapons, drawWeapons, drawWeaponsUnder } from './weapons/index.js';
 import { WEAPONS } from '../../data/weapons.js';
+import { PASSIVES } from '../../data/passives.js';
 import { ENEMIES } from '../../data/enemies.js';
 import { createProjectilePool, updateProjectiles, drawProjectiles } from './projectiles.js';
 import { Zones } from './zones.js';
@@ -277,8 +278,15 @@ export class Game {
       level: p.level,
       payMult: p.def.payMult ?? 1, // IT Director
       tools: [...p.weapons, ...p.innate]
-        .map((w) => ({ name: w.def.name, icon: w.def.icon, evolved: !!w.def.evolved, damage: Math.round(w.damageDone) }))
+        .map((w) => ({
+          name: w.def.name, icon: w.def.icon, desc: w.def.desc, evolved: !!w.def.evolved, damage: Math.round(w.damageDone),
+          level: w.level, maxLevel: w.def.levels.length,
+        }))
         .sort((a, b) => b.damage - a.damage),
+      passives: Object.entries(p.passives).map(([id, level]) => {
+        const d = PASSIVES[id];
+        return { name: d.name, icon: d.icon, desc: d.desc, level, maxLevel: d.maxLevel };
+      }),
       timeline: this.timeline.result(this),
     };
     const wikiNew = recordWiki(this);

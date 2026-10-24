@@ -29,10 +29,18 @@ export function gameOver(scr, s) {
   };
   const rec = (k) => (s.records.includes(k) ? ' <b class="record">NEW RECORD</b>' : '');
   const topDamage = Math.max(1, ...s.tools.map((t) => t.damage));
+  // Tools then passives, indexed by the rows' data-item so hover/tap can show the description.
+  const items = [...s.tools, ...(s.passives ?? [])];
   const tools = s.tools
     .map(
-      (t) => `<div class="tool-row ${t.evolved ? 'evolved' : ''}">${icon(t.icon, 20)}<span class="tool-name">${t.name}</span>
+      (t, i) => `<div class="tool-row ${t.evolved ? 'evolved' : ''}" data-item="${i}" tabindex="0">${icon(t.icon, 20)}<span class="tool-name">${t.name}</span>
         <span class="tool-bar"><i style="width:${Math.round((t.damage / topDamage) * 100)}%"></i></span><span class="tool-dmg">${t.damage.toLocaleString()}</span></div>`,
+    )
+    .join('');
+  const passives = (s.passives ?? [])
+    .map(
+      (p, i) => `<div class="tool-row passive-row" data-item="${s.tools.length + i}" tabindex="0">${icon(p.icon, 20)}<span class="tool-name">${p.name}</span>
+        <span class="tool-lvl">${lvl(p)}</span></div>`,
     )
     .join('');
   scr.show(
@@ -64,7 +72,10 @@ export function gameOver(scr, s) {
           <tr class="paid"><td>Overtime Pay earned</td><td>+${PAY(s.pay)}</td></tr>
           <tr><td>Balance</td><td>${PAY(s.balance)}</td></tr>
         </table>
-        <div class="tools"><div class="tools-head">Damage by tool</div>${tools}</div>
+        <div class="tools"><div class="tools-head">Damage by tool</div>${tools}
+          ${passives ? `<div class="tools-head passives-head">Passives</div>${passives}` : ''}
+          <p class="item-info" aria-live="polite">${HINT}</p>
+        </div>
       </div>
       ${timelineChart(s.timeline)}
       ${s.review ? reviewCard(s) : ''}
@@ -98,4 +109,49 @@ export function gameOver(scr, s) {
   const post = s.cheated ? () => {} : boardPost(scr, s);
   scr.bind('.summary-buttons button', (i, el) => go(el.dataset.act));
   wireTimeline(scr.root, s.timeline);
+  wireItems(scr.root, items);
+}
+
+const HINT = 'Hover or tap a tool or passive to see what it does.';
+const lvl = (t) => (t.level >= t.maxLevel ? 'MAX' : `Lv ${t.level}`);
+
+// Shows one item's description in the box under the lists: on hover or keyboard focus,
+// and on a tap for phones (tapping the same row again hides it). A tap moves the box
+// to just under the row, so it's on screen even when the lists are long.
+function wireItems(root, items) {
+  const box = root.querySelector('.item-info');
+  if (!box) return;
+  const rows = [...root.querySelectorAll('[data-item]')];
+  const home = box.parentNode;
+  let shown = null;
+  const show = (row, under = false) => {
+    shown = row;
+    if (row && under) row.after(box);
+    else home.append(box);
+    rows.forEach((r) => r.classList.toggle('selected', r === row));
+    if (!row) {
+      box.textContent = HINT;
+      box.classList.remove('on');
+      return;
+    }
+    const t = items[row.dataset.item];
+    const level = t.maxLevel > 1 ? ` <span class="tool-lvl">${lvl(t)}</span>` : '';
+    box.innerHTML = `<b>${t.name}</b>${level}<br>${t.desc ?? ''}`;
+    box.classList.add('on');
+  };
+  let touch = false; // the pointer that's down is a finger or pen, not a mouse
+  let pressing = false;
+  for (const row of rows) {
+    row.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && show(row));
+    row.addEventListener('pointerdown', (e) => {
+      touch = e.pointerType !== 'mouse';
+      pressing = true;
+    });
+    row.addEventListener('focus', () => !pressing && show(row)); // Tab key
+    row.addEventListener('click', () => {
+      pressing = false;
+      show(touch && shown === row ? null : row, touch);
+    });
+  }
+  root.querySelector('.tools')?.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && show(null));
 }

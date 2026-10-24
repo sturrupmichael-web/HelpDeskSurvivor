@@ -53,7 +53,7 @@ export function setWeaponLevel(w, level) {
 // tool slot, can't be levelled, and lives in player.innate.
 export function createCrew(crew) {
   const def = {
-    name: 'Your Team', icon: 'delegate', behavior: 'minion', sprite: 'helper', tags: ['people'], color: '#3b5dc9',
+    name: 'Your Team', icon: 'delegate', desc: 'Your built-in helpers follow you and fight users. They hit harder as you level up.', behavior: 'minion', sprite: 'helper', tags: ['people'], color: '#3b5dc9',
     perLevel: crew.perLevel, // damage grows with the player's level
     levels: [{ count: crew.count, damage: crew.damage, speed: 120, leash: 140, hitInterval: 0.45, knockback: 50 }],
   };
