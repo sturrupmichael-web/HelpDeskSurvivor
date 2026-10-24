@@ -23,12 +23,13 @@ export function levelUp(scr, choices, tip, onReroll, rerollsLeft, onPick) {
     onPick(choices[i], always);
   };
   const card = (c, i) => `
-    <button class="card" data-i="${i}">
+    <button class="card ${c.pair?.length ? 'paired' : ''}" data-i="${i}">
       <div class="card-head">${icon(c.icon, 40)}
         <div><div class="card-name">${c.name}</div>
         <div class="card-level">${c.kind === 'reward' ? 'Reward' : c.level === 1 ? 'NEW!' : `Level ${c.level}`}</div></div>
         <kbd>${i + 1}</kbd>
       </div>
+      ${c.pair?.length ? `<div class="evo-pair"><b>&#9889; EVO PAIR</b><span>with</span>${c.pair.map((x) => icon(x.icon, 20)).join('')}</div>` : ''}
       <div class="card-text">${c.text}</div>
       <div class="card-flavor">${c.flavor}</div>
       ${c.hint ? `<div class="card-hint">${c.hint}</div>` : ''}

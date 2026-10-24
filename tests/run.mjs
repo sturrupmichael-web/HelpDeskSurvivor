@@ -17,6 +17,7 @@ import { comboTests } from './combos.test.mjs';
 import { overtimeTests } from './overtime.test.mjs';
 import { collisionTests } from './collision.test.mjs';
 import { hardcoreTests } from './hardcore.test.mjs';
+import { evoPairTests } from './evopair.test.mjs';
 
 const only = (flag) => process.argv.includes(flag);
 let failed = 0;
@@ -29,6 +30,7 @@ comboTests();
 overtimeTests();
 collisionTests();
 hardcoreTests();
+evoPairTests();
 failed += await run();
 if (!only('node')) {
   const server = await serve();

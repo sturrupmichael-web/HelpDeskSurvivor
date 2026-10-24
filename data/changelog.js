@@ -6,10 +6,11 @@ export const CHANGELOG = [
   {
     id: '2026-10-24-summaryinfo',
     date: 'Oct 24, 2026',
-    title: 'What did that tool do?',
+    title: 'Item descriptions and evolution pairs',
     items: [
       'Shift Stats (in the On Hold menu) and the end-of-shift summary: hover over a tool or passive, or tap it on a phone, to see its full description. Tap it again to hide it.',
       'The end-of-shift summary now lists the passives you picked, with their levels, under Damage by tool.',
+      'Level-up cards now glow gold with an EVO PAIR badge when you already own the other half of an evolution: a passive that evolves one of your tools, or a tool whose evolution passive you have. The badge shows the item it pairs with.',
     ],
   },
   {

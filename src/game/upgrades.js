@@ -60,14 +60,25 @@ function describe(c, p) {
   if (c.kind === 'weapon') {
     const d = WEAPONS[c.id];
     const evo = EVOLUTIONS[c.id];
-    const hint = canEvolve(p, evo) && `Evolves at max level with ${PASSIVES[evo.passive].name} into ${WEAPONS[evo.into].name}.`;
-    return { ...c, name: d.name, icon: d.icon, text: c.level === 1 ? d.desc : d.notes[c.level - 1], flavor: d.flavor, maxLevel: d.levels.length, hint };
+    const ok = canEvolve(p, evo);
+    // You already own the passive this tool evolves with: the card gets the evolution badge.
+    const pair = ok && p?.passives?.[evo.passive] ? [PASSIVES[evo.passive]] : [];
+    const hint = ok && (pair.length
+      ? `You have ${PASSIVES[evo.passive].name}: max this out to evolve it into ${WEAPONS[evo.into].name}.`
+      : `Evolves at max level with ${PASSIVES[evo.passive].name} into ${WEAPONS[evo.into].name}.`);
+    return { ...c, name: d.name, icon: d.icon, text: c.level === 1 ? d.desc : d.notes[c.level - 1], flavor: d.flavor, maxLevel: d.levels.length, hint, pair };
   }
   if (c.kind === 'passive') {
     const d = PASSIVES[c.id];
     const evos = Object.entries(EVOLUTIONS).filter(([, v]) => v.passive === c.id && canEvolve(p, v));
-    const hint = evos.length ? `Pairs with ${evos.map(([from, v]) => `${WEAPONS[from].name} (into ${WEAPONS[v.into].name})`).join(' and ')} to evolve it.` : undefined;
-    return { ...c, name: d.name, icon: d.icon, text: d.desc, flavor: d.flavor, maxLevel: d.maxLevel, hint };
+    // Tools you already own that this new passive would evolve (it works at any level, so
+    // only a passive you don't have yet gets the badge).
+    const owned = p?.passives?.[c.id] ? [] : evos.filter(([from]) => p?.weapons?.some((w) => w.id === from));
+    const pair = owned.map(([from]) => WEAPONS[from]);
+    const hint = owned.length
+      ? `You have ${owned.map(([from, v]) => `${WEAPONS[from].name} (evolves into ${WEAPONS[v.into].name} at max level)`).join(' and ')}: this completes the pair.`
+      : evos.length ? `Pairs with ${evos.map(([from, v]) => `${WEAPONS[from].name} (into ${WEAPONS[v.into].name})`).join(' and ')} to evolve it.` : undefined;
+    return { ...c, name: d.name, icon: d.icon, text: d.desc, flavor: d.flavor, maxLevel: d.maxLevel, hint, pair };
   }
   const d = FALLBACK_REWARDS[c.id];
   return { ...c, name: d.name, icon: d.icon, text: d.desc, flavor: d.flavor };

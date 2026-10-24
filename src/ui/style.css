@@ -98,6 +98,10 @@ kbd { font-family: var(--font); font-size: 0.8em; padding: 1px 5px; border: 1px 
 @media (prefers-reduced-motion: reduce) { .hud-boss.angry svg { animation: none; } }
 .slot.evolved { border-color: var(--yellow); box-shadow: 0 0 6px rgba(255, 205, 117, 0.6); }
 .slot.evolved .pips { font-size: 7px; letter-spacing: 0; font-weight: bold; }
+.panel button.card.paired { border-color: var(--yellow); box-shadow: 0 0 8px rgba(255, 205, 117, 0.5); }
+.evo-pair { display: flex; align-items: center; gap: 6px; padding: 3px 6px; background: var(--yellow); color: var(--ink); font-size: calc(11px * var(--fs)); letter-spacing: 1px; align-self: flex-start; }
+.evo-pair span { font-weight: normal; }
+.evo-pair .icon { background: var(--ink); padding: 1px; }
 .card-hint { font-size: calc(12px * var(--fs)); font-weight: normal; color: var(--yellow); border-top: 1px dashed var(--slate); padding-top: 6px; }
 .panel.chest { max-width: 520px; }
 .panel.chest h2 { color: var(--yellow); }
