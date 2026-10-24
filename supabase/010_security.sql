@@ -19,7 +19,7 @@ alter table public.players drop constraint if exists players_name_clean;
 alter table public.players add constraint players_name_clean check (
   name = btrim(name)
   and name !~ '  '
-  and name !~ '[\u0000-\u001f\u007f-\u009f­͏؜ᅟᅠ឴឵᠎​-‏ -  -⁯ㅤ︀-️﻿ﾠ]'
+  and name !~ '[\u0000-\u001f\u007f-\u009f\u00ad\u034f\u061c\u115f\u1160\u17b4\u17b5\u180e\u200b-\u200f\u2028-\u202f\u205f-\u206f\u3164\ufe00-\ufe0f\ufeff\uffa0]'
 ) not valid;
 
 -- 2: a rename renames the player's scores too.
