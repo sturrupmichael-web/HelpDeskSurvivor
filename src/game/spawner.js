@@ -118,7 +118,7 @@ export class Spawner {
   // Overtime level (data/waves.js OVERTIME): 0 until the grace period after 20:00 runs out,
   // then 1, 2, 3... one more each minute.
   overtimeLevel(game) {
-    const t = game.time - SHIFT_LENGTH - OVERTIME.grace;
+    const t = game.time - SHIFT_LENGTH - (game.policy?.otGrace ?? OVERTIME.grace); // Hardcore: shorter grace
     return t < 0 || game.tutorial ? 0 : 1 + Math.floor(t / OVERTIME.every);
   }
 
@@ -144,7 +144,7 @@ export class Spawner {
       if (ot === 1) game.hud.banner('UNPAID OVERTIME', "Every minute you're still here, the users get tougher. Close The Executive's ticket!", 4);
       sfx('warn');
     }
-    const scale = (game.bossAlive() ? this.bossScale : 1) * (1 + OVERTIME.spawnPerLevel * this.overtimeLevel(game));
+    const scale = (game.bossAlive() ? this.bossScale : 1) * (1 + OVERTIME.spawnPerLevel * this.overtimeLevel(game)) * (game.policy?.spawns ?? 1); // Hardcore: more users
     const busy = this.busyTime(game);
     this.acc += this.sample(busy, 'rate') * scale * dt;
     const min = this.sample(busy, 'minAlive') * scale;

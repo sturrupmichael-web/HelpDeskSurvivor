@@ -1,7 +1,7 @@
 // Shift Policies (data/policies.js): combines the picked policies into one set of effects
 // the rest of the game reads from `game.policy`, and works out the pay/score multiplier.
 
-import { POLICIES, POLICY_RULES } from '../../data/policies.js';
+import { POLICIES, POLICY_RULES, HARDCORE } from '../../data/policies.js';
 
 // Ids that still exist, in picking order, at most POLICY_RULES.maxPicked, without clashes.
 export function cleanPolicies(ids) {
@@ -36,19 +36,35 @@ const NONE = Object.freeze({
   items: Object.freeze({}), lockPassives: Object.freeze([]), headStart: 0,
   mixBoost: Object.freeze({}), splits: Object.freeze({}), summons: Object.freeze({}),
   ticketXp: 1, ticketLife: 0, startTools: null, revives: 0,
+  hardcore: false, spawns: 1, otGrace: null, noRevive: false,
 });
 
 // No policies: what the training shift and a plain shift use.
 export const NO_POLICY = NONE;
 
-// One flat effects object for a set of policy ids.
-export function combinePolicies(ids, reorg = false) {
+// Perks can't be picked in a Hardcore shift.
+export const hardcoreOk = (id) => POLICIES[id]?.group !== 'perk';
+
+// The pay and score multiplier with or without Hardcore (2 decimals).
+export const shiftMult = (ids, reorg = false, hardcore = false) =>
+  Math.round(policyMult(ids, reorg) * (hardcore ? HARDCORE.mult : 1) * 100) / 100;
+
+// One flat effects object for a set of policy ids, plus Hardcore (data/policies.js HARDCORE).
+export function combinePolicies(ids, reorg = false, hardcore = false) {
   ids = cleanPolicies(ids);
-  if (!ids.length) return NONE;
+  if (hardcore) ids = ids.filter(hardcoreOk);
+  if (!ids.length && !hardcore) return NONE;
   const c = {
-    ...NONE, ids, reorg: reorg && ids.length > 0, mult: policyMult(ids, reorg),
+    ...NONE, ids, reorg: reorg && ids.length > 0, mult: shiftMult(ids, reorg, hardcore),
     stats: {}, statMul: {}, items: {}, lockPassives: [], mixBoost: {}, splits: {}, summons: {},
   };
+  if (hardcore) {
+    const f = HARDCORE.fx;
+    Object.assign(c, { hardcore: true, spawns: f.spawns, otGrace: f.otGrace, noRevive: true });
+    c.enemyHp *= f.enemyHp;
+    c.phase2Sooner += f.phase2Sooner;
+    c.lockPassives.push(...f.lockPassives);
+  }
   for (const id of ids) {
     const f = POLICIES[id].fx;
     for (const k of ['enemyHp', 'enemySpeed', 'bossHp', 'ticketXp']) if (f[k]) c[k] *= f[k];
@@ -90,6 +106,6 @@ export function rollReorg(available, rnd = Math.random) {
 }
 
 // Policy ids as stored on a leaderboard row ("casualFriday,budgetCuts"; "reorg" marks the
-// dice bonus), and back.
-export const modsString = (p) => [...p.ids, ...(p.reorg ? ['reorg'] : [])].join(',');
-export const parseMods = (s) => String(s ?? '').split(',').filter((id) => POLICIES[id] || id === 'reorg');
+// dice bonus, "hardcore" a Hardcore shift), and back.
+export const modsString = (p) => [...p.ids, ...(p.reorg ? ['reorg'] : []), ...(p.hardcore ? ['hardcore'] : [])].join(',');
+export const parseMods = (s) => String(s ?? '').split(',').filter((id) => POLICIES[id] || id === 'reorg' || id === 'hardcore');

@@ -4,6 +4,7 @@
 
 import { CHARACTERS } from './player.js';
 import { POLICIES } from './policies.js';
+import { MAP_ORDER } from './maps.js';
 
 export const ACHIEVEMENTS = [
   { id: 'first_shift', name: 'Onboarding Complete', icon: 'ticket', desc: 'Finish your first shift, one way or another.', check: (r) => r.ended },
@@ -33,5 +34,7 @@ export const ACHIEVEMENTS = [
   { id: 'map_merger', name: 'Synergy Achieved', icon: 'laptop', desc: 'Win a shift on Merger Day.', check: (r, m) => m.mapsWon?.includes('merger') },
   { id: 'red_tape', name: 'Red Tape', icon: 'book', desc: 'Win a shift under 3 bad Shift Policies.', check: (r) => r.won && r.policies.filter((id) => POLICIES[id].group === 'bad').length >= 3 },
   { id: 'lean_team', name: 'Doing More With Less', icon: 'scissors', desc: 'Win a shift under Budget Cuts and Hiring Freeze.', check: (r) => r.won && r.policies.includes('budgetCuts') && r.policies.includes('hiringFreeze') },
+  { id: 'hardcore_win', name: 'No Comebacks', icon: 'hardcore', desc: 'Win a Hardcore shift.', check: (r) => r.won && r.hardcore },
+  { id: 'hardcore_all', name: 'Iron Helpdesk', icon: 'hardcore', desc: 'Win a Hardcore shift on every map.', check: (r, m) => MAP_ORDER.every((id) => m.hardcoreWon?.includes(id)) },
   { id: 'veteran', name: 'Employee of the Month', icon: 'chair', desc: 'Work 25 shifts.', check: (r, m) => m.shifts >= 25 },
 ];

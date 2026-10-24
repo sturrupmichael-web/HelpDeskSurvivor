@@ -1,18 +1,21 @@
 // Clock In step 3 (src/ui/screens/shiftSetup.js): Shift Policies (data/policies.js).
 // Tap a card to sign up to it or drop it; the bar shows the pay and score multiplier.
-// `pick` is the picker's state: { char, map, policies, reorg }.
+// `pick` is the picker's state: { char, map, policies, reorg, hardcore }. Hardcore shifts
+// can't have perks.
 
 import { icon } from '../icons.js';
 import { sfx } from '../../engine/audio.js';
 import { MAPS } from '../../../data/maps.js';
 import { POLICIES, POLICY_ORDER, POLICY_GROUPS, POLICY_RULES } from '../../../data/policies.js';
-import { policyMult, fmtMult, clashes, rollReorg } from '../../game/policies.js';
+import { shiftMult, fmtMult, clashes, rollReorg, hardcoreOk } from '../../game/policies.js';
 import { gamepadConnected } from '../../engine/input.js';
 
 export function policiesStep(scr, pick) {
   const g = scr.game;
   const meta = g.meta;
-  pick.policies = pick.policies.filter((id) => POLICIES[id] && meta.policyUnlocked(id));
+  const hardcore = !!pick.hardcore && meta.hardcoreOpen();
+  const allowed = (id) => meta.policyUnlocked(id) && (!hardcore || hardcoreOk(id));
+  pick.policies = pick.policies.filter((id) => POLICIES[id] && allowed(id));
   if (!pick.policies.length) pick.reorg = false;
   // Redraw after a tap, keeping the list where it was scrolled to.
   const again = () => {
@@ -22,11 +25,11 @@ export function policiesStep(scr, pick) {
   };
   const picked = pick.policies;
   const full = picked.length >= POLICY_RULES.maxPicked;
-  const mult = policyMult(picked, pick.reorg);
+  const mult = shiftMult(picked, pick.reorg, hardcore);
   const clashWith = (id) => picked.find((o) => o !== id && clashes(o, id));
 
   const toggle = (id) => {
-    if (!meta.policyUnlocked(id)) return;
+    if (!allowed(id)) return;
     const at = picked.indexOf(id);
     if (at >= 0) picked.splice(at, 1);
     else if (full || clashWith(id)) return sfx('hurt');
@@ -53,6 +56,7 @@ export function policiesStep(scr, pick) {
     meta.select(pick.char);
     meta.selectMap(pick.map);
     meta.setPolicies(pick.policies, pick.reorg);
+    meta.setHardcore(hardcore);
     g.newRun();
   };
   // Steps that Clock In skipped (nothing to choose) are skipped on the way back too.
@@ -69,11 +73,14 @@ export function policiesStep(scr, pick) {
     const p = POLICIES[id];
     const n = POLICY_ORDER.indexOf(id) + 1;
     const on = picked.includes(id);
-    const open = meta.policyUnlocked(id);
+    const unlocked = meta.policyUnlocked(id);
+    const open = allowed(id);
     const clash = !on && clashWith(id);
-    const status = !open
+    const status = !unlocked
       ? `Locked: ${meta.policyLockText(id)}`
-      : on
+      : !open
+        ? 'Not in Hardcore'
+        : on
         ? '<b class="ok">SIGNED</b>'
         : clash
           ? `Can't combine with ${POLICIES[clash].name}`
@@ -83,18 +90,17 @@ export function policiesStep(scr, pick) {
     const stamp = meta.data.policiesWon.includes(id) ? '<span class="pol-stamp" title="You\'ve won a shift with this">WON</span>' : '';
     const dim = open && !on && (full || clash);
     return `<button class="card policy ${p.group} ${on ? 'selected' : ''} ${open ? '' : 'locked'} ${dim ? 'dim' : ''}" data-id="${id}" ${open ? '' : 'disabled'}>
-      <div class="card-head">${icon(open ? p.icon : 'policy', 28)}<div class="card-name"><small>${n}.</small> ${open ? p.name : '???'}</div><b class="pol-x">${fmtMult(p.mult)}</b></div>
-      ${open ? `<div class="card-text">${p.desc}</div>` : ''}
+      <div class="card-head">${icon(unlocked ? p.icon : 'policy', 28)}<div class="card-name"><small>${n}.</small> ${unlocked ? p.name : '???'}</div><b class="pol-x">${fmtMult(p.mult)}</b></div>
+      ${unlocked ? `<div class="card-text">${p.desc}</div>` : ''}
       ${status || stamp ? `<div class="char-status">${status}${stamp}</div>` : ''}
     </button>`;
   };
   const groups = POLICY_GROUPS.map(
-    (gr) => `<div class="section-head pol-group ${gr.id}">${gr.name.toUpperCase()} <small>${gr.note}</small></div>
+    (gr) => `<div class="section-head pol-group ${gr.id}">${gr.name.toUpperCase()} <small>${hardcore && gr.id === 'perk' ? 'Off in Hardcore.' : gr.note}</small></div>
       <div class="cards policies">${POLICY_ORDER.filter((id) => POLICIES[id].group === gr.id).map(card).join('')}</div>`,
   ).join('');
-  const summary = picked.length
-    ? `${picked.map((id) => `<b>${POLICIES[id].name}</b>`).join(' + ')}${pick.reorg ? ` + <b>Reorg bonus</b>` : ''}`
-    : 'No policies: a normal shift.';
+  const names = [...(hardcore ? ['Hardcore'] : []), ...picked.map((id) => POLICIES[id].name), ...(pick.reorg ? ['Reorg bonus'] : [])];
+  const summary = names.length ? names.map((n) => `<b>${n}</b>`).join(' + ') : 'No policies: a normal shift.';
   scr.show(
     `<div class="panel wide chars setup">
       <p class="setup-step">STEP ${stepNo} OF ${stepNo}</p>
@@ -109,7 +115,7 @@ export function policiesStep(scr, pick) {
       ${groups}
       <div class="setup-bar">
         <button data-act="back">${stepNo === 1 ? 'Cancel' : 'Back'} <kbd>Esc</kbd></button>
-        <button class="primary" data-act="next">Clock In: ${MAPS[pick.map].name} <kbd>Enter</kbd></button>
+        <button class="primary" data-act="next">Clock In: ${MAPS[pick.map].name}${hardcore ? ' (Hardcore)' : ''} <kbd>Enter</kbd></button>
       </div>
     </div>`,
     (code) => {

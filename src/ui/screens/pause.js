@@ -12,8 +12,8 @@ import { fmtMult } from '../../game/policies.js';
 export function pause(scr) {
   const training = !!scr.game.tutorial;
   const pol = scr.game.policy;
-  const policies = pol.ids.length
-    ? `<p class="tiny pause-policies">Policies (${fmtMult(pol.mult)}): ${pol.ids.map((id) => `<b>${POLICIES[id].name}</b>`).join(', ')}</p>`
+  const policies = pol.ids.length || pol.hardcore
+    ? `<p class="tiny pause-policies">${pol.hardcore ? '<b class="hc-tag">HARDCORE</b> ' : ''}${pol.ids.length ? 'Policies' : 'Pay and score'} (${fmtMult(pol.mult)})${pol.ids.length ? ': ' : ''}${pol.ids.map((id) => `<b>${POLICIES[id].name}</b>`).join(', ')}</p>`
     : '';
   // Restart and Quit throw the shift away, so outside training they need a second press.
   let armed = null;

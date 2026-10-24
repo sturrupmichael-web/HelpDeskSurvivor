@@ -11,7 +11,7 @@ export function reviewCard(s) {
   const r = s.review;
   const stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
   return `<div class="review rating-${r.ratingId}">
-    <div class="review-head"><span>PERFORMANCE REVIEW</span><span>${s.character}</span></div>
+    <div class="review-head"><span>PERFORMANCE REVIEW${s.hardcore ? ' <b class="hc-tag">HARDCORE</b>' : ''}</span><span>${s.character}</span></div>
     <div class="review-rating"><span class="review-stars" aria-label="${r.stars} out of 5">${stars}</span><b>${r.rating}</b></div>
     <div class="review-label">Manager's comments</div>
     <ul>${r.lines.map((l) => `<li>${l}</li>`).join('')}</ul>

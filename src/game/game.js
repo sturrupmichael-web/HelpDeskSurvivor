@@ -171,8 +171,9 @@ export class Game {
   }
 
   // --- Run lifecycle ------------------------------------------------------------------
-  // `policy`: the shift's Shift Policies (data/policies.js), by default the saved picks.
-  newRun(charId = this.meta.data.selected, policy = combinePolicies(this.meta.data.policies, this.meta.data.reorg)) {
+  // `policy`: the shift's Shift Policies (data/policies.js), by default the saved picks
+  // (and Hardcore, when its switch is on).
+  newRun(charId = this.meta.data.selected, policy = combinePolicies(this.meta.data.policies, this.meta.data.reorg, this.meta.hardcoreOn())) {
     const def = CHARACTERS[charId];
     this.policy = policy;
     this.player = createPlayer(def, this.assets.sprite(def.sprite), this.meta, policy);
@@ -268,7 +269,8 @@ export class Game {
       csat: this.score.csat,
       policies: [...this.policy.ids],
       reorg: this.policy.reorg,
-      policyMult: this.policy.mult,
+      hardcore: this.policy.hardcore,
+      policyMult: this.policy.mult, // includes Hardcore's x2
       score: Math.round(this.score.csat * this.policy.mult), // what the leaderboard ranks
       evolutions: this.achievements.run.evolutions,
       bestStreak: this.score.bestStreak,
@@ -280,7 +282,7 @@ export class Game {
       timeline: this.timeline.result(this),
     };
     const wikiNew = recordWiki(this);
-    const { pay, records, newMap, newUnlocks, newPolicies, policiesOpened } = this.meta.finishShift(stats);
+    const { pay, records, newMap, newUnlocks, newPolicies, policiesOpened, hardcoreOpened } = this.meta.finishShift(stats);
     const r = this.achievements.run;
     r.ended = true;
     r.won = won;
@@ -288,7 +290,7 @@ export class Game {
     r.kills = this.score.kills;
     this.achievements.check();
     const review = performanceReview(stats, r);
-    this.screens.gameOver({ ...stats, pay, records, newMap, newUnlocks, newPolicies, policiesOpened, wikiNew, review, balance: this.meta.data.pay });
+    this.screens.gameOver({ ...stats, pay, records, newMap, newUnlocks, newPolicies, policiesOpened, hardcoreOpened, wikiNew, review, balance: this.meta.data.pay });
   }
 
   // Extended Warranty (passive), Long Weekend (policy) or Union Rep (shop): come back from

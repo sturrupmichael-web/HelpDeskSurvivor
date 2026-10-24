@@ -4,7 +4,7 @@
 import { icon } from './icons.js';
 import { SHIFT_LENGTH, OVERTIME } from '../../data/waves.js';
 import { PASSIVES } from '../../data/passives.js';
-import { POLICIES } from '../../data/policies.js';
+import { POLICIES, HARDCORE } from '../../data/policies.js';
 import { fmtMult } from '../game/policies.js';
 import { isMuted } from '../engine/audio.js';
 
@@ -125,9 +125,10 @@ export class Hud {
     this.refreshSlots(game);
     // The shift's policies, as small icons under the clock (names on hover/long press).
     const pol = game.policy;
-    this.el.policies.hidden = !pol.ids.length;
-    this.el.policies.innerHTML = pol.ids.length
-      ? pol.ids.map((id) => `<span class="pol ${POLICIES[id].group}" title="${POLICIES[id].name}: ${POLICIES[id].desc}">${icon(POLICIES[id].icon, 16)}</span>`).join('') +
+    this.el.policies.hidden = !pol.ids.length && !pol.hardcore;
+    this.el.policies.innerHTML = pol.ids.length || pol.hardcore
+      ? (pol.hardcore ? `<span class="pol hc" title="Hardcore: ${HARDCORE.desc}">${icon('hardcore', 16)}</span>` : '') +
+        pol.ids.map((id) => `<span class="pol ${POLICIES[id].group}" title="${POLICIES[id].name}: ${POLICIES[id].desc}">${icon(POLICIES[id].icon, 16)}</span>`).join('') +
         `<b class="pol-mult">${fmtMult(pol.mult)}</b>`
       : '';
   }
@@ -147,7 +148,7 @@ export class Hud {
     this.set('time', Math.floor(game.time), (v) => (e.timer.textContent = fmtTime(v)));
     // Overtime: a countdown to the first ramp-up during the grace period, then the level.
     const ot = game.spawner.overtimeLevel(game);
-    const graceLeft = Math.ceil(SHIFT_LENGTH + OVERTIME.grace - game.time);
+    const graceLeft = Math.ceil(SHIFT_LENGTH + (game.policy.otGrace ?? OVERTIME.grace) - game.time);
     const shift = game.tutorial ? 'training' : game.time < SHIFT_LENGTH ? 'shift' : ot ? 'ot' + ot : 'grace' + graceLeft;
     this.set('overtime', shift, (v) => {
       e.shift.textContent = v === 'training' ? 'TRAINING SHIFT' : v === 'shift' ? 'SHIFT ENDS ' + fmtTime(SHIFT_LENGTH)

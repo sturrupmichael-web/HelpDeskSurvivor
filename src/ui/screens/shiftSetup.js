@@ -9,6 +9,8 @@ import { gamepadConnected } from '../../engine/input.js';
 import { MAPS, MAP_ORDER } from '../../../data/maps.js';
 import { DIGITS, PAY } from './common.js';
 import { policiesStep } from './policies.js';
+import { HARDCORE } from '../../../data/policies.js';
+import { icon } from '../icons.js';
 
 // Clock In: pick a tech, then a map, then (once you've finished a shift) Shift Policies,
 // then confirm, all in one flow. Everything starts on the last shift's picks, which are
@@ -18,7 +20,7 @@ import { policiesStep } from './policies.js';
 // to work. "Change Tech or Map" on the end-of-shift screen still shows every step.
 export function clockIn(scr) {
   const meta = scr.game.meta;
-  const pick = { char: meta.data.selected, map: meta.data.map, policies: [...meta.data.policies], reorg: meta.data.reorg, skipped: {} };
+  const pick = { char: meta.data.selected, map: meta.data.map, policies: [...meta.data.policies], reorg: meta.data.reorg, hardcore: meta.hardcoreOn(), skipped: {} };
   const chars = Object.keys(CHARACTERS);
   const hireable = (id) => !meta.isUnlocked(id) && meta.itemUnlocked('characters', id) && meta.data.pay >= CHARACTERS[id].cost;
   pick.skipped.char = chars.filter((id) => meta.isUnlocked(id)).length === 1 && !chars.some(hireable);
@@ -35,7 +37,7 @@ export function clockIn(scr) {
 export function shiftSetup(scr, step = 'char', pick) {
   const g = scr.game;
   const meta = g.meta;
-  pick ??= { char: meta.data.selected, map: meta.data.map, policies: [...meta.data.policies], reorg: meta.data.reorg };
+  pick ??= { char: meta.data.selected, map: meta.data.map, policies: [...meta.data.policies], reorg: meta.data.reorg, hardcore: meta.hardcoreOn() };
   if (step === 'policies') return policiesStep(scr, pick);
   const withPolicies = meta.policiesOpen();
   const skipped = pick.skipped ?? {};
@@ -52,7 +54,16 @@ export function shiftSetup(scr, step = 'char', pick) {
     if (withPolicies) return scr.shiftSetup('policies', pick);
     meta.select(pick.char);
     meta.selectMap(pick.map);
+    meta.setHardcore(pick.hardcore);
     g.newRun();
+  };
+  // Hardcore (data/policies.js HARDCORE): a switch under the maps once every map is won.
+  const withHardcore = !isChar && meta.hardcoreOpen();
+  const toggleHardcore = () => {
+    if (!withHardcore) return false;
+    pick.hardcore = !pick.hardcore;
+    sfx(pick.hardcore ? 'warn' : 'click');
+    again();
   };
   const back = () => {
     sfx('click');
@@ -130,9 +141,16 @@ export function shiftSetup(scr, step = 'char', pick) {
               <span><b>${tech.name}</b><small>Change tech</small></span></button>`
       }
       <div class="cards">${ids.map(isChar ? charCard : mapCard).join('')}</div>
+      ${
+        withHardcore
+          ? `<button class="hc-switch ${pick.hardcore ? 'on' : ''}" data-act="hardcore" aria-pressed="${!!pick.hardcore}">
+              <span class="switch"></span>${icon('hardcore', 20)}<span><b>HARDCORE</b> ${pick.hardcore ? 'ON' : 'OFF'} <kbd>H</kbd>
+              <small>${HARDCORE.desc}</small></span></button>`
+          : ''
+      }
       <div class="setup-bar">
         <button data-act="back">${isChar || skipped.char ? 'Cancel' : 'Back'} <kbd>Esc</kbd></button>
-        <button class="primary" data-act="next">${isChar && !skipped.map ? 'Next: Map' : withPolicies ? 'Next: Policies' : `Clock In: ${MAPS[pick.map].name}`} <kbd>Enter</kbd></button>
+        <button class="primary" data-act="next">${isChar && !skipped.map ? 'Next: Map' : withPolicies ? 'Next: Policies' : `Clock In: ${MAPS[pick.map].name}${pick.hardcore && withHardcore ? ' (Hardcore)' : ''}`} <kbd>Enter</kbd></button>
       </div>
     </div>`,
     (code) => {
@@ -141,10 +159,12 @@ export function shiftSetup(scr, step = 'char', pick) {
       else if (code === 'ArrowLeft' || code === 'ArrowUp' || code === 'KeyA' || code === 'KeyW') move(-1);
       else if (code === 'Enter' || code === 'Space') next();
       else if (code === 'Escape' || code === 'Backspace') back();
+      else if (code === 'KeyH') return toggleHardcore();
       else return false;
     },
   );
   scr.bind('.card', (i) => choose(i));
+  scr.bind('[data-act=hardcore]', toggleHardcore);
   scr.bind('[data-act=back]', back);
   scr.bind('[data-act=next]', next);
   scr.drawThumbs();

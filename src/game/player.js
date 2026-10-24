@@ -33,7 +33,7 @@ export function createPlayer(def, sprite, meta, policy = NO_POLICY) {
     regen: def.regen + (meta ? meta.bonus('regen') : 0) + policy.regen, // sanity per second (+ Snack Drawer, Energy Drinks)
     baseRegen: def.regen + (meta ? meta.bonus('regen') : 0) + policy.regen,
     rerolls: meta ? meta.bonus('rerolls') : 0, // level-up rerolls left this shift
-    revives: meta ? meta.bonus('revives') : 0, // Union Rep comebacks left this shift
+    revives: meta && !policy.noRevive ? meta.bonus('revives') : 0, // Union Rep comebacks left this shift (none in Hardcore)
     warranty: 0, // Extended Warranty comebacks left this shift
     longWeekend: policy.revives, // Long Weekend (policy) comebacks left this shift
     maxWeapons: Math.min(MAX_WEAPONS, policy.maxWeapons) + (def.toolSlots ?? 0), // tool slots (Budget Cuts, Vendor Lock-In; Systems Operations Manager)

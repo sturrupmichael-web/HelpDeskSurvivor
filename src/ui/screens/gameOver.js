@@ -43,6 +43,7 @@ export function gameOver(scr, s) {
       ${s.newMap ? `<p class="unlock">NEW MAP UNLOCKED: <b>${MAPS[s.newMap].name}</b> (pick it when you Clock In)</p>` : ''}
       ${s.newUnlocks?.length ? `<p class="unlock">NOW AVAILABLE: ${s.newUnlocks.map((u) => `<b>${unlockName(u)}</b>`).join(', ')}</p>` : ''}
       ${s.policiesOpened ? '<p class="unlock">SHIFT POLICIES UNLOCKED: optional twists for more pay and score. Pick them when you Clock In, after the map.</p>' : ''}
+      ${s.hardcoreOpened ? '<p class="unlock">HARDCORE UNLOCKED: you\'ve won on every map. Flip the Hardcore switch under the maps when you Clock In, for double pay and score.</p>' : ''}
       ${s.newPolicies?.length && !s.policiesOpened ? `<p class="unlock">NEW POLICIES: ${s.newPolicies.map((id) => `<b>${POLICIES[id].name}</b>`).join(', ')}</p>` : ''}
       <div class="summary-cols">
         <table class="stats">
@@ -52,9 +53,10 @@ export function gameOver(scr, s) {
           <tr><td>Tickets closed</td><td>${s.kills.toLocaleString()}${rec('tickets')}</td></tr>
           <tr><td>CSAT score</td><td>${s.csat.toLocaleString()}${rec('csat')}</td></tr>
           ${
-            s.policies?.length
-              ? `<tr><td>Policies</td><td class="pol-line">${s.policies.map((id) => POLICIES[id].name).join(', ')}${s.reorg ? ' (Reorg)' : ''} ${fmtMult(s.policyMult)}</td></tr>
-                 <tr><td>Leaderboard score</td><td>${s.score.toLocaleString()}</td></tr>`
+            s.policies?.length || s.hardcore
+              ? `${s.hardcore ? '<tr><td>Mode</td><td><b class="hc-tag">HARDCORE</b> x2</td></tr>' : ''}
+                 ${s.policies.length ? `<tr><td>Policies</td><td class="pol-line">${s.policies.map((id) => POLICIES[id].name).join(', ')}${s.reorg ? ' (Reorg)' : ''}</td></tr>` : ''}
+                 <tr><td>Leaderboard score</td><td>${s.score.toLocaleString()} <span class="pol-line">(CSAT ${fmtMult(s.policyMult)})</span></td></tr>`
               : ''
           }
           <tr><td>Best streak</td><td>x${s.bestStreak}</td></tr>

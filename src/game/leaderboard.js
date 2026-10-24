@@ -36,10 +36,13 @@ export function cleanName(name) {
     .slice(0, LB.nameMax);
 }
 
+// Board filters: 'clean' = only shifts without policies (or Hardcore), 'hardcore' = only
+// Hardcore shifts (their mods include "hardcore"), anything else = every shift.
+const filterQ = (filter) => (filter === 'clean' || filter === true ? '&mods=eq.' : filter === 'hardcore' ? '&mods=like.*hardcore*' : '');
+
 // Top scores on one map: [{ name, character, seconds, csat, won, mods, mult, score }].
-// `clean` = only shifts without policies.
-export async function topScores(map, clean = false) {
-  const q = `?select=name,character,seconds,csat,won,mods,mult,score&map=eq.${encodeURIComponent(map)}${clean ? '&mods=eq.' : ''}&order=score.desc,seconds.desc&limit=${LB.top}`;
+export async function topScores(map, filter = '') {
+  const q = `?select=name,character,seconds,csat,won,mods,mult,score&map=eq.${encodeURIComponent(map)}${filterQ(filter)}&order=score.desc,seconds.desc&limit=${LB.top}`;
   const r = await call(q);
   if (!r.ok) return r;
   return { ok: true, rows: await r.res.json() };
@@ -47,8 +50,8 @@ export async function topScores(map, clean = false) {
 
 // A player's best score on one map and its place on the board, for when they're outside
 // the top rows: { ok, best: { score, seconds, won, character, mods, mult } | null, rank }.
-export async function myRank(map, name, clean = false) {
-  const m = `map=eq.${encodeURIComponent(map)}${clean ? '&mods=eq.' : ''}`;
+export async function myRank(map, name, filter = '') {
+  const m = `map=eq.${encodeURIComponent(map)}${filterQ(filter)}`;
   const r = await call(`?select=character,seconds,csat,won,mods,mult,score&${m}&name=eq.${encodeURIComponent(name)}&order=score.desc,seconds.desc&limit=1`);
   if (!r.ok) return r;
   const best = (await r.res.json())[0] ?? null;

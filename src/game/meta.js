@@ -4,7 +4,7 @@
 
 import { SHOP, PAYOUT } from '../../data/meta.js';
 import { CHARACTERS } from '../../data/player.js';
-import { MAPS } from '../../data/maps.js';
+import { MAPS, MAP_ORDER } from '../../data/maps.js';
 import { PREVIEW } from '../version.js';
 import { UNLOCKS } from '../../data/unlocks.js';
 import { POLICIES, POLICY_ORDER } from '../../data/policies.js';
@@ -39,6 +39,8 @@ function fresh() {
     reorg: false, // those picks came from the dice button (and keep its bonus)
     policiesWon: [], // policies you've won a shift with (stamps in the wiki)
     policyUnlocks: [], // policies unlocked by a feat rather than a map win (Change Freeze)
+    hardcore: false, // the Hardcore switch is on for the next shift (data/policies.js HARDCORE)
+    hardcoreWon: [], // maps with a won Hardcore shift
   };
 }
 
@@ -177,6 +179,22 @@ export class Meta {
     return 'not available yet';
   }
 
+  // --- Hardcore (data/policies.js HARDCORE) ---
+  // The switch shows up once you've won a shift on every map (always in preview builds).
+  hardcoreOpen(real = false) {
+    return (PREVIEW && !real) || MAP_ORDER.every((id) => this.data.mapsWon.includes(id));
+  }
+
+  // Is the next shift a Hardcore one?
+  hardcoreOn() {
+    return this.data.hardcore && this.hardcoreOpen();
+  }
+
+  setHardcore(on) {
+    this.data.hardcore = !!on && this.hardcoreOpen();
+    this.save();
+  }
+
   setPolicies(ids, reorg = false) {
     this.data.policies = cleanPolicies(ids).filter((id) => this.policyUnlocked(id));
     this.data.reorg = reorg && this.data.policies.length > 0;
@@ -186,7 +204,8 @@ export class Meta {
   // Ends a shift on map `s.map`: pays out (with the map's pay bonus and the policies'
   // multiplier), updates records and unlocks. Returns { pay, records: [names of new
   // records], newMap: id or null, newUnlocks: [{ kind, id }] added by this map's first
-  // win, newPolicies: [policy ids unlocked], policiesOpened: first shift done }.
+  // win, newPolicies: [policy ids unlocked], policiesOpened: first shift done,
+  // hardcoreOpened: this win opened Hardcore }.
   finishShift(s) {
     const map = MAPS[s.map] ?? MAPS.office;
     const pay = Math.floor(
@@ -199,8 +218,10 @@ export class Meta {
     let newMap = null;
     let newUnlocks = [];
     const lockedBefore = POLICY_ORDER.filter((id) => !this.policyUnlocked(id, true));
+    const hardcoreBefore = this.hardcoreOpen(true);
     if (s.won) {
       mb.wins++;
+      if (s.hardcore && !d.hardcoreWon.includes(s.map)) d.hardcoreWon.push(s.map);
       for (const id of s.policies ?? []) if (!d.policiesWon.includes(id)) d.policiesWon.push(id);
       if (!s.evolutions) for (const id of POLICY_ORDER) if (POLICIES[id].unlock === 'noEvolveWin' && !d.policyUnlocks.includes(id)) d.policyUnlocks.push(id);
       if (!d.mapsWon.includes(s.map)) {
@@ -219,8 +240,9 @@ export class Meta {
     if (s.csat > d.best.csat) (d.best.csat = s.csat), records.push('csat');
     const newPolicies = lockedBefore.filter((id) => this.policyUnlocked(id, true));
     const policiesOpened = d.shifts === 1 && !PREVIEW; // the Policies step opens after the first shift
+    const hardcoreOpened = !hardcoreBefore && this.hardcoreOpen(true);
     this.save();
-    return { pay, records, newMap, newUnlocks, newPolicies, policiesOpened };
+    return { pay, records, newMap, newUnlocks, newPolicies, policiesOpened, hardcoreOpened };
   }
 
   // Debug: wipe the save.
@@ -247,7 +269,8 @@ export function upgradeSave(saved) {
   if (!isObj(d.mapBest)) d.mapBest = {};
   if (!Array.isArray(d.unlocked)) d.unlocked = [];
   if (!Array.isArray(d.mapsWon)) d.mapsWon = [];
-  for (const k of ['policiesWon', 'policyUnlocks']) if (!Array.isArray(d[k])) d[k] = [];
+  for (const k of ['policiesWon', 'policyUnlocks', 'hardcoreWon']) if (!Array.isArray(d[k])) d[k] = [];
+  d.hardcore = !!d.hardcore;
   d.policies = cleanPolicies(d.policies);
   d.reorg = !!d.reorg && d.policies.length > 0;
   if (from <= SAVE_VERSION) {
@@ -260,6 +283,7 @@ export function upgradeSave(saved) {
     for (const id of Object.keys(d.mapBest)) if (!MAPS[id]) delete d.mapBest[id];
     d.policiesWon = [...new Set(d.policiesWon.filter((id) => POLICIES[id]))];
     d.policyUnlocks = [...new Set(d.policyUnlocks.filter((id) => POLICIES[id]))];
+    d.hardcoreWon = [...new Set(d.hardcoreWon.filter((id) => MAPS[id]))];
   }
   if (!d.unlocked.includes('tier1')) d.unlocked.unshift('tier1');
   for (const id of Object.keys(d.mapBest)) d.mapBest[id] = { time: 0, tickets: 0, wins: 0, ...(isObj(d.mapBest[id]) ? d.mapBest[id] : {}) };

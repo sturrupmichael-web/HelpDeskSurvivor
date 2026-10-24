@@ -170,7 +170,7 @@ export function boardPost(screens, s) {
     msg.textContent = 'Posting…';
     const r = await postScore({
       map: s.map, character: s.character, seconds: Math.round(s.time), csat: s.csat, won: s.won, version: VERSION,
-      mods: modsString({ ids: s.policies ?? [], reorg: s.reorg }), mult: s.policyMult ?? 1,
+      mods: modsString({ ids: s.policies ?? [], reorg: s.reorg, hardcore: s.hardcore }), mult: s.policyMult ?? 1,
     });
     if (r.ok) {
       posted = true;

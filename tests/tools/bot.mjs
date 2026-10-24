@@ -6,9 +6,11 @@
 //   node tests/tools/bot.mjs --profiles [--runs 8]
 //   node tests/tools/bot.mjs --map office --policies casualFriday,budgetCuts
 //   node tests/tools/bot.mjs --each-policy [--profile 1] [--runs 8]
+//   node tests/tools/bot.mjs --map all --vet --hardcore
 //
 // --map / --tech take ids from data/maps.js and data/player.js, or "all".
 // --vet starts from a save with the whole shop maxed and everything unlocked.
+// --hardcore plays Hardcore shifts (data/policies.js HARDCORE; needs every map won, so --vet).
 // --profiles plays the progression table in BALANCE.md: each map with the shop share and
 // map wins a player usually has when they get there (PROFILES below).
 
@@ -144,9 +146,10 @@ export function profileSave(share, mapsWon) {
 const CAP = 30 * 60; // seconds of game time before a shift is called off
 
 // Plays `runs` shifts; returns one summary per shift.
-export function playShifts({ map = 'office', tech = 'tier1', runs = 1, vet = false, save = null, policies = [] } = {}) {
+export function playShifts({ map = 'office', tech = 'tier1', runs = 1, vet = false, save = null, policies = [], hardcore = false } = {}) {
   const game = headlessGame(manifest, { pick: botPick, autopilot: botPilot, save: save ?? (vet ? veteranSave() : null) });
   game.meta.data.policies = policies;
+  game.meta.data.hardcore = hardcore;
   const out = [];
   for (let i = 0; i < runs; i++) {
     game.startShift(map, tech);
@@ -187,6 +190,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const only = arg('profile', null); // one row of the table, by index
     for (const [map, share, won] of only === null ? PROFILES : [PROFILES[+only]]) report(`${map.padEnd(11)} shop ${String(share * 100).padStart(3)}%`, { map, save: profileSave(share, won) });
   } else {
-    for (const map of maps) for (const tech of techs) report(`${map.padEnd(11)} ${tech.padEnd(14)}`, { map, tech, vet, policies });
+    for (const map of maps) for (const tech of techs) report(`${map.padEnd(11)} ${tech.padEnd(14)}`, { map, tech, vet, policies, hardcore: process.argv.includes('--hardcore') });
   }
 }

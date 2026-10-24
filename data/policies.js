@@ -189,3 +189,18 @@ export const POLICY_GROUPS = [
 
 // The order they're listed in (picker, wiki, numbers players use).
 export const POLICY_ORDER = Object.keys(POLICIES);
+
+// Hardcore (idea 6): a switch on the Clock In map step, there once you've won a shift on
+// every map. It stacks with bad and mixed policies (its `mult` multiplies theirs, beyond
+// POLICY_RULES.maxMult) but not with perks. Applied by combinePolicies (src/game/policies.js).
+//   spawns        multiplies how many users come and how many stay on the floor
+//   enemyHp       multiplies regular users' HP
+//   phase2Sooner  bosses get angry this much sooner (added to phase2.at)
+//   otGrace       seconds of overtime before it starts ramping up (normally OVERTIME.grace)
+//   lockPassives  passives that are never offered (Extended Warranty: no comebacks)
+// Union Rep (shop) doesn't work in Hardcore either.
+export const HARDCORE = {
+  name: 'Hardcore', mult: 2,
+  desc: '50% more users with 25% more HP, bosses get angry sooner, overtime gets harder after 2 minutes, and no comebacks from burnout. Perks are off. Double pay and score.',
+  fx: { spawns: 1.5, enemyHp: 1.25, phase2Sooner: 0.15, otGrace: 120, lockPassives: ['warranty'] },
+};
