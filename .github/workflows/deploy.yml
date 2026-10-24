@@ -60,17 +60,17 @@ jobs:
           fi
           echo "main=$main" >> "$GITHUB_OUTPUT"
           echo "preview=$pre" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: steps.pre.outputs.go == 'true'
         with:
           ref: ${{ steps.pre.outputs.main }}
           path: live
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: steps.pre.outputs.exists == 'true'
         with:
           ref: ${{ steps.pre.outputs.preview }}
           path: pre
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: steps.pre.outputs.go == 'true'
         with:
           node-version: 22
@@ -90,7 +90,7 @@ jobs:
           npm ci
           npm run build:preview
           cp -r preview ../_site/preview
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         if: steps.pre.outputs.go == 'true'
         with:
           path: _site
@@ -104,4 +104,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
