@@ -4,6 +4,16 @@
 
 export const CHANGELOG = [
   {
+    id: '2026-10-24-solidgarage',
+    date: 'Oct 24, 2026',
+    title: 'Solid cars in the garage',
+    items: [
+      "Night Shift: the parked cars and the concrete pillars are solid now, so every map has furniture you can't walk through. Empty parking stalls are still open.",
+      "Keep your flashlight on the way ahead: it's easy to back into a car in the dark.",
+      'Users walk round, bosses barge straight through, and boss shots stop at the cars.',
+    ],
+  },
+  {
     id: '2026-10-23-solidmerger',
     date: 'Oct 23, 2026',
     title: 'Solid furniture on Merger Day',

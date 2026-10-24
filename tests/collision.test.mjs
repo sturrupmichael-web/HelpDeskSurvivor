@@ -20,13 +20,12 @@ function quietShift(map = 'office') {
 }
 
 export function collisionTests() {
-  test('collision: every map but the Parking Garage is solid', async () => {
-    for (const map of ['office', 'server', 'callcenter', 'merger']) {
+  test('collision: every map is solid', async () => {
+    for (const map of ['office', 'server', 'callcenter', 'garage', 'merger']) {
       const { g, row } = quietShift(map);
       assert(g.floor.solid && row, map + ' not solid');
       assert(g.floor.blocked(row[0] + 2, row[1] + 2), map + ': inside a row is not blocked');
     }
-    assert(!quietShift('garage').g.floor.solid, 'garage is solid');
   });
 
   test('collision: the Server Room hot aisles stay walkable', async () => {
@@ -57,7 +56,7 @@ export function collisionTests() {
     assert(p.x > x0 + 10, 'no slide along the row');
   });
 
-  for (const map of ['office', 'server', 'callcenter']) {
+  for (const map of ['office', 'server', 'callcenter', 'garage']) {
     test(`collision: ${map}: a user behind a row walks round it`, async () => {
       const { g, row } = quietShift(map);
       const p = g.player;

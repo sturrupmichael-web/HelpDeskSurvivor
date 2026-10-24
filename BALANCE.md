@@ -650,3 +650,19 @@ every earlier map won):
 
 A smaller hit than the other maps (open navy floor has few benches), but still harder for
 the bot.
+
+## Solid cars and pillars in the Parking Garage (issue #67), 2026-10-24
+
+The last map gets collision: parked cars (28x46 px each, 14 px gaps between neighbours, so
+users and the tech fit between them) and pillars block; empty stalls stay open. No
+toughness changes. Every map now has `solid: true`.
+
+Balance bot, progression profile (`node tests/tools/bot.mjs --profiles --profile 4`, shop 85%):
+
+| Build         | Runs | Average shift | Reached 10:00 | Won  |
+|---------------|------|---------------|---------------|------|
+| Before walls  | 32   | 24:55         | 32            | 3/32 |
+| With walls    | 32   | 19:42         | 31            | 4/32 |
+
+Wins didn't move; the shorter average comes from shifts that ran deep into overtime ending
+sooner (the bot's shifts are capped at 30:00).

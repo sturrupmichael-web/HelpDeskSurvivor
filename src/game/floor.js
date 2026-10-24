@@ -275,9 +275,14 @@ export class Floor {
       for (let i = 0; i <= n; i++) ctx.fillRect(x0 + i * 44, oy, 2, 64);
       ctx.fillRect(x0, oy + 63, n * 44 + 2, 2);
       const cars = ['car_red', 'car_blue', 'car_white', 'car_green'];
-      for (let i = 0; i < n; i++) if (r() < 0.65) this.put(ctx, cars[Math.floor(r() * cars.length)], x0 + i * 44 + 8, oy + 6);
+      for (let i = 0; i < n; i++)
+        if (r() < 0.65) {
+          this.put(ctx, cars[Math.floor(r() * cars.length)], x0 + i * 44 + 8, oy + 6);
+          this.block(x0 + i * 44 + 9, oy + 12, 28, 46); // empty stalls stay walkable
+        }
     } else if (roll < 0.9) {
       this.put(ctx, 'pillar', ox + 40, oy + 40);
+      this.block(ox + 40, oy + 44, 24, 36);
     }
   }
 
@@ -308,7 +313,7 @@ export class Floor {
 
   // The solid furniture of a chunk as world-space rects [x, y, w, h]: cubicle rows (the
   // chairs in front stay walkable), server racks and CRAC units, call-center pod rows,
-  // Merger Day's hot-desk benches.
+  // Merger Day's hot-desk benches, the Parking Garage's parked cars and pillars.
   solidRects(cx, cy) {
     const k = this.key(cx, cy);
     let rects = this.solids.get(k);

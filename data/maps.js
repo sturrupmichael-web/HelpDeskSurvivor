@@ -19,8 +19,8 @@
 //                          on it get x`hpMult` HP and drop x`xpMult` tickets when closed
 //                          there. Every `boxEvery` s an Unclaimed Moving Box appears nearby
 //                          (at most `boxMax` at once).
-//   solid       the furniture rows are solid (cubicles, server racks, call-center pods,
-//               Merger Day benches; see src/game/floor.js): nobody walks through them
+//   solid       the furniture is solid (cubicles, server racks, call-center pods, parked
+//               cars and pillars, Merger Day benches; see src/game/floor.js): nobody walks through them
 //               (users go round the end, bosses barge through), boss bullets stop at them,
 //               pickups never land in them
 //   newUsers   map-only users added to the spawn mix from `from` seconds on, each at
@@ -75,10 +75,11 @@ export const MAPS = {
     floor: 'garage',
     unlockAfter: 'callcenter',
     blurb: "3 a.m. on-call. The exec's laptop won't connect and he is in the car.",
-    twistText: 'Lights out: you only see what your phone flashlight shows. Users are 10% faster.',
+    twistText: 'Lights out: you only see what your phone flashlight shows. Parked cars and pillars are solid. Users are 10% faster.',
     pay: 1.5,
     hpMult: 1.15,
     speedMult: 1.1,
+    solid: true,
     mixBoost: { phish: 1.3, vip: 1.5 },
     music: { transpose: -5, tempo: 0.92, lead: 'triangle', cutoff: 900 },
     twist: { type: 'dark', radius: 190, flicker: 0.06 },
