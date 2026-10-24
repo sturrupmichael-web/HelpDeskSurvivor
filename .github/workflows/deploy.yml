@@ -1,23 +1,25 @@
 # Builds and publishes the site to GitHub Pages (Settings > Pages > Source: GitHub Actions).
 #   main     -> the live game at /
 #   preview  -> the test copy at /preview/ (if the branch exists)
-# A push to either branch rebuilds both, so neither overwrites the other. The tests must
-# pass first, so a broken build never goes live. The built files are not committed.
-# GitHub only lets main deploy to Pages, so a push to preview is picked up here after the
-# Tests workflow passes on it (workflow_run runs as main).
+# It runs after the Tests workflow passes on main or preview, and rebuilds both, so
+# neither overwrites the other. The tests aren't run again here. Before building, it
+# checks that the commit at the tip of each branch passed Tests: if main's hasn't (it
+# failed, or a newer push is still being tested and will deploy when it passes), this run
+# publishes nothing; if preview's hasn't, the site goes up without /preview/ until it does.
+# The built files are not committed. (GitHub only lets main deploy to Pages; workflow_run
+# always runs as main, which is how a preview push gets published.)
 name: Deploy
 
 on:
-  push:
-    branches: [main]
   workflow_run:
     workflows: [Tests]
     types: [completed]
-    branches: [preview]
+    branches: [main, preview]
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 
@@ -30,34 +32,52 @@ jobs:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      go: ${{ steps.pre.outputs.go }}
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-          path: live
-      - name: Find the preview branch
+      - name: Check that main and preview passed their tests
         id: pre
         run: |
-          if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}" preview >/dev/null; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
+          passed() { # $1 = commit: did Tests succeed on it?
+            [ "$(gh api "repos/${{ github.repository }}/actions/workflows/test.yml/runs?head_sha=$1&status=success" --jq '.total_count')" != "0" ]
+          }
+          main=$(gh api "repos/${{ github.repository }}/commits/main" --jq .sha)
+          if ! passed "$main"; then
+            echo "::notice::main ($main) hasn't passed Tests (yet), so this run publishes nothing."
+            exit 0
           fi
+          echo "go=true" >> "$GITHUB_OUTPUT"
+          if pre=$(gh api "repos/${{ github.repository }}/commits/preview" --jq .sha 2>/dev/null); then
+            if passed "$pre"; then
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "::warning::preview ($pre) hasn't passed Tests, so /preview/ is left out of this deploy."
+            fi
+          else
+            pre=""
+          fi
+          echo "main=$main" >> "$GITHUB_OUTPUT"
+          echo "preview=$pre" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        if: steps.pre.outputs.go == 'true'
+        with:
+          ref: ${{ steps.pre.outputs.main }}
+          path: live
       - uses: actions/checkout@v4
         if: steps.pre.outputs.exists == 'true'
         with:
-          ref: preview
+          ref: ${{ steps.pre.outputs.preview }}
           path: pre
       - uses: actions/setup-node@v4
+        if: steps.pre.outputs.go == 'true'
         with:
           node-version: 22
-      - name: Test main
-        if: github.event_name != 'workflow_run'
-        working-directory: live
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
-          npm run build
-          npm test
+          cache: npm
+          cache-dependency-path: live/package-lock.json
       - name: Build the live game
+        if: steps.pre.outputs.go == 'true'
         working-directory: live
         run: |
           npm ci
@@ -71,11 +91,13 @@ jobs:
           npm run build:preview
           cp -r preview ../_site/preview
       - uses: actions/upload-pages-artifact@v3
+        if: steps.pre.outputs.go == 'true'
         with:
           path: _site
 
   deploy:
     needs: build
+    if: needs.build.outputs.go == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

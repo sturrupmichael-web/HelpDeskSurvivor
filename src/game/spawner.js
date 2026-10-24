@@ -136,7 +136,6 @@ export class Spawner {
 
   update(game, dt) {
     if (this.stopped) return;
-    const t = game.time;
     this.events(game, dt);
     const ot = this.overtimeLevel(game);
     if (ot > this.otShown) {

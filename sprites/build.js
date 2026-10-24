@@ -4,13 +4,17 @@
 //
 //   node sprites/build.js                 build sheets + manifest
 //   node sprites/build.js --preview DIR   also write 6x-scaled previews to DIR
+//   node sprites/build.js --check         write nothing; fail if sprites/out is out of date
+//
+// A sheet is only rewritten when its pixels change (its ?v= tag in the manifest), so a
+// rebuild with no art changes leaves sprites/out untouched in git.
 //
 // The game only ever reads manifest.json and the PNGs, so a third-party asset pack can
 // replace them as long as it provides the same sprite ids (see README "Swapping art").
 
 import { deflateSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { PALETTE, FLASH_COLOR } from '../data/palette.js';
@@ -20,6 +24,11 @@ const defsDir = join(here, 'defs');
 const outDir = join(here, 'out');
 const previewIdx = process.argv.indexOf('--preview');
 const previewDir = previewIdx > 0 ? process.argv[previewIdx + 1] : null;
+const CHECK = process.argv.includes('--check');
+const manifestPath = join(outDir, 'manifest.json');
+const old = existsSync(manifestPath) ? readFileSync(manifestPath, 'utf8') : null;
+const oldSheets = old ? JSON.parse(old).sheets : {};
+const stale = [];
 
 const hexToRgba = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).concat(255);
 const COLORS = Object.fromEntries(Object.entries(PALETTE).map(([k, v]) => [k, hexToRgba(v)]));
@@ -130,14 +139,27 @@ for (const file of readdirSync(defsDir).filter((f) => f.endsWith('.js')).sort())
     };
     y0 += r.h;
   }
-  writeFileSync(join(outDir, `${def.sheet}.png`), encodePNG(sheetW, sheetH, rgba));
   // The ?v= tag changes whenever the pixels do, so the installed app (sw.js) can keep
   // sheets cached and still fetch a new one the moment the art changes.
   const tag = createHash('sha1').update(rgba).update(`${sheetW}x${sheetH}`).digest('hex').slice(0, 10);
   manifest.sheets[def.sheet] = `${def.sheet}.png?v=${tag}`;
+  const png = join(outDir, `${def.sheet}.png`);
+  const changed = oldSheets[def.sheet] !== manifest.sheets[def.sheet] || !existsSync(png);
+  if (changed) stale.push(`${def.sheet}.png`);
+  if (changed && !CHECK) writeFileSync(png, encodePNG(sheetW, sheetH, rgba));
   if (previewDir) writeFileSync(join(previewDir, `${def.sheet}.png`), encodePNG(sheetW * 6, sheetH * 6, scaleUp(sheetW, sheetH, rgba, 6)));
-  console.log(`${def.sheet}.png  ${sheetW}x${sheetH}  ${rows.length} sprites`);
+  if (!CHECK) console.log(`${def.sheet}.png  ${sheetW}x${sheetH}  ${rows.length} sprites${changed ? '' : ' (unchanged)'}`);
 }
 
-writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 1));
-console.log(`manifest.json  ${Object.keys(manifest.sprites).length} sprites`);
+const json = JSON.stringify(manifest, null, 1);
+if (json !== old) stale.push('manifest.json');
+if (CHECK) {
+  if (stale.length) {
+    console.log(`sprites/out is out of date (${stale.join(', ')}): run node sprites/build.js`);
+    process.exit(1);
+  }
+  console.log('sprites/out is up to date');
+} else {
+  if (json !== old) writeFileSync(manifestPath, json);
+  console.log(`manifest.json  ${Object.keys(manifest.sprites).length} sprites${json === old ? ' (unchanged)' : ''}`);
+}

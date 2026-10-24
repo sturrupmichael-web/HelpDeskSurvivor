@@ -29,7 +29,7 @@ module file names. It isn't kept in git: GitHub Actions builds it on every deplo
 build it locally (for example to test the published page):
 
 ```sh
-npm install      # once, installs esbuild and Playwright
+npm install      # once, installs esbuild, Playwright and ESLint
 npm run build
 ```
 
@@ -176,8 +176,12 @@ saves, accounts and the leaderboard with the live game (scores show the `-pre` v
 
 GitHub builds and publishes the site itself (`.github/workflows/deploy.yml`, with
 Settings > Pages > Source set to "GitHub Actions"). A push to `main` or `preview` runs the
-tests, builds the live game from `main` and the preview from `preview`, and publishes both.
-If a test fails nothing is published. Nothing built needs committing.
+Tests workflow; when it passes, Deploy builds the live game from `main` and the preview
+from `preview` and publishes both, without running the tests again. If `main`'s latest
+commit hasn't passed, nothing is published; if `preview`'s hasn't, the site goes up
+without `/preview/`. Nothing built needs committing. Once a month GitHub opens a pull
+request if the build and test tools have updates (`.github/dependabot.yml`); merge it if
+the tests pass.
 
 - **Make a preview:** push the change to the `preview` branch.
 - **Publish:** merge it into `main` and push.
@@ -193,6 +197,8 @@ runs, a phone-sized screen draws at world size, 900 users stay inside a frame bu
 saves upgrade, and the built page starts offline. `npm test -- quick` skips the built
 page. Every push runs them on GitHub (`.github/workflows/test.yml`); a red X on a commit
 means a test failed. First time: `npm install` and `npx playwright install chromium`.
+`npm run lint` (ESLint, `eslint.config.js`) checks the code for mistakes such as
+misspelled or unused names; GitHub runs it with the tests.
 Tests live in `tests/`; `tests/harness.mjs` has helpers (`T.start(map)`, `T.step(seconds)`).
 Every `tests/*.test.mjs` file runs by itself (`tests/run.mjs` finds them); one that
 exports `pages` runs in the browser on those pages, the rest run in plain Node.
@@ -257,7 +263,11 @@ Sprites live in `sprites/defs/*.js` as grids of palette characters (`data/palett
 ```sh
 node sprites/build.js
 node sprites/build.js --preview /tmp/sprite-preview   # also writes 6x-scaled previews
+node sprites/build.js --check                         # only checks sprites/out is up to date
 ```
+
+Only sheets whose pixels changed are rewritten. `npm test` fails if a definition was
+edited without rebuilding.
 
 Hit-flash frames are generated automatically from each frame.
 

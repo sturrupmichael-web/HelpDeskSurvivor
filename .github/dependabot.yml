@@ -1,0 +1,19 @@
+# Once a month GitHub opens a pull request when the build and test tools (esbuild,
+# Playwright) or the GitHub Actions steps in .github/workflows have a newer version.
+# The Tests workflow runs on it; merge it if they pass. Security fixes come sooner.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      tools:
+        patterns: ['*']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ['*']
