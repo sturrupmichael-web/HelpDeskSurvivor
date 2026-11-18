@@ -1,5 +1,6 @@
 // Entry point: load sprite sheets, start input, sound and the game loop.
 
+import { joinSiteLive } from './site-live.js';
 import { loadAssets } from './engine/assets.js';
 import { initInput, pollGamepad } from './engine/input.js';
 import { initAudio } from './engine/audio.js';
@@ -49,3 +50,5 @@ if ('serviceWorker' in navigator && !location.pathname.endsWith('dev.html')) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 document.getElementById('boot')?.remove();
+
+joinSiteLive('helpdesk-survivors'); // live "N playing" + visit counter on michaelsturrup.com

@@ -65,7 +65,7 @@ function withCsp(page) {
     `script-src 'self' ${hashes.join(' ')}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
-    `connect-src 'self' ${new URL(LEADERBOARD.url).origin}`,
+    `connect-src 'self' ${new URL(LEADERBOARD.url).origin} wss://abeqdmurddrkrqbnfylb.supabase.co`,
     "worker-src 'self'",
     "manifest-src 'self'",
     "object-src 'none'",
